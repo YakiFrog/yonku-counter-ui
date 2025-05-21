@@ -149,23 +149,48 @@ export default function HomePage() {
           {/* レイアウト: 左側にコース情報、右側に大きな経過時間表示 */}
           <Grid templateColumns="2fr 1fr" gap={6}>
             {/* 左側：4コース分のレース情報と周回表示 */}
-            <Box>
-              <VStack spacing={4} align="stretch">
-                {courseData.map((course) => (
+            <Box pl={100} pr={2}> {/* 左右の余白を調整 */}
+              <VStack spacing={6} align="stretch"> {/* 間隔を広げる */}
+                {[...courseData].reverse().map((course) => (
                   <Box 
                     key={course.id}
                     p={4} 
+                    pl={6}  // 左側に余白を追加して数字のスペースを確保
                     borderWidth="1px" 
                     borderRadius="lg" 
                     borderLeftWidth="8px" 
                     borderLeftColor={course.color} 
                     shadow="md"
+                    position="relative"  // 絶対配置の基準点
                   >
+                    {/* 大きなコース番号を左側に表示（枠外に） - 常に「4,3,2,1」の順で表示 */}
+                    <Box
+                      position="absolute"
+                      left="-100px"
+                      top="50%"
+                      transform="translateY(-50%)"
+                      fontSize="6xl"
+                      fontWeight="black"
+                      color={course.color}
+                      w="80px"
+                      h="80px"
+                      display="flex"
+                      justifyContent="center"
+                      alignItems="center"
+                      borderRadius="full"
+                      bg="white"
+                      _dark={{ bg: "gray.800" }}
+                      boxShadow="lg"
+                      border="4px solid"
+                      borderColor={course.color}
+                      zIndex={2}
+                    >
+                      {course.id}
+                    </Box>
                     <Flex justifyContent="space-between" alignItems="center">
                       <Box>
-                        <Text fontWeight="bold" fontSize="xl">コース {course.id}</Text>
-                        <Text>選手名: {course.name}</Text>
-                        <Text>車両: {course.vehicle}</Text>
+                        <Text fontWeight="bold" fontSize="lg">{course.name}</Text>
+                        <Text fontSize="sm">車両: {course.vehicle}</Text>
                       </Box>
                       <Flex direction="column" alignItems="center">
                         <Flex alignItems="center">
