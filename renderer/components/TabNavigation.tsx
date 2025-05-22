@@ -47,12 +47,65 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({ currentTab = 'race
         variant="enclosed"
         colorScheme="cyan"
         size="lg"
-        color="white"
       >
-        <TabList>
-          <Tab fontWeight="semibold">レース</Tab>
-          <Tab fontWeight="semibold">ランキング</Tab>
-          <Tab fontWeight="semibold">設定</Tab>
+        <TabList
+          bg="gray.800"
+          borderBottomColor="gray.700"
+        >
+          <Tab 
+            fontWeight="semibold"
+            color="gray.300"
+            bg="gray.900"
+            borderColor="gray.600"
+            _selected={{ 
+              color: "white", 
+              bg: "gray.700",
+              borderColor: "cyan.400",
+              borderBottomColor: "transparent"
+            }}
+            _hover={{
+              color: "white",
+              bg: "gray.700"
+            }}
+          >
+            レース
+          </Tab>
+          <Tab 
+            fontWeight="semibold"
+            color="gray.300"
+            bg="gray.900"
+            borderColor="gray.600"
+            _selected={{ 
+              color: "white", 
+              bg: "gray.700",
+              borderColor: "cyan.400",
+              borderBottomColor: "transparent"
+            }}
+            _hover={{
+              color: "white",
+              bg: "gray.700"
+            }}
+          >
+            ランキング
+          </Tab>
+          <Tab 
+            fontWeight="semibold"
+            color="gray.300"
+            bg="gray.900"
+            borderColor="gray.600"
+            _selected={{ 
+              color: "white", 
+              bg: "gray.700",
+              borderColor: "cyan.400",
+              borderBottomColor: "transparent"
+            }}
+            _hover={{
+              color: "white",
+              bg: "gray.700"
+            }}
+          >
+            設定
+          </Tab>
         </TabList>
       </Tabs>
     </Box>

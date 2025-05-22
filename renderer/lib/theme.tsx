@@ -15,6 +15,15 @@ const theme = extendTheme({
     useSystemColorMode: false, // システムの設定を使用しない
   },
 
+  styles: {
+    global: {
+      body: {
+        bg: 'gray.900',
+        color: 'white',
+      },
+    },
+  },
+
   colors: {
     // カスタムカラーパレット
     blue: {

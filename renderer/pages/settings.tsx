@@ -242,14 +242,14 @@ export default function SettingsPage() {
           {/* タブナビゲーション */}
           <TabNavigation currentTab="settings" />
           
-          <Heading size="lg" mb={4}>レース設定</Heading>
+          <Heading size="lg" mb={4} color="white">レース設定</Heading>
           
-          <Box as="form" onSubmit={handleSubmit} borderWidth="1px" borderRadius="lg" p={6} shadow="md">
+          <Box as="form" onSubmit={handleSubmit} borderWidth="1px" borderRadius="lg" p={6} shadow="md" bg="gray.800" borderColor="gray.700">
             <Tabs variant="enclosed" colorScheme="blue">
-              <TabList mb={4}>
-                <Tab fontWeight="semibold">基本設定</Tab>
-                <Tab fontWeight="semibold">選手/車両登録</Tab>
-                <Tab fontWeight="semibold">コース割り当て</Tab>
+              <TabList mb={4} bg="gray.800" borderBottomColor="gray.700">
+                <Tab fontWeight="semibold" color="gray.300" bg="gray.900" borderColor="gray.600" _selected={{ color: "white", bg: "gray.700" }}>基本設定</Tab>
+                <Tab fontWeight="semibold" color="gray.300" bg="gray.900" borderColor="gray.600" _selected={{ color: "white", bg: "gray.700" }}>選手/車両登録</Tab>
+                <Tab fontWeight="semibold" color="gray.300" bg="gray.900" borderColor="gray.600" _selected={{ color: "white", bg: "gray.700" }}>コース割り当て</Tab>
               </TabList>
               
               <TabPanels>
@@ -260,26 +260,27 @@ export default function SettingsPage() {
                       <Heading size="md" mb={4}>基本設定</Heading>
                       
                       <FormControl id="totalLaps" mb={4}>
-                        <FormLabel>周回数</FormLabel>
+                        <FormLabel color="white">周回数</FormLabel>
                         <NumberInput 
                           value={settings.lapCount} 
                           min={1} 
                           max={20}
                           onChange={(valueString, valueNumber) => handleUpdateSetting('lapCount', valueNumber)}
                         >
-                          <NumberInputField />
+                          <NumberInputField bg="gray.900" borderColor="gray.600" color="white" _hover={{ borderColor: "gray.500" }} />
                           <NumberInputStepper>
-                            <NumberIncrementStepper />
-                            <NumberDecrementStepper />
+                            <NumberIncrementStepper color="gray.400" borderColor="gray.600" />
+                            <NumberDecrementStepper color="gray.400" borderColor="gray.600" />
                           </NumberInputStepper>
                         </NumberInput>
                       </FormControl>
 
                       <FormControl mt="4" display="flex" alignItems="center">
-                        <FormLabel mb="0">サウンド</FormLabel>
+                        <FormLabel mb="0" color="white">サウンド</FormLabel>
                         <Switch 
                           isChecked={settings.soundEnabled} 
                           onChange={(e) => handleUpdateSetting('soundEnabled', e.target.checked)} 
+                          colorScheme="cyan"
                         />
                       </FormControl>
                     </Box>
@@ -294,7 +295,7 @@ export default function SettingsPage() {
                 <TabPanel>
                   <VStack spacing={6} align="stretch">
                     <Box>
-                      <Heading size="md" mb={4}>選手リスト</Heading>
+                      <Heading size="md" mb={4} color="white">選手リスト</Heading>
                       
                       {/* 新規選手の追加 */}
                       <Flex mb={5}>
@@ -303,127 +304,158 @@ export default function SettingsPage() {
                           value={newPlayerName}
                           onChange={(e) => setNewPlayerName(e.target.value)}
                           mr={2}
+                          bg="gray.900"
+                          borderColor="gray.600"
+                          color="white"
+                          _hover={{ borderColor: "gray.500" }}
+                          _placeholder={{ color: "gray.400" }}
                         />
                         <Button
                           leftIcon={<AddIcon />}
                           colorScheme="green"
                           onClick={addPlayer}
                         >
-                          選手を追加
+                          追加
                         </Button>
                       </Flex>
                       
-                      {/* 選手リスト */}
-                      {playersState.map((player) => (
-                        <Box key={player.id} mb={6} p={4} borderWidth="1px" borderRadius="md" shadow="sm">
-                          {/* 選手情報 */}
-                          <Flex justifyContent="space-between" alignItems="center" mb={4}>
-                            {editingPlayerId === player.id ? (
-                              <Flex flex="1">
-                                <Input
-                                  value={editingPlayerName}
-                                  onChange={(e) => setEditingPlayerName(e.target.value)}
-                                  mr={2}
-                                />
-                                <Button colorScheme="blue" size="sm" onClick={savePlayerEdit}>
-                                  保存
-                                </Button>
-                              </Flex>
-                            ) : (
-                              <>
-                                <Heading size="sm">{player.name}</Heading>
+                      {/* 選手一覧 */}
+                      <Box mb={4}>
+                        {playersState.map((player) => (
+                          <Box 
+                            key={player.id}
+                            p={4}
+                            mb={3}
+                            borderWidth="1px"
+                            borderRadius="md"
+                            bg="gray.900"
+                            borderColor="gray.600"
+                          >
+                            {/* 選手名の表示/編集 */}
+                            <Box mb={3}>
+                              {editingPlayerId === player.id ? (
                                 <Flex>
-                                  <IconButton
-                                    aria-label="Edit player"
-                                    icon={<EditIcon />}
-                                    size="sm"
+                                  <Input
+                                    value={editingPlayerName}
+                                    onChange={(e) => setEditingPlayerName(e.target.value)}
+                                    bg="gray.800"
+                                    borderColor="gray.600"
+                                    color="white"
+                                    _hover={{ borderColor: "gray.500" }}
                                     mr={2}
-                                    onClick={() => startEditingPlayer(player)}
                                   />
-                                  <IconButton
-                                    aria-label="Delete player"
-                                    icon={<DeleteIcon />}
-                                    colorScheme="red"
-                                    size="sm"
-                                    onClick={() => deletePlayer(player.id)}
-                                  />
+                                  <Button size="sm" colorScheme="blue" onClick={savePlayerEdit}>
+                                    保存
+                                  </Button>
                                 </Flex>
-                              </>
-                            )}
-                          </Flex>
-                          
-                          {/* 車両情報 */}
-                          <Box ml={4}>
-                            <Heading size="xs" mb={2}>車両情報</Heading>
-                            {player.vehicle ? (
-                              <Box borderWidth="1px" borderRadius="md" p={2}>
-                                {editingVehiclePlayerId === player.id ? (
+                              ) : (
+                                <Flex justifyContent="space-between" alignItems="center">
+                                  <Text color="white">{player.name}</Text>
                                   <Flex>
-                                    <Input
+                                    <IconButton
+                                      aria-label="Edit player"
+                                      icon={<EditIcon />}
                                       size="sm"
-                                      value={editingVehicleName}
-                                      onChange={(e) => setEditingVehicleName(e.target.value)}
                                       mr={2}
+                                      onClick={() => startEditingPlayer(player.id)}
                                     />
-                                    <Button size="sm" colorScheme="blue" onClick={saveVehicleEdit}>
-                                      保存
-                                    </Button>
+                                    <IconButton
+                                      aria-label="Delete player"
+                                      icon={<DeleteIcon />}
+                                      colorScheme="red"
+                                      size="sm"
+                                      onClick={() => removePlayer(player.id)}
+                                    />
                                   </Flex>
-                                ) : (
-                                  <Flex justifyContent="space-between" alignItems="center">
-                                    <Text>{player.vehicle.name}</Text>
+                                </Flex>
+                              )}
+                            </Box>
+
+                            {/* 車両情報 */}
+                            <Box>
+                              <Text fontSize="sm" color="gray.300" mb={2}>車両情報:</Text>
+                              {player.vehicle ? (
+                                <Box>
+                                  {editingVehiclePlayerId === player.id ? (
                                     <Flex>
-                                      <IconButton
-                                        aria-label="Edit vehicle"
-                                        icon={<EditIcon />}
-                                        size="xs"
+                                      <Input
+                                        value={editingVehicleName}
+                                        onChange={(e) => setEditingVehicleName(e.target.value)}
+                                        bg="gray.800"
+                                        borderColor="gray.600"
+                                        color="white"
+                                        _hover={{ borderColor: "gray.500" }}
                                         mr={2}
-                                        onClick={() => startEditingVehicle(player.id)}
                                       />
-                                      <IconButton
-                                        aria-label="Remove vehicle"
-                                        icon={<DeleteIcon />}
-                                        colorScheme="red"
-                                        size="xs"
-                                        onClick={() => removeVehicle(player.id)}
-                                      />
+                                      <Button size="sm" colorScheme="blue" onClick={saveVehicleEdit}>
+                                        保存
+                                      </Button>
                                     </Flex>
-                                  </Flex>
-                                )}
-                              </Box>
-                            ) : (
-                              <Text fontSize="sm" color="gray.500">車両が登録されていません</Text>
-                            )}
-                            
-                            {/* 車両の設定/更新 */}
-                            {!player.vehicle && (
-                              <Flex mt={3}>
-                                <Input
-                                  placeholder="車両名"
-                                  size="sm"
-                                  value={newVehicleName}
-                                  onChange={(e) => setNewVehicleName(e.target.value)}
-                                  mr={2}
-                                />
-                                <Button
-                                  size="sm"
-                                  leftIcon={<AddIcon />}
-                                  colorScheme="green"
-                                  onClick={() => setVehicleToPlayer(player.id)}
-                                >
-                                  追加
-                                </Button>
-                              </Flex>
-                            )}
+                                  ) : (
+                                    <Flex justifyContent="space-between" alignItems="center">
+                                      <Text color="white">{player.vehicle.name}</Text>
+                                      <Flex>
+                                        <IconButton
+                                          aria-label="Edit vehicle"
+                                          icon={<EditIcon />}
+                                          size="xs"
+                                          mr={2}
+                                          onClick={() => startEditingVehicle(player.id)}
+                                        />
+                                        <IconButton
+                                          aria-label="Remove vehicle"
+                                          icon={<DeleteIcon />}
+                                          colorScheme="red"
+                                          size="xs"
+                                          onClick={() => removeVehicle(player.id)}
+                                        />
+                                      </Flex>
+                                    </Flex>
+                                  )}
+                                </Box>
+                              ) : (
+                                <Text fontSize="sm" color="gray.400">車両が登録されていません</Text>
+                              )}
+                              
+                              {/* 車両の設定/更新 */}
+                              {!player.vehicle && (
+                                <Flex mt={3}>
+                                  <Input
+                                    placeholder="車両名"
+                                    size="sm"
+                                    value={newVehicleName}
+                                    onChange={(e) => setNewVehicleName(e.target.value)}
+                                    mr={2}
+                                    bg="gray.800"
+                                    borderColor="gray.600"
+                                    color="white"
+                                    _hover={{ borderColor: "gray.500" }}
+                                    _placeholder={{ color: "gray.400" }}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    leftIcon={<AddIcon />}
+                                    colorScheme="green"
+                                    onClick={() => setVehicleToPlayer(player.id)}
+                                  >
+                                    追加
+                                  </Button>
+                                </Flex>
+                              )}
+                            </Box>
                           </Box>
-                        </Box>
-                      ))}
+                        ))}
+                        
+                        {playersState.length === 0 && (
+                          <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
+                            <Text align="center">選手が登録されていません</Text>
+                          </Box>
+                        )}
+                      </Box>
                       
-                      {playersState.length === 0 && (
-                        <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
-                          <Text align="center">選手が登録されていません</Text>
-                        </Box>
-                      )}
+                      <Button type="submit" colorScheme="blue" size="lg" mt={4}>
+                        設定を保存
+                      </Button>
                     </Box>
                     
                     <Button type="submit" colorScheme="blue" size="lg" mt={4}>
@@ -436,22 +468,26 @@ export default function SettingsPage() {
                 <TabPanel>
                   <VStack spacing={6} align="stretch">
                     <Box>
-                      <Heading size="md" mb={4}>コース割り当て</Heading>
+                      <Heading size="md" mb={4} color="white">コース割り当て</Heading>
                       
                       <SimpleGrid columns={[1, 2]} spacing={6}>
                         {settings.courses.map((course, index) => (
-                          <Box key={index} p={4} borderWidth="1px" borderRadius="md">
-                            <Heading size="sm" mb={3}>コース {index + 1}</Heading>
+                          <Box key={index} p={4} borderWidth="1px" borderRadius="md" bg="gray.900" borderColor="gray.600">
+                            <Heading size="sm" mb={3} color="white">コース {index + 1}</Heading>
                             
                             <FormControl mb={3}>
-                              <FormLabel>選手</FormLabel>
+                              <FormLabel color="white">選手</FormLabel>
                               <Select
                                 placeholder="選手を選択"
                                 value={course.playerId || ''}
                                 onChange={(e) => updateCourseAssignment(index, 'playerId', e.target.value)}
+                                bg="gray.800"
+                                borderColor="gray.600"
+                                color="white"
+                                _hover={{ borderColor: "gray.500" }}
                               >
                                 {playersState.map((player) => (
-                                  <option key={player.id} value={player.id}>
+                                  <option key={player.id} value={player.id} style={{ backgroundColor: "#1A202C" }}>
                                     {player.name}
                                   </option>
                                 ))}
@@ -459,17 +495,21 @@ export default function SettingsPage() {
                             </FormControl>
                             
                             <FormControl>
-                              <FormLabel>車両</FormLabel>
+                              <FormLabel color="white">車両</FormLabel>
                               <Select
                                 placeholder="車両を選択"
                                 value={course.vehicleId || ''}
                                 onChange={(e) => updateCourseAssignment(index, 'vehicleId', e.target.value)}
                                 isDisabled={!course.playerId}
+                                bg="gray.800"
+                                borderColor="gray.600"
+                                color="white"
+                                _hover={{ borderColor: "gray.500" }}
                               >
                                 {(() => {
                                   const vehicle = getVehicleForPlayer(course.playerId);
                                   return vehicle ? [
-                                    <option key={vehicle.id} value={vehicle.id}>
+                                    <option key={vehicle.id} value={vehicle.id} style={{ backgroundColor: "#1A202C" }}>
                                       {vehicle.name}
                                     </option>
                                   ] : [];
