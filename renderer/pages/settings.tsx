@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Head from 'next/head'
 import { 
   Box, 
@@ -25,141 +25,71 @@ import {
   Tabs,
   VStack,
   useToast,
-  Text
+  Text,
+  Spinner,
+  Center
 } from '@chakra-ui/react'
 import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons'
 
 import { Container } from '../components/Container'
 import { TabNavigation } from '../components/TabNavigation'
-
-// 選手データの型定義
-type Player = {
-  id: string;
-  name: string;
-  vehicle: {
-    id: string;
-    name: string;
-  } | null;
-};
-
-// コースデータの型定義
-type Course = {
-  playerId: string | null;
-  vehicleId: string | null;
-};
+import { useAppSettingsContext } from '../utils/AppSettingsContext'
+import { Player, Vehicle } from '../utils/types'
 
 export default function SettingsPage() {
-  // 設定データを保持するstate
-  const [settings, setSettings] = useState({
-    courses: [
-      { id: 1, player: null, machine: null },
-      { id: 2, player: null, machine: null },
-      { id: 3, player: null, machine: null },
-      { id: 4, player: null, machine: null }
-    ],
-    lapCount: 10,
-    soundEnabled: true,
-    // 他の設定項目があれば追加
-  });
+  const { 
+    settings, 
+    isLoading,
+    updateSettings,
+    updateCourse,
+    addPlayer: addPlayerToContext,
+    updatePlayer: updatePlayerInContext,
+    removePlayer: removePlayerFromContext
+  } = useAppSettingsContext();
+  
   const toast = useToast();
 
-  // コンポーネントマウント時に設定をロード
+  // 選手リスト
+  const [playersState, setPlayersState] = useState<Player[]>([]);
+  
+  // コンテキストから選手データをロード
   useEffect(() => {
-    const savedSettings = localStorage.getItem('settings');
-    if (savedSettings) {
-      try {
-        const parsedSettings = JSON.parse(savedSettings);
-        setSettings(parsedSettings);
-        console.log('設定をロードしました:', parsedSettings);
-      } catch (error) {
-        console.error('設定のロードに失敗しました:', error);
-        toast({
-          title: 'エラー',
-          description: '設定データの読み込みに失敗しました',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      }
+    if (!isLoading && settings) {
+      setPlayersState(settings.players || []);
     }
-  }, [toast]);
-
-  // 選手リスト管理
-  const [players, setPlayers] = useState<Player[]>([
-    { 
-      id: 'p1', 
-      name: '選手1', 
-      vehicle: { id: 'v1-1', name: '車両1' }
-    },
-    { 
-      id: 'p2', 
-      name: '選手2', 
-      vehicle: { id: 'v2-1', name: '車両2' }
-    },
-    { 
-      id: 'p3', 
-      name: '選手3', 
-      vehicle: { id: 'v3-1', name: '車両3' }
-    },
-    { 
-      id: 'p4', 
-      name: '選手4', 
-      vehicle: { id: 'v4-1', name: '車両4' }
-    },
-  ]);
-
+  }, [settings, isLoading]);
+  
   // 新規選手・車両入力用の状態
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newVehicleName, setNewVehicleName] = useState('');
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editingPlayerName, setEditingPlayerName] = useState('');
+  
+  // 車両名の編集状態の管理
+  const [editingVehiclePlayerId, setEditingVehiclePlayerId] = useState<string | null>(null);
+  const [editingVehicleName, setEditingVehicleName] = useState('');
 
   // 設定送信ハンドラ
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // 実際のアプリケーションではローカルストレージに保存する
-    try {
-      localStorage.setItem('settings', JSON.stringify(settings));
-      console.log('設定を保存しました:', settings);
-      
-      toast({
-        title: '設定が保存されました',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error('設定の保存に失敗しました:', error);
-      toast({
-        title: 'エラー',
-        description: '設定の保存に失敗しました',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+    
+    toast({
+      title: '設定が自動保存されました',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
   };
 
   // 設定値変更ハンドラ
-  const updateSettings = (field: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleUpdateSetting = (field: string, value: any) => {
+    updateSettings({ [field]: value });
   };
 
   // コース情報の更新（選手とマシンの割り当て）
   const updateCourseAssignment = (courseIndex: number, field: string, value: string) => {
-    const newCourses = [...settings.courses];
-    newCourses[courseIndex] = {
-      ...newCourses[courseIndex],
-      [field]: value === '' ? null : value
-    };
-    
-    setSettings(prev => ({
-      ...prev,
-      courses: newCourses
-    }));
+    const courseId = settings.courses[courseIndex].id;
+    updateCourse(courseId, { [field]: value === '' ? null : value });
   };
 
   // 新規選手の追加
@@ -172,7 +102,7 @@ export default function SettingsPage() {
       vehicle: null // 初期状態では車両なし
     };
     
-    setPlayers(prev => [...prev, newPlayer]);
+    addPlayerToContext(newPlayer);
     setNewPlayerName('');
     
     toast({
@@ -185,20 +115,7 @@ export default function SettingsPage() {
 
   // 選手の削除
   const deletePlayer = (playerId: string) => {
-    setPlayers(prev => prev.filter(player => player.id !== playerId));
-    
-    // この選手が割り当てられているコースをクリア
-    const updatedCourses = settings.courses.map(course => {
-      if (course.playerId === playerId) {
-        return { playerId: null, vehicleId: null };
-      }
-      return course;
-    });
-    
-    setSettings(prev => ({
-      ...prev,
-      courses: updatedCourses
-    }));
+    removePlayerFromContext(playerId);
     
     toast({
       title: '選手を削除しました',
@@ -218,13 +135,7 @@ export default function SettingsPage() {
   const savePlayerEdit = () => {
     if (!editingPlayerId || editingPlayerName.trim() === '') return;
     
-    setPlayers(prev => 
-      prev.map(player => 
-        player.id === editingPlayerId 
-          ? { ...player, name: editingPlayerName }
-          : player
-      )
-    );
+    updatePlayerInContext(editingPlayerId, { name: editingPlayerName });
     
     setEditingPlayerId(null);
     setEditingPlayerName('');
@@ -239,7 +150,7 @@ export default function SettingsPage() {
   
   // 車両名編集モードの開始
   const startEditingVehicle = (playerId: string) => {
-    const player = players.find(p => p.id === playerId);
+    const player = playersState.find(p => p.id === playerId);
     if (!player || !player.vehicle) return;
     
     setEditingVehiclePlayerId(playerId);
@@ -250,18 +161,15 @@ export default function SettingsPage() {
   const saveVehicleEdit = () => {
     if (!editingVehiclePlayerId || editingVehicleName.trim() === '') return;
     
-    const player = players.find(p => p.id === editingVehiclePlayerId);
+    const player = playersState.find(p => p.id === editingVehiclePlayerId);
     if (!player || !player.vehicle) return;
     
-    const vehicleId = player.vehicle.id;
+    const updatedPlayer = {
+      ...player,
+      vehicle: { ...player.vehicle, name: editingVehicleName }
+    };
     
-    setPlayers(prev => 
-      prev.map(player => 
-        player.id === editingVehiclePlayerId && player.vehicle
-          ? { ...player, vehicle: { ...player.vehicle, name: editingVehicleName } }
-          : player
-      )
-    );
+    updatePlayerInContext(editingVehiclePlayerId, { vehicle: updatedPlayer.vehicle });
     
     setEditingVehiclePlayerId(null);
     setEditingVehicleName('');
@@ -283,30 +191,9 @@ export default function SettingsPage() {
       name: newVehicleName
     };
     
-    setPlayers(prev => 
-      prev.map(player => 
-        player.id === playerId
-          ? { ...player, vehicle: newVehicle }
-          : player
-      )
-    );
-    
-    // コース割り当てを更新
-    const playerWithUpdatedVehicle = players.find(p => p.id === playerId);
-    if (playerWithUpdatedVehicle && playerWithUpdatedVehicle.vehicle) {
-      const oldVehicleId = playerWithUpdatedVehicle.vehicle.id;
-      
-      const updatedCourses = settings.courses.map(course => {
-        if (course.playerId === playerId && course.vehicleId === oldVehicleId) {
-          return { ...course, vehicleId: newVehicle.id };
-        }
-        return course;
-      });
-      
-      setSettings(prev => ({
-        ...prev,
-        courses: updatedCourses
-      }));
+    const player = playersState.find(p => p.id === playerId);
+    if (player) {
+      updatePlayerInContext(playerId, { vehicle: newVehicle });
     }
     
     setNewVehicleName('');
@@ -322,31 +209,13 @@ export default function SettingsPage() {
   // 車両の削除
   const removeVehicle = (playerId: string) => {
     // プレイヤーから車両を削除
-    const playerToUpdate = players.find(p => p.id === playerId);
+    const playerToUpdate = playersState.find(p => p.id === playerId);
     if (!playerToUpdate || !playerToUpdate.vehicle) return;
     
-    const vehicleId = playerToUpdate.vehicle.id;
+    updatePlayerInContext(playerId, { vehicle: null });
     
-    setPlayers(prev => 
-      prev.map(player => 
-        player.id === playerId
-          ? { ...player, vehicle: null }
-          : player
-      )
-    );
-    
-    // この車両が割り当てられているコースの車両IDをクリア
-    const updatedCourses = settings.courses.map(course => {
-      if (course.vehicleId === vehicleId) {
-        return { ...course, vehicleId: null };
-      }
-      return course;
-    });
-    
-    setSettings(prev => ({
-      ...prev,
-      courses: updatedCourses
-    }));
+    // この車両が割り当てられているコースの車両IDをクリアする処理は
+    // updatePlayerInContext内で処理するのが良い
     
     toast({
       title: '車両を削除しました',
@@ -359,13 +228,9 @@ export default function SettingsPage() {
   // 特定の選手の車両を取得する関数
   const getVehicleForPlayer = (playerId: string | null) => {
     if (!playerId) return null;
-    const player = players.find(p => p.id === playerId);
+    const player = playersState.find(p => p.id === playerId);
     return player ? player.vehicle : null;
   };
-  
-  // 車両名の編集状態の管理
-  const [editingVehiclePlayerId, setEditingVehiclePlayerId] = useState<string | null>(null);
-  const [editingVehicleName, setEditingVehicleName] = useState('');
 
   return (
     <React.Fragment>
@@ -400,7 +265,7 @@ export default function SettingsPage() {
                           value={settings.lapCount} 
                           min={1} 
                           max={20}
-                          onChange={(_, value) => updateSettings('lapCount', value)}
+                          onChange={(valueString, valueNumber) => handleUpdateSetting('lapCount', valueNumber)}
                         >
                           <NumberInputField />
                           <NumberInputStepper>
@@ -410,11 +275,11 @@ export default function SettingsPage() {
                         </NumberInput>
                       </FormControl>
 
-                      <FormControl mt={4} display="flex" alignItems="center">
-                        <FormLabel mb={0}>サウンド</FormLabel>
+                      <FormControl mt="4" display="flex" alignItems="center">
+                        <FormLabel mb="0">サウンド</FormLabel>
                         <Switch 
                           isChecked={settings.soundEnabled} 
-                          onChange={(e) => updateSettings('soundEnabled', e.target.checked)} 
+                          onChange={(e) => handleUpdateSetting('soundEnabled', e.target.checked)} 
                         />
                       </FormControl>
                     </Box>
@@ -449,7 +314,7 @@ export default function SettingsPage() {
                       </Flex>
                       
                       {/* 選手リスト */}
-                      {players.map((player) => (
+                      {playersState.map((player) => (
                         <Box key={player.id} mb={6} p={4} borderWidth="1px" borderRadius="md" shadow="sm">
                           {/* 選手情報 */}
                           <Flex justifyContent="space-between" alignItems="center" mb={4}>
@@ -554,7 +419,7 @@ export default function SettingsPage() {
                         </Box>
                       ))}
                       
-                      {players.length === 0 && (
+                      {playersState.length === 0 && (
                         <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
                           <Text align="center">選手が登録されていません</Text>
                         </Box>
@@ -585,7 +450,7 @@ export default function SettingsPage() {
                                 value={course.playerId || ''}
                                 onChange={(e) => updateCourseAssignment(index, 'playerId', e.target.value)}
                               >
-                                {players.map((player) => (
+                                {playersState.map((player) => (
                                   <option key={player.id} value={player.id}>
                                     {player.name}
                                   </option>

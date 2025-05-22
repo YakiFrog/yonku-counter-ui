@@ -13,15 +13,25 @@ import {
   Badge,
   Text,
   Tooltip,
-  Flex
+  Flex,
+  Spinner,
+  Center
 } from '@chakra-ui/react'
 
 import { Container } from '../components/Container'
 import { TabNavigation } from '../components/TabNavigation'
+import { useAppSettingsContext } from '../utils/AppSettingsContext'
 
 export default function RankingPage() {
+  // グローバル設定コンテキスト
+  const { settings, isLoading } = useAppSettingsContext();
+  
   // ユーティリティ関数: 文字列形式の時間（mm:ss.ms）を比較して小さい方（速い方）を返す
-  const findBestLap = (laps: string[]): { value: string, index: number } => {
+  const findBestLap = (laps: string[]): { value: string | null, index: number } => {
+    if (!laps || laps.length === 0) {
+      return { value: null, index: -1 };
+    }
+    
     let bestValue = laps[0];
     let bestIndex = 0;
     
@@ -34,43 +44,78 @@ export default function RankingPage() {
     
     return { value: bestValue, index: bestIndex };
   };
-
-  // ランキングデータのサンプル
-  const rankingData = [
-    { 
-      position: 1, 
-      name: '選手1', 
-      vehicle: '車両1', 
-      time: '01:23.45', 
-      laps: ['00:16.78', '00:17.32', '00:17.11', '00:16.89', '00:16.78'] 
-    },
-    { 
-      position: 2, 
-      name: '選手2', 
-      vehicle: '車両2', 
-      time: '01:25.67', 
-      laps: ['00:17.12', '00:17.80', '00:17.59', '00:17.34', '00:17.12'] 
-    },
-    { 
-      position: 3, 
-      name: '選手3', 
-      vehicle: '車両3', 
-      time: '01:28.90', 
-      laps: ['00:17.45', '00:18.23', '00:18.15', '00:17.95', '00:17.45'] 
-    },
-    { 
-      position: 4, 
-      name: '選手4', 
-      vehicle: '車両4', 
-      time: '01:30.21', 
-      laps: ['00:18.03', '00:18.65', '00:18.32', '00:18.25', '00:18.03'] 
-    },
-  ];
+  
+  // レース結果の取得（最新のレースを取得）
+  const latestRace = settings?.races && settings.races.length > 0 
+    ? settings.races[settings.races.length - 1] 
+    : null;
+    
+  // レース結果データをランキングデータ形式に変換
+  const rankingData = latestRace ? latestRace.results.map(result => ({
+    position: result.position,
+    name: result.playerName,
+    vehicle: result.vehicleName,
+    time: result.totalTime,
+    laps: result.laps?.map(lap => lap.time) || [],
+    wins: 0
+  })) : [];
+    
+  // 総合ランキングの計算
+  // プレイヤーごとにレース結果を集計
+  const calculateOverallRankings = () => {
+    if (!settings.races || settings.races.length === 0) return [];
+    
+    const playerStats = {};
+    
+    // すべてのレースを集計
+    settings.races.forEach(race => {
+      race.results.forEach(result => {
+        const playerId = result.playerId || result.playerName;
+        
+        if (!playerStats[playerId]) {
+          playerStats[playerId] = {
+            playerId,
+            playerName: result.playerName,
+            wins: 0,
+            races: 0,
+            bestTime: null,
+            totalTime: 0
+          };
+        }
+        
+        // 1位だったらWin数を増やす
+        if (result.position === 1) {
+          playerStats[playerId].wins += 1;
+        }
+        
+        // レース数を増やす
+        playerStats[playerId].races += 1;
+        
+        // ベストタイムを更新
+        if (result.bestLap && (!playerStats[playerId].bestTime || 
+            result.bestLap.time < playerStats[playerId].bestTime)) {
+          playerStats[playerId].bestTime = result.bestLap.time;
+        }
+      });
+    });
+    
+    // オブジェクトを配列に変換してwin数でソート
+    const rankings = Object.values(playerStats)
+      .sort((a, b) => b.wins - a.wins);
+      
+    // 順位を付ける
+    return rankings.map((player, index) => ({
+      ...player,
+      position: index + 1
+    }));
+  };
+  
+  const overallRankings = calculateOverallRankings();
 
   return (
     <React.Fragment>
       <Head>
-        <title>ランキング - 四駆カウンター</title>
+        <title>ランキング</title>
       </Head>
       <Container maxWidth="full" px={2} py={4}>
         <VStack spacing={6} align="stretch" width="full">
@@ -82,7 +127,7 @@ export default function RankingPage() {
           {/* 最新レース結果 */}
           <Box borderWidth="1px" borderRadius="lg" p={4} shadow="md">
             <Heading size="md" mb={3}>
-              最新レース結果 <Badge colorScheme="green" ml={2}>レース #1</Badge>
+              最新レース結果
             </Heading>
             
             <Table variant="simple" size="sm">
@@ -96,48 +141,56 @@ export default function RankingPage() {
                 </Tr>
               </Thead>
               <Tbody>
-                {rankingData.map((entry) => (
-                  <Tr key={entry.position}>
-                    <Td fontWeight="bold">{entry.position}</Td>
-                    <Td>{entry.name}</Td>
-                    <Td>{entry.vehicle}</Td>
-                    <Td>{entry.time}</Td>
-                    <Td>
-                      <Flex wrap="wrap" gap={2}>
-                        {(() => {
-                          const bestLap = findBestLap(entry.laps);
-                          return entry.laps.map((lap, index) => (
-                            <Box 
-                              key={index} 
-                              borderWidth="1px"
-                              borderRadius="md"
-                              borderColor={index === bestLap.index ? "green.400" : "gray.200"}
-                              bg={index === bestLap.index ? "green.50" : "gray.50"}
-                              px={2}
-                              py={1}
-                            >
-                              <Tooltip label={`ベストタイム: ${bestLap.value}`} isDisabled={index !== bestLap.index}>
-                                <Flex alignItems="center" gap={1}>
-                                  <Text fontSize="sm" fontWeight="medium" color="gray.600">
-                                    {index + 1}:
-                                  </Text>
-                                  <Text fontSize="sm" fontWeight={index === bestLap.index ? "bold" : "normal"}>
-                                    {lap}
-                                  </Text>
-                                  {index === bestLap.index && (
-                                    <Badge colorScheme="green" fontSize="2xs" variant="subtle">
-                                      ベスト
-                                    </Badge>
-                                  )}
-                                </Flex>
-                              </Tooltip>
-                            </Box>
-                          ));
-                        })()}
-                      </Flex>
+                {rankingData.length > 0 ? (
+                  rankingData.map((entry) => (
+                    <Tr key={entry.position}>
+                      <Td fontWeight="bold">{entry.position}</Td>
+                      <Td>{entry.name}</Td>
+                      <Td>{entry.vehicle}</Td>
+                      <Td>{entry.time}</Td>
+                      <Td>
+                        <Flex wrap="wrap" gap={2}>
+                          {(() => {
+                            const bestLap = findBestLap(entry.laps);
+                            return entry.laps.map((lap, index) => (
+                              <Box 
+                                key={index} 
+                                borderWidth="1px"
+                                borderRadius="md"
+                                borderColor={index === bestLap.index ? "green.400" : "gray.200"}
+                                bg={index === bestLap.index ? "green.50" : "gray.50"}
+                                px={2}
+                                py={1}
+                              >
+                                <Tooltip label={`ベストタイム: ${bestLap.value}`} isDisabled={index !== bestLap.index}>
+                                  <Flex alignItems="center" gap={1}>
+                                    <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                                      {index + 1}:
+                                    </Text>
+                                    <Text fontSize="sm" fontWeight={index === bestLap.index ? "bold" : "normal"}>
+                                      {lap}
+                                    </Text>
+                                    {index === bestLap.index && (
+                                      <Badge colorScheme="green" fontSize="2xs" variant="subtle">
+                                        ベスト
+                                      </Badge>
+                                    )}
+                                  </Flex>
+                                </Tooltip>
+                              </Box>
+                            ));
+                          })()}
+                        </Flex>
+                      </Td>
+                    </Tr>
+                  ))
+                ) : (
+                  <Tr>
+                    <Td colSpan={5} textAlign="center" py={4}>
+                      レース結果がありません
                     </Td>
                   </Tr>
-                ))}
+                )}
               </Tbody>
             </Table>
           </Box>
@@ -159,22 +212,32 @@ export default function RankingPage() {
                 </Tr>
               </Thead>
               <Tbody>
-                {rankingData.map((entry) => {
-                  const bestLap = findBestLap(entry.laps);
-                  return (
-                    <Tr key={entry.position}>
-                      <Td fontWeight="bold">{entry.position}</Td>
-                      <Td>{entry.name}</Td>
-                      <Td>{5 - entry.position}</Td>
-                      <Td>{entry.time}</Td>
-                      <Td>
-                        <Badge colorScheme="green" variant="subtle" px={2} py={1}>
-                          {bestLap.value}
-                        </Badge>
-                      </Td>
-                    </Tr>
-                  );
-                })}
+                {rankingData.length > 0 ? (
+                  rankingData.map((entry) => {
+                    const bestLap = findBestLap(entry.laps || []);
+                    return (
+                      <Tr key={entry.position}>
+                        <Td fontWeight="bold">{entry.position}</Td>
+                        <Td>{entry.name}</Td>
+                        <Td>{entry.wins || 0}</Td>
+                        <Td>{entry.time}</Td>
+                        <Td>
+                          {bestLap.value && (
+                            <Badge colorScheme="green" variant="subtle" px={2} py={1}>
+                              {bestLap.value}
+                            </Badge>
+                          )}
+                        </Td>
+                      </Tr>
+                    );
+                  })
+                ) : (
+                  <Tr>
+                    <Td colSpan={5} textAlign="center" py={4}>
+                      ランキングデータがありません
+                    </Td>
+                  </Tr>
+                )}
               </Tbody>
             </Table>
           </Box>

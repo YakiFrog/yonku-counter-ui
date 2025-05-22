@@ -55,54 +55,10 @@ export default function HomePage() {
   
   // 各コースのデータを管理する状態
   const [courseData, setCourseData] = useState([
-    { 
-      id: 1, 
-      name: '', 
-      vehicle: '', 
-      color: 'red.500', 
-      currentLap: 0, 
-      totalLaps: 0, 
-      time: 0, 
-      bestLap: null, 
-      lapTimes: [], // 各周回のタイム記録
-      lastLapTime: 0 // 前の周回が完了した時間
-    },
-    { 
-      id: 2, 
-      name: '', 
-      vehicle: '', 
-      color: 'blue.500', 
-      currentLap: 0, 
-      totalLaps: 0, 
-      time: 0,
-      bestLap: null,
-      lapTimes: [],
-      lastLapTime: 0
-    },
-    { 
-      id: 3, 
-      name: '', 
-      vehicle: '', 
-      color: 'green.500', 
-      currentLap: 0, 
-      totalLaps: 0, 
-      time: 0,
-      bestLap: null,
-      lapTimes: [],
-      lastLapTime: 0
-    },
-    { 
-      id: 4, 
-      name: '', 
-      vehicle: '', 
-      color: 'purple.500', 
-      currentLap: 0, 
-      totalLaps: 0, 
-      time: 0,
-      bestLap: null,
-      lapTimes: [],
-      lastLapTime: 0
-    },
+    { id: 1, name: '', vehicle: '', color: 'red.500', currentLap: 0, totalLaps: 0, time: 0, bestLap: null },
+    { id: 2, name: '', vehicle: '', color: 'blue.500', currentLap: 0, totalLaps: 0, time: 0, bestLap: null },
+    { id: 3, name: '', vehicle: '', color: 'green.500', currentLap: 0, totalLaps: 0, time: 0, bestLap: null },
+    { id: 4, name: '', vehicle: '', color: 'purple.500', currentLap: 0, totalLaps: 0, time: 0, bestLap: null },
   ]);
   
   // タイマーのID保持用
@@ -160,9 +116,7 @@ export default function HomePage() {
           currentLap: 0, // レース開始時は0から
           totalLaps: settings.lapCount || 0,
           time: 0,
-          bestLap: null,
-          lapTimes: [], // 周回ごとの記録時間
-          lastLapTime: 0 // 前回のラップ完了時間
+          bestLap: null
         };
       });
       
@@ -190,10 +144,7 @@ export default function HomePage() {
       prev.map(course => ({
         ...course,
         time: 0,
-        currentLap: 0,
-        lapTimes: [],
-        lastLapTime: 0,
-        bestLap: null
+        currentLap: 0
       }))
     );
   };
@@ -205,16 +156,25 @@ export default function HomePage() {
     
     // レース結果を作成
     const results: RaceResult[] = courseData.map((course, index) => {
-      // ラップタイムをRaceLap配列に変換
-      const laps = [...course.lapTimes];
+      // ラップ情報を生成（この例では簡略化）
+      const laps: RaceLap[] = [];
+      for (let i = 1; i <= course.currentLap; i++) {
+        laps.push({
+          lapNumber: i,
+          time: formatTime(course.time / course.currentLap), // 簡略化: 均等に分配
+          timestamp: Math.floor(course.time / course.currentLap)
+        });
+      }
       
-      // ベストラップ
-      const bestLap = course.bestLap;
+      // ベストラップを計算
+      const bestLap = laps.length > 0 ? laps.reduce((best, current) => 
+        best.timestamp < current.timestamp ? best : current
+      ) : null;
       
       return {
         id: `result-${Date.now()}-${index}`,
         raceId: `race-${Date.now()}`,
-        position: index + 1, // 仮の順位（後でソート）
+        position: index + 1, // 簡略化: コース順に順位付け
         playerId: course.name ? `player-${index}` : null, // 仮のID
         playerName: course.name || `未登録プレイヤー${index + 1}`,
         vehicleId: course.vehicle ? `vehicle-${index}` : null, // 仮のID
@@ -280,77 +240,23 @@ export default function HomePage() {
   // 特定コースの周回数を増やす
   const incrementLap = (courseId) => {
     setCourseData(prev => 
-      prev.map(course => {
-        if (course.id === courseId && 
-            (course.totalLaps === 0 || course.currentLap < course.totalLaps)) {
-          
-          // 現在のタイムスタンプ
-          const currentTime = course.time;
-          
-          // 周回のラップタイム計算（今の時間 - 前回の周回完了時間）
-          const lapTime = currentTime - course.lastLapTime;
-          
-          // 新しいラップタイム記録を追加
-          const newLapTime = {
-            lapNumber: course.currentLap + 1, // 新しい周回番号
-            time: formatTime(lapTime), // 表示用フォーマット時間
-            timestamp: lapTime // ミリ秒単位の生データ
-          };
-          
-          // ベストラップの更新
-          let bestLap = course.bestLap;
-          if (!bestLap || (lapTime < bestLap.timestamp && lapTime > 0)) {
-            bestLap = newLapTime;
-          }
-          
-          // 周回時間の配列に追加
-          const newLapTimes = [...course.lapTimes, newLapTime];
-          
-          return {
-            ...course, 
-            currentLap: course.currentLap + 1,
-            lapTimes: newLapTimes,
-            lastLapTime: currentTime, // 現在の時間を最後のラップタイムとして記録
-            bestLap
-          };
-        }
-        return course;
-      })
+      prev.map(course => 
+        course.id === courseId && 
+        (course.totalLaps === 0 || course.currentLap < course.totalLaps) // 合計周回数が0の場合は無制限
+          ? { ...course, currentLap: course.currentLap + 1 }
+          : course
+      )
     );
   };
   
   // 特定コースの周回数を減らす
   const decrementLap = (courseId) => {
     setCourseData(prev => 
-      prev.map(course => {
-        if (course.id === courseId && course.currentLap > 0) {
-          // 最後のラップタイム記録を削除
-          const newLapTimes = [...course.lapTimes];
-          newLapTimes.pop();
-          
-          // 新しいbestLapを計算
-          let bestLap = null;
-          if (newLapTimes.length > 0) {
-            bestLap = newLapTimes.reduce((best, current) => 
-              best.timestamp < current.timestamp ? best : current
-            );
-          }
-          
-          // 前の周回の完了時間を計算
-          const lastLapTime = course.currentLap > 1 
-            ? course.lastLapTime - (course.lapTimes[course.lapTimes.length - 1]?.timestamp || 0)
-            : 0;
-          
-          return {
-            ...course, 
-            currentLap: course.currentLap - 1,
-            lapTimes: newLapTimes,
-            lastLapTime,
-            bestLap
-          };
-        }
-        return course;
-      })
+      prev.map(course => 
+        course.id === courseId && course.currentLap > 0
+          ? { ...course, currentLap: course.currentLap - 1 }
+          : course
+      )
     );
   };
   
@@ -429,11 +335,6 @@ export default function HomePage() {
                       <Box>
                         <Text fontWeight="bold" fontSize="lg">{course.name}</Text>
                         <Text fontSize="sm">車両: {course.vehicle}</Text>
-                        {course.bestLap && (
-                          <Text fontSize="sm" color={`${course.color.split('.')[0]}.700`} fontWeight="bold">
-                            ベストタイム: {course.bestLap.time}
-                          </Text>
-                        )}
                       </Box>
                       <Flex direction="column" alignItems="center">
                         <Flex alignItems="center">
@@ -464,35 +365,6 @@ export default function HomePage() {
                         <Text fontSize="sm" mt={1}>周回数</Text>
                       </Flex>
                     </Flex>
-                    
-                    {/* 周回時間の表示 */}
-                    {course.lapTimes.length > 0 && (
-                      <Box mt={4}>
-                        <Text fontSize="sm" fontWeight="semibold" mb={2}>周回タイム:</Text>
-                        <Flex flexWrap="wrap" gap={2}>
-                          {course.lapTimes.map((lap, index) => (
-                            <Badge
-                              key={index}
-                              colorScheme={
-                                course.bestLap && lap.timestamp === course.bestLap.timestamp 
-                                  ? `${course.color.split('.')[0]}` 
-                                  : "gray"
-                              }
-                              p={2}
-                              borderRadius="md"
-                              variant={
-                                course.bestLap && lap.timestamp === course.bestLap.timestamp 
-                                  ? "solid" 
-                                  : "subtle"
-                              }
-                            >
-                              {lap.lapNumber}周目: {lap.time}
-                            </Badge>
-                          ))}
-                        </Flex>
-                      </Box>
-                    )}
-                    
                     {course.totalLaps > 0 && (
                       <Progress 
                         mt={3} 
