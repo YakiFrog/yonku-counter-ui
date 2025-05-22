@@ -66,16 +66,7 @@ export default function RankingPage() {
   const calculateOverallRankings = () => {
     if (!settings.races || settings.races.length === 0) return [];
     
-    interface PlayerStats {
-      playerId: string;
-      playerName: string;
-      wins: number;
-      races: number;
-      bestTime: string | null;
-      totalTime: number;
-    }
-    
-    const playerStats: Record<string, PlayerStats> = {};
+    const playerStats = {};
     
     // すべてのレースを集計
     settings.races.forEach(race => {

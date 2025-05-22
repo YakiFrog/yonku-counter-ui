@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
-import Image from 'next/image'
 import { 
   Box, 
   Button, 
@@ -34,7 +33,6 @@ import { useRouter } from 'next/router'
 
 import { Container } from '../components/Container'
 import { Footer } from '../components/Footer'
-import { Hero } from '../components/Hero'
 import { TabNavigation } from '../components/TabNavigation'
 import { useAppSettingsContext } from '../utils/AppSettingsContext'
 import { Race, RaceResult, RaceLap } from '../utils/types'
@@ -127,7 +125,7 @@ export default function HomePage() {
             time: elapsed
           }))
         );
-      }, 100); // 100msごとに更新
+      }, 30); // 100msごとに更新
     } else if (timerRef.current) {
       clearInterval(timerRef.current);
     }
@@ -405,15 +403,15 @@ export default function HomePage() {
                 {[...courseData].reverse().map((course) => (                    <Box 
                     key={course.id}
                     p={3} 
-                    pl={5}  // 左側の余白を少し縮小
+                    pl={5}
                     borderWidth="1px" 
-                    borderRadius="md" // より小さい角丸
-                    borderLeftWidth="6px" // 左ボーダーも細く
+                    borderRadius="md"
+                    borderLeftWidth="6px"
                     borderLeftColor={course.color} 
-                    shadow="md" // 影を少し強調
-                    position="relative"  // 絶対配置の基準点
-                    bg="gray.800" // ダークモード用背景色
-                    borderColor="gray.700" // ボーダー色も暗く
+                    shadow="md"
+                    position="relative"
+                    bg="gray.800"
+                    borderColor="gray.700"
                   >
                     {/* 大きなコース番号を左側に表示（枠外に） - 常に「4,3,2,1」の順で表示 */}
                     <Box
@@ -439,10 +437,10 @@ export default function HomePage() {
                       {course.id}
                     </Box>
                     <Flex justifyContent="space-between" alignItems="center">
-                      <Box>
-                        <Text fontWeight="bold" fontSize="md" color="white">{course.name}</Text>
-                        <Flex alignItems="center" gap={2} flexWrap="wrap">
-                          <Text fontSize="xs" color="white">車両: {course.vehicle}</Text>
+                      <Box maxW="60%">
+                        <Flex align="baseline" gap={2} flexWrap="wrap">
+                          <Text fontWeight="bold" fontSize={["xl", "2xl", "3xl"]} color="#FFFFFF" noOfLines={1} overflow="hidden" textOverflow="ellipsis">{course.name}</Text>
+                          <Text fontSize="md" color="rgba(255, 255, 255, 0.8)" noOfLines={1} overflow="hidden" textOverflow="ellipsis">/ {course.vehicle}</Text>
                           {course.bestLap && (
                             <Badge size="sm" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
                               ベスト: {course.bestLap.time}
@@ -590,9 +588,17 @@ export default function HomePage() {
                   display="flex"
                   justifyContent="center"
                   alignItems="center"
+                  fontFamily="mono"
                 >
-                  {formatTime(elapsedTime)}
-                </Box>                  <Flex justifyContent="space-between" w="full" px={2}>
+                    <Text as="span" display="flex" gap={0.1} color="#FFFFFF">
+                    <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(0, 2)}</Text>
+                    <Text as="span" color="rgba(255, 255, 255, 0.7)">:</Text>
+                    <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(3, 5)}</Text>
+                    <Text as="span" color="rgba(255, 255, 255, 0.7)">.</Text>
+                    <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(6, 8)}</Text>
+                    </Text>
+                </Box>                 
+                <Flex justifyContent="space-between" w="full" px={2}>
                   <Badge 
                     colorScheme={isRunning ? "green" : "gray"} 
                     fontSize="lg" 
