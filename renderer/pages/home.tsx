@@ -7,9 +7,9 @@ import {
   Grid, 
   Heading, 
   HStack, 
-  Link as ChakraLink, 
-  Progress, 
-  Text, 
+  Link as ChakraLink,
+  Progress,
+  Text,
   VStack,
   Badge,
   Stat,
@@ -50,6 +50,7 @@ export default function HomePage() {
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [raceNumber, setRaceNumber] = useState(1);  // レース番号の状態を追加
   
   // 各コースのデータを管理する状態
   const [courseData, setCourseData] = useState([
@@ -563,41 +564,91 @@ export default function HomePage() {
               shadow="md"
               display="flex"
               flexDirection="column"
-              justifyContent="center"
-              alignItems="center"
+              justifyContent="flex-start"
+              alignItems="stretch"
               h="100%"
-              w="full"
+              w="100%"
               bg="gray.800"
               borderColor="gray.700"
             >
-              <VStack spacing={3} w="full">
-                <Text fontSize="lg" fontWeight="medium" color="white">総経過時間</Text>
-                <Box 
-                  fontSize={["3xl", "4xl", "5xl", "6xl"]}
-                  fontWeight="bold"
-                  color="cyan.400"
-                  p={3}
-                  py={6}
-                  borderRadius="lg"
-                  bg="gray.900"
-                  border="1px solid"
-                  borderColor="gray.700"
-                  boxShadow="dark-lg"
-                  textAlign="center"
-                  w="full"
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                  fontFamily="mono"
-                >
-                    <Text as="span" display="flex" gap={0.1} color="#FFFFFF">
-                    <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(0, 2)}</Text>
-                    <Text as="span" color="rgba(255, 255, 255, 0.7)">:</Text>
-                    <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(3, 5)}</Text>
-                    <Text as="span" color="rgba(255, 255, 255, 0.7)">.</Text>
-                    <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(6, 8)}</Text>
-                    </Text>
-                </Box>                 
+              <VStack spacing={3} width="100%" align="stretch">
+                <VStack spacing={4} width="100%" align="stretch">
+                  {/* レース番号表示 */}
+                  <Box width="100%">
+                    <Flex alignItems="center" gap={2}>
+                      <Text fontSize="lg" fontWeight="medium" color="white">レース番号</Text>
+                      <Button
+                        onClick={() => setRaceNumber(prev => Math.max(1, prev - 1))}
+                        colorScheme="red"
+                        variant="outline"
+                        size="sm"
+                      >
+                        -
+                      </Button>
+                      <Button
+                        onClick={() => setRaceNumber(prev => prev + 1)}
+                        colorScheme="blue"
+                        variant="outline"
+                        size="sm"
+                      >
+                        +
+                      </Button>
+                    </Flex>
+                    <Box 
+                      fontSize={["4xl", "5xl", "6xl", "7xl"]}
+                      fontWeight="bold"
+                      color="cyan.400"
+                      p={3}
+                      py={6}
+                      borderRadius="lg"
+                      bg="gray.900"
+                      border="1px solid"
+                      borderColor="gray.700"
+                      boxShadow="dark-lg"
+                      textAlign="center"
+                      width="100%"
+                      display="flex"
+                      flexDirection="column"
+                      justifyContent="center"
+                      alignItems="center"
+                      fontFamily="RocknRoll One"
+                    >
+                      <Text color="#FFFFFF">第{raceNumber}レース</Text>
+                    </Box>
+                  </Box>
+
+                  {/* 経過時間表示 */}
+                  <Box width="100%">
+                    <Text fontSize="lg" fontWeight="medium" color="white">総経過時間</Text>
+                    <Box 
+                      fontSize={["3xl", "4xl", "5xl", "6xl"]}
+                      fontWeight="bold"
+                      color="cyan.400"
+                      p={3}
+                      py={6}
+                      borderRadius="lg"
+                      bg="gray.900"
+                      border="1px solid"
+                      borderColor="gray.700"
+                      boxShadow="dark-lg"
+                      textAlign="center"
+                      width="100%"
+                      display="flex"
+                      flexDirection="column"
+                      justifyContent="center"
+                      alignItems="center"
+                      fontFamily="mono"
+                    >
+                      <Text as="span" display="flex" gap={0.1} color="#FFFFFF">
+                        <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(0, 2)}</Text>
+                        <Text as="span" color="rgba(255, 255, 255, 0.7)">:</Text>
+                        <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(3, 5)}</Text>
+                        <Text as="span" color="rgba(255, 255, 255, 0.7)">.</Text>
+                        <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(6, 8)}</Text>
+                      </Text>
+                    </Box>
+                  </Box>
+                </VStack>                 
                 <Flex justifyContent="space-between" w="full" px={2}>
                   <Badge 
                     colorScheme={isRunning ? "green" : "gray"} 
