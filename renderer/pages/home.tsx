@@ -49,6 +49,7 @@ export default function HomePage() {
   const [startTime, setStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [raceNumber, setRaceNumber] = useState(1);
+  const [raceType, setRaceType] = useState('');
   const [courseData, setCourseData] = useState([
     { 
       id: 1, 
@@ -201,6 +202,7 @@ export default function HomePage() {
     setIsRunning(false);
     setElapsedTime(0);
     setRaceNumber(1);  // レース番号も1に戻す
+    setRaceType('');   // レースタイプをリセット
     setCourseData(prev => 
       prev.map(course => ({
         ...course,
@@ -261,16 +263,21 @@ export default function HomePage() {
     // レース情報を作成
     const race: Race = {
       id: `race-${Date.now()}`,
-      name: `第${raceNumber}レース`,
+      name: raceType || `第${raceNumber}レース`,
       date: new Date().toISOString(),
       raceNumber: raceNumber,
+      raceType: raceType,
       totalLaps: settings.lapCount,
       results
     };
     
-    // レース結果を保存して、レース番号をインクリメント
+    // レース結果を保存
     saveRaceResult(race);
-    setRaceNumber(currentNumber => currentNumber + 1);
+    
+    // 通常レースの場合のみレース番号をインクリメント
+    if (!raceType) {
+      setRaceNumber(currentNumber => currentNumber + 1);
+    }
     
     toast({
       title: 'レース終了',
@@ -588,8 +595,8 @@ export default function HomePage() {
                 <VStack spacing={4} width="100%" align="stretch">
                   {/* レース番号表示 */}
                   <Box width="100%">
-                    <Flex alignItems="center" gap={2}>
-                      <Text fontSize="lg" fontWeight="medium" color="white">レース番号</Text>
+                    <HStack alignItems="center" gap={2} mb={2} width="100%">
+                      <Text fontSize="lg" fontWeight="medium" color="white" minW="auto">レース番号</Text>
                       <Button
                         onClick={() => setRaceNumber(prev => Math.max(1, prev - 1))}
                         colorScheme="red"
@@ -606,7 +613,42 @@ export default function HomePage() {
                       >
                         +
                       </Button>
-                    </Flex>
+                      {/* ここに隙間 */}
+                      <div style={{ flexGrow: 1 }}></div>
+                      <Button
+                        colorScheme="yellow"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setRaceNumber(0);
+                          setRaceType('敗者復活戦');
+                        }}
+                      >
+                        敗者復活戦
+                      </Button>
+                      <Button
+                        colorScheme="orange"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setRaceNumber(0);
+                          setRaceType('準決勝');
+                        }}
+                      >
+                        準決勝
+                      </Button>
+                      <Button
+                        colorScheme="red"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setRaceNumber(0);
+                          setRaceType('決勝');
+                        }}
+                      >
+                        決勝
+                      </Button>
+                    </HStack>
                     <Box 
                       fontSize={["4xl", "5xl", "6xl", "7xl"]}
                       fontWeight="bold"
@@ -626,7 +668,14 @@ export default function HomePage() {
                       alignItems="center"
                       fontFamily="RocknRoll One"
                     >
-                      <Text color="#FFFFFF">第{raceNumber}レース</Text>
+                      <Text color={
+                        raceType === '敗者復活戦' ? 'yellow.400' :
+                        raceType === '準決勝' ? 'orange.400' :
+                        raceType === '決勝' ? 'red.400' :
+                        '#FFFFFF'
+                      }>
+                        {raceType ? raceType : `第${raceNumber}レース`}
+                      </Text>
                     </Box>
                   </Box>
 
@@ -773,21 +822,6 @@ export default function HomePage() {
               </AlertDialogContent>
             </AlertDialogOverlay>
           </AlertDialog>
-          
-          <Footer pt={0}>
-            <Button
-              as={ChakraLink}
-              href="/ranking"
-              variant="outline"
-              colorScheme="teal"
-              rounded="button"
-              size="sm"
-              width="auto"
-              mb={1}
-            >
-              ランキングへ
-            </Button>
-          </Footer>
         </VStack>
       </Container>
     </React.Fragment>

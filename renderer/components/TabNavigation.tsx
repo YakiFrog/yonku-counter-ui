@@ -86,7 +86,7 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({ currentTab = 'race
               bg: "gray.700"
             }}
           >
-            ランキング
+            レース結果
           </Tab>
           <Tab 
             fontWeight="semibold"

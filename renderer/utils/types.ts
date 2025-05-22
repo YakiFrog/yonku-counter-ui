@@ -43,6 +43,7 @@ export type Race = {
   name: string;
   date: string;
   raceNumber: number;  // レース番号を追加
+  raceType?: string;   // レースタイプを追加（通常/敗者復活戦/準決勝/決勝）
   totalLaps: number;
   results: RaceResult[];
 };
