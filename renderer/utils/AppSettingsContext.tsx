@@ -57,12 +57,41 @@ export const AppSettingsProvider: React.FC<{ children: ReactNode }> = ({ childre
     return savedSettings;
   }, [settings]);
 
+  // プレイヤー操作のラッパー関数
+  const addPlayerWrapper = useCallback((player) => {
+    const result = settingsUtils.addPlayer(player);
+    setSettings(result); // 即座にローカル状態を更新
+    return result;
+  }, [settingsUtils]);
+
+  const updatePlayerWrapper = useCallback((playerId, data) => {
+    const result = settingsUtils.updatePlayer(playerId, data);
+    setSettings(result); // 即座にローカル状態を更新
+    return result;
+  }, [settingsUtils]);
+
+  const removePlayerWrapper = useCallback((playerId) => {
+    const result = settingsUtils.removePlayer(playerId);
+    setSettings(result); // 即座にローカル状態を更新
+    return result;
+  }, [settingsUtils]);
+
+  const updateCourseWrapper = useCallback((courseId, data) => {
+    const result = settingsUtils.updateCourse(courseId, data);
+    setSettings(result); // 即座にローカル状態を更新
+    return result;
+  }, [settingsUtils]);
+
   return (
     <AppSettingsContext.Provider value={{ 
       ...settingsUtils,
       settings: settings || settingsUtils.settings,  // nullの場合はsettingsUtilsの値を使用
       isLoading, 
       clearRaceResults,
+      addPlayer: addPlayerWrapper,
+      updatePlayer: updatePlayerWrapper,
+      removePlayer: removePlayerWrapper,
+      updateCourse: updateCourseWrapper,
       currentRaceNumber: (settings || settingsUtils.settings)?.currentRaceNumber || 1,
       updateRaceNumber
     }}>

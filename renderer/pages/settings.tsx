@@ -64,11 +64,29 @@ export default function SettingsPage() {
   
   // コンテキストからチームデータをロード
   useEffect(() => {
-    if (!isLoading && settings) {
-      setPlayersState(settings.players || []);
-      console.log('チームリスト更新:', settings.players); // デバッグ用
-    }
-  }, [settings, isLoading, settings?.players]);
+    const loadPlayers = () => {
+      if (!isLoading && settings?.players) {
+        console.log('チームデータの更新を開始:', {
+          currentPlayers: playersState,
+          newPlayers: settings.players
+        });
+        
+        setPlayersState(settings.players);
+        
+        // ローカルストレージの状態確認
+        const storageData = localStorage.getItem('yonkuAppSettings');
+        const parsedStorage = storageData ? JSON.parse(storageData) : null;
+        
+        console.log('ローカルストレージの状態:', {
+          rawData: storageData,
+          parsedData: parsedStorage,
+          playerCount: parsedStorage?.players?.length
+        });
+      }
+    };
+
+    loadPlayers();
+  }, [settings?.players, isLoading]);
   
   // 新規チーム・車両入力用の状態
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -98,11 +116,45 @@ export default function SettingsPage() {
   };
 
   // コース情報の更新（選手とマシンの割り当て）
-  const updateCourseAssignment = (courseIndex: number, field: string, value: string) => {
+  const updateCourseAssignment = async (courseIndex: number, field: string, value: string) => {
     try {
-      console.log('コース割り当て試行:', { courseIndex, field, value }); // デバッグ用
+      console.log('コース割り当て試行:', { courseIndex, field, value });
+      console.log('現在の設定状態:', settings);
+      console.log('利用可能なプレイヤー:', playersState);
 
-      // 同じチームが他のコースに割り当てられていないかチェック
+      // 重要: プレイヤーIDの更新時の処理
+      // この部分は慎重に扱う必要があり、以下の順序で処理を行う
+      if (field === 'playerId') {
+        const courseId = settings.courses[courseIndex].id;
+        if (value === '') {
+          // 重要: プレイヤーの割り当てを解除する場合は、
+          // プレイヤーIDと車両IDの両方をnullにする必要がある
+          await updateCourse(courseId, { playerId: null, vehicleId: null });
+        } else {
+          // まず、プレイヤーの割り当てを更新
+          const player = playersState.find(p => p.id === value);
+          if (!player) {
+            throw new Error('選択したプレイヤーが見つかりません');
+          }
+
+          // 重要: 他のコースに同じプレイヤーが割り当てられていないことを確認
+          // これは競合を防ぐための重要なチェック
+          const isAlreadyAssigned = settings.courses.some((course, idx) => 
+            idx !== courseIndex && course.playerId === value
+          );
+
+          if (isAlreadyAssigned) {
+            throw new Error('選択したチームは既に他のコースに割り当てられています');
+          }
+
+          // 重要: プレイヤーと車両の割り当てを同時に更新
+          // この同期処理は一貫性を保つために不可欠
+          const vehicleId = player.vehicle?.id || null;
+          await updateCourse(courseId, { playerId: value, vehicleId });
+        }
+      }
+
+      // 同じチームが他のコースに割り当てられていないかチェック - 重要な検証（二重チェック）
       if (field === 'playerId' && value !== '') {
         const isAlreadyAssigned = settings.courses.some((course, idx) => 
           idx !== courseIndex && course.playerId === value
@@ -145,10 +197,13 @@ export default function SettingsPage() {
       vehicle: null // 初期状態では車両なし
     };
     
-    addPlayerToContext(newPlayer);
+    console.log('新しいプレイヤーを追加:', newPlayer); // デバッグ用
+    const updatedSettings = addPlayerToContext(newPlayer);
+    console.log('追加後の設定:', updatedSettings); // デバッグ用
     setNewPlayerName('');
     
-    toast({          title: 'チームを追加しました',
+    toast({
+      title: 'チームを追加しました',
       status: 'success',
       duration: 2000,
       isClosable: true,
@@ -531,6 +586,12 @@ export default function SettingsPage() {
                     <Box>
                       <Heading size="md" mb={4} color="white">コース割り当て</Heading>
                       
+                      {/* デバッグ情報表示 */}
+                      <Text color="gray.400" fontSize="sm" mb={4}>
+                        登録チーム数: {playersState.length} | 
+                        設定からのチーム数: {settings?.players?.length || 0}
+                      </Text>
+                      
                       <SimpleGrid columns={[1, 2]} spacing={6}>
                         {settings.courses.map((course, index) => (
                           <Box key={index} p={4} borderWidth="1px" borderRadius="md" bg="gray.900" borderColor="gray.600">
@@ -542,58 +603,49 @@ export default function SettingsPage() {
                                 placeholder="チームを選択"
                                 value={course.playerId || ''}
                                 onChange={(e) => {
-                                  try {
-                                    const playerId = e.target.value;
-                                    if (playerId === '') {
-                                      // チームの割り当てを解除
-                                      updateCourseAssignment(index, 'playerId', '');
-                                      updateCourse(course.id, { vehicleId: null });
-                                      return;
-                                    }
-                                    
-                                    const player = playersState.find(p => p.id === playerId);
-                                    if (!player) {
+                                  const playerId = e.target.value;
+                                  console.log('選択されたプレイヤーID:', playerId);
+                                  console.log('コースの現在の状態:', course);
+                                  
+                                  updateCourseAssignment(index, 'playerId', playerId)
+                                    .then(() => {
+                                      if (playerId) {
+                                        toast({
+                                          title: '成功',
+                                          description: 'チームを割り当てました',
+                                          status: 'success',
+                                          duration: 2000,
+                                          isClosable: true,
+                                        });
+                                      }
+                                    })
+                                    .catch((error) => {
+                                      console.error('コース割り当てエラー:', error);
                                       toast({
                                         title: 'エラー',
-                                        description: '選択したチームが見つかりません',
+                                        description: error.message || 'コースの割り当てに失敗しました',
                                         status: 'error',
                                         duration: 3000,
                                         isClosable: true,
                                       });
-                                      return;
-                                    }
-                                    
-                                    // まず選手を割り当て
-                                    updateCourseAssignment(index, 'playerId', playerId);
-                                    
-                                    // 次に車両を割り当て（存在する場合のみ）
-                                    const vehicleId = player.vehicle?.id;
-                                    if (vehicleId) {
-                                      updateCourse(course.id, { vehicleId });
-                                    } else {
-                                      updateCourse(course.id, { vehicleId: null });
-                                    }
-                                  } catch (error) {
-                                    console.error('コース割り当てエラー:', error);
-                                    toast({
-                                      title: 'エラー',
-                                      description: 'コースの割り当てに失敗しました',
-                                      status: 'error',
-                                      duration: 3000,
-                                      isClosable: true,
                                     });
-                                  }
                                 }}
                                 bg="gray.800"
                                 borderColor="gray.600"
                                 color="white"
                                 _hover={{ borderColor: "gray.500" }}
                               >
-                                {playersState.map((player) => (
-                                  <option key={player.id} value={player.id} style={{ backgroundColor: "#1A202C" }}>
-                                    {player.name}{player.vehicle ? ` - ${player.vehicle.name}` : ''}
+                                {playersState.length > 0 ? (
+                                  playersState.map((player) => (
+                                    <option key={player.id} value={player.id} style={{ backgroundColor: "#1A202C" }}>
+                                      {player.name}{player.vehicle ? ` - ${player.vehicle.name}` : ''}
+                                    </option>
+                                  ))
+                                ) : (
+                                  <option disabled style={{ backgroundColor: "#1A202C" }}>
+                                    チームが登録されていません
                                   </option>
-                                ))}
+                                )}
                               </Select>
                             </FormControl>
                           </Box>
