@@ -517,12 +517,12 @@ export default function HomePage() {
                     </Flex>
                     
                     {/* 周回時間の表示 */}
-                    <Box mt={2} height="80px"> {/* 高さを縮小 */}
+                    <Box mt={2} height="100px">
                       <Text fontSize="xs" fontWeight="semibold" mb={1} color="white">周回タイム:</Text>
                       {course.lapTimes.length > 0 ? (
                         <Box 
                           overflowY="auto" 
-                          maxHeight="60px" 
+                          maxHeight="80px"
                           borderWidth="1px" 
                           borderRadius="md" 
                           borderColor="gray.600" 
@@ -553,8 +553,9 @@ export default function HomePage() {
                             ))}
                           </Flex>
                         </Box>
-                      ) : (                  <Box 
-                    height="60px" 
+                      ) : (                  
+                    <Box 
+                    height="80px"
                     borderWidth="1px" 
                     borderRadius="md" 
                     borderColor="gray.600"
@@ -660,7 +661,7 @@ export default function HomePage() {
                       fontWeight="bold"
                       color="cyan.400"
                       p={3}
-                      py={6}
+                      py={10} // パディングを増やして高さを調整
                       borderRadius="lg"
                       bg="gray.900"
                       border="1px solid"
@@ -689,11 +690,11 @@ export default function HomePage() {
                   <Box width="100%">
                     <Text fontSize="lg" fontWeight="medium" color="white">総経過時間</Text>
                     <Box 
-                      fontSize={["3xl", "4xl", "5xl", "6xl"]}
+                      fontSize={["3xl", "4xl", "5xl", "8xl"]} // フォントサイズを大きく
                       fontWeight="bold"
                       color="cyan.400"
                       p={3}
-                      py={6}
+                      py={12} // パディングを増やしてさらに高さを調整
                       borderRadius="lg"
                       bg="gray.900"
                       border="1px solid"
@@ -708,31 +709,21 @@ export default function HomePage() {
                       fontFamily="mono"
                     >
                       <Text as="span" display="flex" gap={0.1} color="#FFFFFF">
-                        <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(0, 2)}</Text>
-                        <Text as="span" color="rgba(255, 255, 255, 0.7)">:</Text>
-                        <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(3, 5)}</Text>
-                        <Text as="span" color="rgba(255, 255, 255, 0.7)">.</Text>
-                        <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(6, 8)}</Text>
+                      <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(0, 2)}</Text>
+                      <Text as="span" color="rgba(255, 255, 255, 0.7)">:</Text>
+                      <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(3, 5)}</Text>
+                      <Text as="span" color="rgba(255, 255, 255, 0.7)">.</Text>
+                      <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(6, 8)}</Text>
                       </Text>
                     </Box>
                   </Box>
-                </VStack>                 
-                <Flex justifyContent="space-between" w="full" px={2}>
-                  <Badge 
-                    colorScheme={isRunning ? "green" : "gray"} 
-                    fontSize="lg" 
-                    p={2} 
-                    borderRadius="md"
-                  >
-                    {isRunning ? "レース中" : "停止中"}
-                  </Badge>
-                </Flex>
+                </VStack>
               </VStack>
             </Box>
           </Grid>
           
           {/* コントロールボタン */}
-          <Flex justifyContent="center" gap={3} mt={3} mb={1}>
+          <Flex justifyContent="center" gap={3} mt={5} width="100%">
             <Button 
               colorScheme={isRunning ? "orange" : "cyan"} 
               size="md" 
