@@ -385,13 +385,13 @@ export default function HomePage() {
       <Head>
         <title>レース管理システム</title>
       </Head>
-      <Container maxHeight="100vh" maxWidth="full" px={2} py={4}>
-        <VStack spacing={4} align="stretch" width="full">
+      <Container maxHeight="100vh" maxWidth="1920px" px={4} py={3}>
+        <VStack spacing={3} align="stretch" width="full">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="race" />
           
           <Flex justifyContent="space-between" alignItems="center" pb={1}>
-            <Heading size="lg">レース管理</Heading>
+            <Heading size="lg" color="white">レース管理</Heading>
             <Badge colorScheme={isRunning ? "green" : "gray"} fontSize="xl" p={2} borderRadius="md">
               {isRunning ? "レース中" : "準備中"}
             </Badge>
@@ -402,8 +402,7 @@ export default function HomePage() {
             {/* 左側：4コース分のレース情報と周回表示 */}
             <Box pl={"6.3%"}> {/* 左右の余白を縮小 */}
               <VStack spacing={3} align="stretch"> {/* 間隔を狭くする */}
-                {[...courseData].reverse().map((course) => (
-                  <Box 
+                {[...courseData].reverse().map((course) => (                    <Box 
                     key={course.id}
                     p={3} 
                     pl={5}  // 左側の余白を少し縮小
@@ -411,8 +410,10 @@ export default function HomePage() {
                     borderRadius="md" // より小さい角丸
                     borderLeftWidth="6px" // 左ボーダーも細く
                     borderLeftColor={course.color} 
-                    shadow="sm" // 影も控えめに
+                    shadow="md" // 影を少し強調
                     position="relative"  // 絶対配置の基準点
+                    bg="gray.800" // ダークモード用背景色
+                    borderColor="gray.700" // ボーダー色も暗く
                   >
                     {/* 大きなコース番号を左側に表示（枠外に） - 常に「4,3,2,1」の順で表示 */}
                     <Box
@@ -429,9 +430,8 @@ export default function HomePage() {
                       justifyContent="center"
                       alignItems="center"
                       borderRadius="full"
-                      bg="white"
-                      _dark={{ bg: "gray.800" }}
-                      boxShadow="md"
+                      bg="gray.900"
+                      boxShadow="dark-lg"
                       border="3px solid"
                       borderColor={course.color}
                       zIndex={2}
@@ -440,9 +440,9 @@ export default function HomePage() {
                     </Box>
                     <Flex justifyContent="space-between" alignItems="center">
                       <Box>
-                        <Text fontWeight="bold" fontSize="md">{course.name}</Text>
+                        <Text fontWeight="bold" fontSize="md" color="white">{course.name}</Text>
                         <Flex alignItems="center" gap={2} flexWrap="wrap">
-                          <Text fontSize="xs">車両: {course.vehicle}</Text>
+                          <Text fontSize="xs" color="white">車両: {course.vehicle}</Text>
                           {course.bestLap && (
                             <Badge size="sm" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
                               ベスト: {course.bestLap.time}
@@ -470,7 +470,7 @@ export default function HomePage() {
                           >
                             -
                           </Button>
-                          <Text fontWeight="bold" fontSize="xl" mx={1}>
+                          <Text fontWeight="bold" fontSize="xl" mx={1} color="white">
                             {course.currentLap}{course.totalLaps > 0 ? ` / ${course.totalLaps}` : ''}
                           </Text>
                           <Button 
@@ -487,20 +487,21 @@ export default function HomePage() {
                             +
                           </Button>
                         </Flex>
-                        <Text fontSize="xs" mt={0}>周回数</Text>
+                        <Text fontSize="xs" mt={0} color="white">周回数</Text>
                       </Flex>
                     </Flex>
                     
                     {/* 周回時間の表示 */}
                     <Box mt={2} height="80px"> {/* 高さを縮小 */}
-                      <Text fontSize="xs" fontWeight="semibold" mb={1}>周回タイム:</Text>
+                      <Text fontSize="xs" fontWeight="semibold" mb={1} color="white">周回タイム:</Text>
                       {course.lapTimes.length > 0 ? (
                         <Box 
                           overflowY="auto" 
                           maxHeight="60px" 
                           borderWidth="1px" 
                           borderRadius="md" 
-                          borderColor="gray.200" 
+                          borderColor="gray.600" 
+                          bg="gray.900"
                           p={1}
                         >
                           <Flex flexWrap="wrap" gap={1}>
@@ -518,26 +519,27 @@ export default function HomePage() {
                                 variant={
                                   course.bestLap && lap.timestamp === course.bestLap.timestamp 
                                     ? "solid" 
-                                    : "subtle"
+                                    : "outline"
                                 }
+                                color="white"
                               >
                                 {lap.lapNumber}周目: {lap.time}
                               </Badge>
                             ))}
                           </Flex>
                         </Box>
-                      ) : (
-                        <Box 
-                          height="60px" 
-                          borderWidth="1px" 
-                          borderRadius="md" 
-                          borderColor="gray.200"
-                          display="flex" 
-                          justifyContent="center" 
-                          alignItems="center"
-                        >
-                          <Text color="gray.500" fontSize="xs">周回データがありません</Text>
-                        </Box>
+                      ) : (                  <Box 
+                    height="60px" 
+                    borderWidth="1px" 
+                    borderRadius="md" 
+                    borderColor="gray.600"
+                    bg="gray.900"
+                    display="flex" 
+                    justifyContent="center" 
+                    alignItems="center"
+                  >
+                    <Text color="gray.400" fontSize="xs">周回データがありません</Text>
+                  </Box>
                       )}
                     </Box>
                     
@@ -567,19 +569,22 @@ export default function HomePage() {
               alignItems="center"
               h="100%"
               w="full"
+              bg="gray.800"
+              borderColor="gray.700"
             >
               <VStack spacing={3} w="full">
-                <Text fontSize="lg" fontWeight="medium">総経過時間</Text>
+                <Text fontSize="lg" fontWeight="medium" color="white">総経過時間</Text>
                 <Box 
                   fontSize={["3xl", "4xl", "5xl", "6xl"]}
                   fontWeight="bold"
-                  color="blue.500"
+                  color="cyan.400"
                   p={3}
                   py={6}
                   borderRadius="lg"
-                  bg="gray.50"
-                  _dark={{ bg: "gray.700" }}
-                  boxShadow="md"
+                  bg="gray.900"
+                  border="1px solid"
+                  borderColor="gray.700"
+                  boxShadow="dark-lg"
                   textAlign="center"
                   w="full"
                   display="flex"
@@ -602,14 +607,20 @@ export default function HomePage() {
           </Grid>
           
           {/* コントロールボタン */}
-          <Flex justifyContent="center" gap={2} mt={2}>
+          <Flex justifyContent="center" gap={3} mt={3} mb={1}>
             <Button 
-              colorScheme={isRunning ? "orange" : "green"} 
+              colorScheme={isRunning ? "orange" : "cyan"} 
               size="md" 
               onClick={toggleTimer}
-              py={5}
+              py={6}
+              px={8}
               fontSize="lg"
+              fontWeight="bold"
               flex={1}
+              boxShadow="lg"
+              _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
+              _active={{ transform: "translateY(0px)" }}
+              transition="all 0.2s"
             >
               {isRunning ? "一時停止" : "スタート"}
             </Button>
@@ -617,20 +628,32 @@ export default function HomePage() {
               colorScheme="red" 
               size="md" 
               onClick={resetTimer}
-              py={5}
+              py={6}
+              px={8}
               fontSize="lg"
+              fontWeight="bold"
               flex={1}
+              boxShadow="lg"
+              _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
+              _active={{ transform: "translateY(0px)" }}
+              transition="all 0.2s"
             >
               リセット
             </Button>
             <Button 
               colorScheme="purple" 
               size="md"
-              py={5}
+              py={6}
+              px={8}
               fontSize="lg"
+              fontWeight="bold"
               flex={1}
               onClick={onOpen}
               isDisabled={!isRunning && elapsedTime === 0}
+              boxShadow="lg"
+              _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
+              _active={{ transform: "translateY(0px)" }}
+              transition="all 0.2s"
             >
               レース終了
             </Button>
@@ -643,17 +666,27 @@ export default function HomePage() {
             onClose={onClose}
           >
             <AlertDialogOverlay>
-              <AlertDialogContent>
-                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              <AlertDialogContent bg="gray.800" borderColor="gray.700">
+                <AlertDialogHeader fontSize="lg" fontWeight="bold" color="white">
                   レースを終了する
                 </AlertDialogHeader>
 
-                <AlertDialogBody>
+                <AlertDialogBody color="white">
                   レースを終了し、結果を保存しますか？この操作は元に戻せません。
                 </AlertDialogBody>
 
                 <AlertDialogFooter>
-                  <Button ref={cancelRef} onClick={onClose}>
+                  <Button 
+                    ref={cancelRef} 
+                    onClick={onClose} 
+                    variant="outline"
+                    color="white"
+                    borderColor="gray.400"
+                    _hover={{
+                      bg: "gray.700",
+                      borderColor: "white"
+                    }}
+                  >
                     キャンセル
                   </Button>
                   <Button 

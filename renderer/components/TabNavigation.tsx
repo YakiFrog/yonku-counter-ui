@@ -38,15 +38,16 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({ currentTab = 'race
     <Box 
       width="full" 
       borderBottomWidth="1px" 
-      borderBottomColor="gray.200" 
+      borderBottomColor="gray.700" 
       mb={4}
     >
       <Tabs 
         index={getTabIndex()} 
         onChange={handleTabChange}
         variant="enclosed"
-        colorScheme="blue"
+        colorScheme="cyan"
         size="lg"
+        color="white"
       >
         <TabList>
           <Tab fontWeight="semibold">レース</Tab>

@@ -118,41 +118,41 @@ export default function RankingPage() {
       <Head>
         <title>ランキング</title>
       </Head>
-      <Container maxWidth="full" px={2} py={4}>
-        <VStack spacing={6} align="stretch" width="full">
+      <Container maxWidth="1920px" px={4} py={3}>
+        <VStack spacing={4} align="stretch" width="full">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="ranking" />
           
-          <Heading size="lg" mb={4}>レースランキング</Heading>
+          <Heading size="lg" mb={3} color="white">レースランキング</Heading>
           
           {/* 最新レース結果 */}
-          <Box borderWidth="1px" borderRadius="lg" p={4} shadow="md">
-            <Heading size="md" mb={3}>
+          <Box borderWidth="1px" borderRadius="lg" p={4} shadow="md" bg="gray.800" borderColor="gray.700">
+            <Heading size="md" mb={3} color="white">
               最新レース結果
             </Heading>
             
-            <Table variant="simple" size="sm">
+            <Table variant="simple" size="sm" colorScheme="whiteAlpha">
               <Thead>
                 <Tr>
-                  <Th>順位</Th>
-                  <Th>選手名</Th>
-                  <Th>車両</Th>
-                  <Th>総合タイム</Th>
-                  <Th width="40%">各周回ラップタイム</Th>
+                  <Th color="gray.100">順位</Th>
+                  <Th color="gray.100">選手名</Th>
+                  <Th color="gray.100">車両</Th>
+                  <Th color="gray.100">総合タイム</Th>
+                  <Th color="gray.100" width="40%">各周回ラップタイム</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {rankingData.length > 0 ? (
                   rankingData.map((entry) => (
                     <Tr key={entry.position}>
-                      <Td fontWeight="bold">{entry.position}</Td>
-                      <Td>{entry.name}</Td>
-                      <Td>{entry.vehicle}</Td>
+                      <Td fontWeight="bold" color="white">{entry.position}</Td>
+                      <Td color="white">{entry.name}</Td>
+                      <Td color="white">{entry.vehicle}</Td>
                       <Td>
                         <Flex alignItems="center" gap={2}>
-                          {entry.time}
+                          <Text color="white">{entry.time}</Text>
                           {entry.isCompleted && (
-                            <Badge colorScheme="green" size="sm">完走</Badge>
+                            <Badge colorScheme="green" size="sm" px={2} py={1} borderRadius="md" variant="solid">完走</Badge>
                           )}
                         </Flex>
                       </Td>
@@ -160,26 +160,26 @@ export default function RankingPage() {
                         <Flex wrap="wrap" gap={2}>
                           {(() => {
                             const bestLap = findBestLap(entry.laps);
-                            return entry.laps.map((lap, index) => (
-                              <Box 
+                            return entry.laps.map((lap, index) => (                                <Box 
                                 key={index} 
                                 borderWidth="1px"
                                 borderRadius="md"
-                                borderColor={index === bestLap.index ? "green.400" : "gray.200"}
-                                bg={index === bestLap.index ? "green.50" : "gray.50"}
+                                borderColor={index === bestLap.index ? "green.400" : "gray.600"}
+                                bg={index === bestLap.index ? "green.900" : "#111827"}
                                 px={2}
                                 py={1}
+                                boxShadow="md"
                               >
                                 <Tooltip label={`ベストタイム: ${bestLap.value}`} isDisabled={index !== bestLap.index}>
                                   <Flex alignItems="center" gap={1}>
-                                    <Text fontSize="sm" fontWeight="medium" color="gray.600">
+                                    <Text fontSize="sm" fontWeight="medium" color="gray.200">
                                       {index + 1}:
                                     </Text>
-                                    <Text fontSize="sm" fontWeight={index === bestLap.index ? "bold" : "normal"}>
+                                    <Text fontSize="sm" fontWeight={index === bestLap.index ? "bold" : "normal"} color={index === bestLap.index ? "green.200" : "white"}>
                                       {lap}
                                     </Text>
                                     {index === bestLap.index && (
-                                      <Badge colorScheme="green" fontSize="2xs" variant="subtle">
+                                      <Badge colorScheme="green" fontSize="2xs" variant="solid">
                                         ベスト
                                       </Badge>
                                     )}
@@ -194,7 +194,7 @@ export default function RankingPage() {
                   ))
                 ) : (
                   <Tr>
-                    <Td colSpan={5} textAlign="center" py={4}>
+                    <Td colSpan={5} textAlign="center" py={4} color="gray.300">
                       レース結果がありません
                     </Td>
                   </Tr>
@@ -204,19 +204,19 @@ export default function RankingPage() {
           </Box>
           
           {/* 総合ランキング */}
-          <Box borderWidth="1px" borderRadius="lg" p={4} shadow="md">
-            <Heading size="md" mb={3}>
+          <Box borderWidth="1px" borderRadius="lg" p={4} shadow="md" bg="gray.800" borderColor="gray.700">
+            <Heading size="md" mb={3} color="white">
               総合ランキング
             </Heading>
             
-            <Table variant="simple" size="sm">
+            <Table variant="simple" size="sm" colorScheme="whiteAlpha">
               <Thead>
                 <Tr>
-                  <Th>順位</Th>
-                  <Th>選手名</Th>
-                  <Th>勝利数</Th>
-                  <Th>平均タイム</Th>
-                  <Th>ベストタイム</Th>
+                  <Th color="gray.100">順位</Th>
+                  <Th color="gray.100">選手名</Th>
+                  <Th color="gray.100">勝利数</Th>
+                  <Th color="gray.100">平均タイム</Th>
+                  <Th color="gray.100">ベストタイム</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -225,10 +225,10 @@ export default function RankingPage() {
                     const bestLap = findBestLap(entry.laps || []);
                     return (
                       <Tr key={entry.position}>
-                        <Td fontWeight="bold">{entry.position}</Td>
-                        <Td>{entry.name}</Td>
-                        <Td>{entry.wins || 0}</Td>
-                        <Td>{entry.time}</Td>
+                        <Td fontWeight="bold" color="white">{entry.position}</Td>
+                        <Td color="white">{entry.name}</Td>
+                        <Td color="white">{entry.wins || 0}</Td>
+                        <Td color="white">{entry.time}</Td>
                         <Td>
                           {bestLap.value && (
                             <Badge colorScheme="green" variant="subtle" px={2} py={1}>
@@ -241,7 +241,7 @@ export default function RankingPage() {
                   })
                 ) : (
                   <Tr>
-                    <Td colSpan={5} textAlign="center" py={4}>
+                    <Td colSpan={5} textAlign="center" py={4} color="gray.300">
                       ランキングデータがありません
                     </Td>
                   </Tr>
