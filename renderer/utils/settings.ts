@@ -10,7 +10,7 @@ const defaultSettings: AppSettings = {
     { id: 4, playerId: null, vehicleId: null }
   ],
   players: [],
-  lapCount: 0,
+  lapCount: 5,
   soundEnabled: false,
   races: []
 };

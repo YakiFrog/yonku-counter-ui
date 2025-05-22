@@ -237,8 +237,8 @@ export default function SettingsPage() {
       <Head>
         <title>設定 - 四駆カウンター</title>
       </Head>
-      <Container maxWidth="full" px={2} py={4}>
-        <VStack spacing={6} align="stretch" width="full">
+      <Container maxWidth="1920px" px={4} py={3}>
+        <VStack spacing={4} align="stretch" width="full">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="settings" />
           
@@ -357,14 +357,14 @@ export default function SettingsPage() {
                                       icon={<EditIcon />}
                                       size="sm"
                                       mr={2}
-                                      onClick={() => startEditingPlayer(player.id)}
+                                      onClick={() => startEditingPlayer(player)}
                                     />
                                     <IconButton
                                       aria-label="Delete player"
                                       icon={<DeleteIcon />}
                                       colorScheme="red"
                                       size="sm"
-                                      onClick={() => removePlayer(player.id)}
+                                      onClick={() => deletePlayer(player.id)}
                                     />
                                   </Flex>
                                 </Flex>
@@ -447,8 +447,8 @@ export default function SettingsPage() {
                         ))}
                         
                         {playersState.length === 0 && (
-                          <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.50">
-                            <Text align="center">選手が登録されていません</Text>
+                          <Box p={4} borderWidth="1px" borderRadius="md" bg="gray.800" borderColor="gray.600">
+                            <Text align="center" color="gray.400">選手が登録されていません</Text>
                           </Box>
                         )}
                       </Box>
@@ -457,10 +457,6 @@ export default function SettingsPage() {
                         設定を保存
                       </Button>
                     </Box>
-                    
-                    <Button type="submit" colorScheme="blue" size="lg" mt={4}>
-                      設定を保存
-                    </Button>
                   </VStack>
                 </TabPanel>
                 
