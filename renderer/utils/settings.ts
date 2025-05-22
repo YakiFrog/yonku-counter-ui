@@ -49,33 +49,43 @@ export function useAppSettings() {
   const updateSettings = (newSettings: Partial<AppSettings>) => {
     // 更新前の状態をログ
     console.log('更新前の設定:', settings);
-    console.log('更新内容:', newSettings);
+    
+    // 現在のストレージの内容を直接取得
+    const currentStorageSettings = localStorage.getItem(STORAGE_KEY);
+    const currentSettings = currentStorageSettings 
+      ? JSON.parse(currentStorageSettings) as AppSettings 
+      : settings;
 
-    const updated = { ...settings, ...newSettings };
+    // 新しい設定を現在の設定とマージ
+    const updatedSettings = {
+      ...currentSettings,
+      ...newSettings
+    };
+    console.log('更新内容:', newSettings);
     
     try {
       // ローカルストレージに保存
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSettings));
       // メモリ上の状態を更新
-      setSettings(updated);
-      console.log('更新後の設定:', updated);
+      setSettings(updatedSettings);
+      console.log('更新後の設定:', updatedSettings);
       console.log('ローカルストレージの保存成功');
     } catch (error) {
       console.error('設定の保存に失敗しました:', error);
     }
     
-    return updated;
+    return updatedSettings;
   };
 
   // コース情報を更新する重要な関数
   // この関数はプレイヤーと車両の割り当てを同期的に管理する
   const updateCourse = (courseId: number, data: Partial<Course>) => {
     // 重要: localStorage と状態の両方を更新する必要がある
-    const settings = localStorage.getItem('settings');
-    if (!settings) {
+    const savedSettings = localStorage.getItem(STORAGE_KEY);
+    if (!savedSettings) {
       throw new Error('設定が見つかりません');
     }
-    const currentSettings = JSON.parse(settings);
+    const currentSettings = JSON.parse(savedSettings);
     const courseIndex = currentSettings.courses.findIndex(c => c.id === courseId);
 
     if (courseIndex === -1) {
@@ -101,14 +111,14 @@ export function useAppSettings() {
       
       // 重要: localStorage への永続化
       // この処理は必ず行う必要がある
-      localStorage.setItem('settings', JSON.stringify(currentSettings));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentSettings));
       
       return currentSettings;
     } catch (error) {
       // エラー発生時は前の状態に戻す
       console.error('コース更新エラー:', error);
       currentSettings.courses[courseIndex] = previousState;
-      localStorage.setItem('settings', JSON.stringify(currentSettings));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentSettings));
       throw error;
     }
   };
@@ -156,8 +166,12 @@ export function useAppSettings() {
 
   // レース結果を保存する
   const saveRaceResult = (race: Race) => {
+    console.log('保存前の全レース:', settings.races);
     const updatedRaces = [...settings.races, race];
-    return updateSettings({ races: updatedRaces });
+    console.log('保存する全レース:', updatedRaces);
+    const result = updateSettings({ races: updatedRaces });
+    console.log('保存後のsettings:', result);
+    return result;
   };
 
   // 全設定をリセットする

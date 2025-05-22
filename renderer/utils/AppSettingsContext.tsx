@@ -30,12 +30,9 @@ export const AppSettingsProvider: React.FC<{ children: ReactNode }> = ({ childre
   // レース番号を更新する関数
   const updateRaceNumber = useCallback((newNumber: number) => {
     if (!settings) return;
-    const updatedSettings = {
-      ...settings,
-      currentRaceNumber: newNumber
-    };
-    const savedSettings = settingsUtils.updateSettings(updatedSettings);
-    setSettings(savedSettings);
+    // 現在の設定の全ての値を保持したまま、レース番号だけを更新
+    const result = settingsUtils.updateSettings({ currentRaceNumber: newNumber });
+    setSettings(result);
   }, [settings, settingsUtils]);
 
   // settingsUtilsの値が変更されたら、ローカルのステートを更新

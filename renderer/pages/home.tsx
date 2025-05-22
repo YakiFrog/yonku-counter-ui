@@ -226,6 +226,9 @@ export default function HomePage() {
     // レースを一時停止
     setIsRunning(false);
     
+    // デバッグ: 保存前のローカルストレージの内容を確認
+    console.log('保存前のローカルストレージ:', localStorage.getItem('yonkuAppSettings'));
+    
     // レース結果を作成
     const results: RaceResult[] = courseData.map((course) => {
       // ラップタイムをRaceLap配列に変換
@@ -281,8 +284,13 @@ export default function HomePage() {
       results
     };
     
+    console.log('保存するレースデータ:', race); // 保存するデータの確認
+    
     // レース結果を保存
     saveRaceResult(race);
+    
+    // デバッグ: 保存後のローカルストレージの内容を確認
+    console.log('保存後のローカルストレージ:', localStorage.getItem('yonkuAppSettings'));
     
     // 通常レースの場合のみレース番号をインクリメント
     if (!raceType) {
