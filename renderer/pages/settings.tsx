@@ -66,8 +66,9 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!isLoading && settings) {
       setPlayersState(settings.players || []);
+      console.log('チームリスト更新:', settings.players); // デバッグ用
     }
-  }, [settings, isLoading]);
+  }, [settings, isLoading, settings?.players]);
   
   // 新規チーム・車両入力用の状態
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -98,8 +99,40 @@ export default function SettingsPage() {
 
   // コース情報の更新（選手とマシンの割り当て）
   const updateCourseAssignment = (courseIndex: number, field: string, value: string) => {
-    const courseId = settings.courses[courseIndex].id;
-    updateCourse(courseId, { [field]: value === '' ? null : value });
+    try {
+      console.log('コース割り当て試行:', { courseIndex, field, value }); // デバッグ用
+
+      // 同じチームが他のコースに割り当てられていないかチェック
+      if (field === 'playerId' && value !== '') {
+        const isAlreadyAssigned = settings.courses.some((course, idx) => 
+          idx !== courseIndex && course.playerId === value
+        );
+        
+        if (isAlreadyAssigned) {
+          toast({
+            title: 'エラー',
+            description: '選択したチームは既に他のコースに割り当てられています',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+      }
+      
+      const courseId = settings.courses[courseIndex].id;
+      const updatedSettings = updateCourse(courseId, { [field]: value === '' ? null : value });
+      console.log('コース更新後の設定:', updatedSettings); // デバッグ用
+    } catch (error) {
+      console.error('コース割り当てエラー:', error);
+      toast({
+        title: 'エラー',
+        description: 'コースの割り当てに失敗しました',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   // 新規選手の追加
@@ -509,12 +542,47 @@ export default function SettingsPage() {
                                 placeholder="チームを選択"
                                 value={course.playerId || ''}
                                 onChange={(e) => {
-                                  const playerId = e.target.value;
-                                  const player = playersState.find(p => p.id === playerId);
-                                  const vehicleId = player?.vehicle?.id || null;
-                                  
-                                  updateCourseAssignment(index, 'playerId', playerId);
-                                  updateCourseAssignment(index, 'vehicleId', vehicleId);
+                                  try {
+                                    const playerId = e.target.value;
+                                    if (playerId === '') {
+                                      // チームの割り当てを解除
+                                      updateCourseAssignment(index, 'playerId', '');
+                                      updateCourse(course.id, { vehicleId: null });
+                                      return;
+                                    }
+                                    
+                                    const player = playersState.find(p => p.id === playerId);
+                                    if (!player) {
+                                      toast({
+                                        title: 'エラー',
+                                        description: '選択したチームが見つかりません',
+                                        status: 'error',
+                                        duration: 3000,
+                                        isClosable: true,
+                                      });
+                                      return;
+                                    }
+                                    
+                                    // まず選手を割り当て
+                                    updateCourseAssignment(index, 'playerId', playerId);
+                                    
+                                    // 次に車両を割り当て（存在する場合のみ）
+                                    const vehicleId = player.vehicle?.id;
+                                    if (vehicleId) {
+                                      updateCourse(course.id, { vehicleId });
+                                    } else {
+                                      updateCourse(course.id, { vehicleId: null });
+                                    }
+                                  } catch (error) {
+                                    console.error('コース割り当てエラー:', error);
+                                    toast({
+                                      title: 'エラー',
+                                      description: 'コースの割り当てに失敗しました',
+                                      status: 'error',
+                                      duration: 3000,
+                                      isClosable: true,
+                                    });
+                                  }
                                 }}
                                 bg="gray.800"
                                 borderColor="gray.600"

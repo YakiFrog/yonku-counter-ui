@@ -19,15 +19,6 @@ const theme = extendTheme({
     useSystemColorMode: false, // システムの設定を使用しない
   },
 
-  styles: {
-    global: {
-      body: {
-        bg: 'gray.900',
-        color: 'white',
-      },
-    },
-  },
-
   colors: {
     // カスタムカラーパレット
     blue: {
@@ -56,6 +47,7 @@ const theme = extendTheme({
     },
     black: '#16161D',
   },
+
   semanticTokens: {
     colors: {
       text: {
@@ -75,24 +67,19 @@ const theme = extendTheme({
       button: '12px',
     },
   },
+
   styles: {
     global: (props) => ({
       body: {
         bg: props.colorMode === 'dark' ? '#111827' : 'white',
         color: props.colorMode === 'dark' ? '#F9FAFB' : 'gray.800',
       },
-      // すべてのテキスト要素にデフォルト色を設定
       'h1, h2, h3, h4, h5, h6, p, span, label, a, div': {
         color: props.colorMode === 'dark' ? '#F9FAFB' : 'gray.800'
-      },
-      '.chakra-text': {
-        color: props.colorMode === 'dark' ? '#F9FAFB' : 'gray.800'
-      },
-      '.chakra-heading': {
-        color: props.colorMode === 'dark' ? '#F9FAFB' : 'gray.800'
       }
-    }),
+    })
   },
+
   fonts,
   breakpoints,
 })

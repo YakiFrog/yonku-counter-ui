@@ -12,7 +12,8 @@ const defaultSettings: AppSettings = {
   players: [],
   lapCount: 5,
   soundEnabled: false,
-  races: []
+  races: [],
+  currentRaceNumber: 1  // 初期レース番号を1に設定
 };
 
 // ローカルストレージのキー
