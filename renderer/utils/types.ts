@@ -7,6 +7,7 @@ export type Vehicle = {
 export type Player = {
   id: string;
   name: string;
+  teamName?: string; // チーム名を追加（オプショナル）
   vehicle: Vehicle | null;
 };
 
@@ -28,6 +29,7 @@ export type RaceResult = {
   position: number;
   playerId: string | null;
   playerName: string;
+  teamName?: string; // チーム名を追加（オプショナル）
   vehicleId: string | null;
   vehicleName: string;
   totalTime: string;
@@ -40,6 +42,7 @@ export type Race = {
   id: string;
   name: string;
   date: string;
+  raceNumber: number;  // レース番号を追加
   totalLaps: number;
   results: RaceResult[];
 };

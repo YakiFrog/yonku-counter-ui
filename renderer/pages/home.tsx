@@ -38,21 +38,17 @@ import { useAppSettingsContext } from '../utils/AppSettingsContext'
 import { Race, RaceResult, RaceLap } from '../utils/types'
 
 export default function HomePage() {
-  // グローバルな設定コンテキストを使用
   const { settings, isLoading, saveRaceResult } = useAppSettingsContext();
   const toast = useToast();
   const router = useRouter();
-  
-  // レース終了確認ダイアログの状態
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef();
-
+  
+  // すべてのステート hooks を先に宣言
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [raceNumber, setRaceNumber] = useState(1);  // レース番号の状態を追加
-  
-  // 各コースのデータを管理する状態
+  const [raceNumber, setRaceNumber] = useState(1);
   const [courseData, setCourseData] = useState([
     { 
       id: 1, 
@@ -63,9 +59,9 @@ export default function HomePage() {
       totalLaps: 0, 
       time: 0, 
       bestLap: null, 
-      lapTimes: [], // 各周回のタイム記録
-      lastLapTime: 0, // 前の周回が完了した時間
-      finishTime: null, // 全周回完了時の時間
+      lapTimes: [], 
+      lastLapTime: 0, 
+      finishTime: null,
     },
     { 
       id: 2, 
@@ -174,6 +170,20 @@ export default function HomePage() {
     }
   }, [settings, isLoading]);
 
+  // settingsがロード中または未定義の場合はローディング表示
+  if (isLoading || !settings) {
+    return (
+      <Container maxWidth="1920px" px={4} py={3}>
+        <VStack spacing={4} align="stretch" width="full">
+          <TabNavigation currentTab="race" />
+          <Center py={10}>
+            <Spinner size="xl" color="white" />
+          </Center>
+        </VStack>
+      </Container>
+    );
+  }
+
   // スタート/ストップ切り替え
   const toggleTimer = () => {
     if (!isRunning) {
@@ -190,6 +200,7 @@ export default function HomePage() {
   const resetTimer = () => {
     setIsRunning(false);
     setElapsedTime(0);
+    setRaceNumber(1);  // レース番号も1に戻す
     setCourseData(prev => 
       prev.map(course => ({
         ...course,
@@ -250,18 +261,20 @@ export default function HomePage() {
     // レース情報を作成
     const race: Race = {
       id: `race-${Date.now()}`,
-      name: `レース ${new Date().toLocaleString('ja-JP')}`,
+      name: `第${raceNumber}レース`,
       date: new Date().toISOString(),
+      raceNumber: raceNumber,
       totalLaps: settings.lapCount,
       results
     };
     
-    // レース結果を保存
+    // レース結果を保存して、レース番号をインクリメント
     saveRaceResult(race);
+    setRaceNumber(currentNumber => currentNumber + 1);
     
     toast({
       title: 'レース終了',
-      description: 'レース結果が保存されました。',
+      description: `第${raceNumber}レースの結果が保存されました。`,
       status: 'success',
       duration: 3000,
       isClosable: true,

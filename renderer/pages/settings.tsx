@@ -27,7 +27,14 @@ import {
   useToast,
   Text,
   Spinner,
-  Center
+  Center,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useDisclosure
 } from '@chakra-ui/react'
 import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons'
 
@@ -44,22 +51,25 @@ export default function SettingsPage() {
     updateCourse,
     addPlayer: addPlayerToContext,
     updatePlayer: updatePlayerInContext,
-    removePlayer: removePlayerFromContext
+    removePlayer: removePlayerFromContext,
+    clearRaceResults
   } = useAppSettingsContext();
   
   const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const cancelRef = React.useRef();
 
-  // 選手リスト
+  // チームリスト
   const [playersState, setPlayersState] = useState<Player[]>([]);
   
-  // コンテキストから選手データをロード
+  // コンテキストからチームデータをロード
   useEffect(() => {
     if (!isLoading && settings) {
       setPlayersState(settings.players || []);
     }
   }, [settings, isLoading]);
   
-  // 新規選手・車両入力用の状態
+  // 新規チーム・車両入力用の状態
   const [newPlayerName, setNewPlayerName] = useState('');
   const [newVehicleName, setNewVehicleName] = useState('');
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
@@ -105,8 +115,7 @@ export default function SettingsPage() {
     addPlayerToContext(newPlayer);
     setNewPlayerName('');
     
-    toast({
-      title: '選手を追加しました',
+    toast({          title: 'チームを追加しました',
       status: 'success',
       duration: 2000,
       isClosable: true,
@@ -117,8 +126,7 @@ export default function SettingsPage() {
   const deletePlayer = (playerId: string) => {
     removePlayerFromContext(playerId);
     
-    toast({
-      title: '選手を削除しました',
+    toast({          title: 'チームを削除しました',
       status: 'info',
       duration: 2000,
       isClosable: true,
@@ -141,7 +149,7 @@ export default function SettingsPage() {
     setEditingPlayerName('');
     
     toast({
-      title: '選手名を更新しました',
+      title: 'チーム名を更新しました',
       status: 'success',
       duration: 2000,
       isClosable: true,
@@ -232,6 +240,33 @@ export default function SettingsPage() {
     return player ? player.vehicle : null;
   };
 
+  // レース記録削除の確認ダイアログを処理する関数
+  const handleClearRaceResults = () => {
+    clearRaceResults();
+    onClose();
+    toast({
+      title: "レース記録を削除しました",
+      description: "すべてのレース記録が削除されました。",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
+
+  // ローディング中の表示
+  if (isLoading || !settings) {
+    return (
+      <Container maxWidth="1920px" px={4} py={3}>
+        <VStack spacing={4} align="stretch" width="full">
+          <TabNavigation currentTab="settings" />
+          <Center py={10}>
+            <Spinner size="xl" color="white" />
+          </Center>
+        </VStack>
+      </Container>
+    );
+  }
+
   return (
     <React.Fragment>
       <Head>
@@ -248,7 +283,7 @@ export default function SettingsPage() {
             <Tabs variant="enclosed" colorScheme="blue">
               <TabList mb={4} bg="gray.800" borderBottomColor="gray.700">
                 <Tab fontWeight="semibold" color="gray.300" bg="gray.900" borderColor="gray.600" _selected={{ color: "white", bg: "gray.700" }}>基本設定</Tab>
-                <Tab fontWeight="semibold" color="gray.300" bg="gray.900" borderColor="gray.600" _selected={{ color: "white", bg: "gray.700" }}>選手/車両登録</Tab>
+                <Tab fontWeight="semibold" color="gray.300" bg="gray.900" borderColor="gray.600" _selected={{ color: "white", bg: "gray.700" }}>チーム/車両登録</Tab>
                 <Tab fontWeight="semibold" color="gray.300" bg="gray.900" borderColor="gray.600" _selected={{ color: "white", bg: "gray.700" }}>コース割り当て</Tab>
               </TabList>
               
@@ -295,12 +330,12 @@ export default function SettingsPage() {
                 <TabPanel>
                   <VStack spacing={6} align="stretch">
                     <Box>
-                      <Heading size="md" mb={4} color="white">選手リスト</Heading>
+                      <Heading size="md" mb={4} color="white">チームリスト</Heading>
                       
-                      {/* 新規選手の追加 */}
+                      {/* 新規チームの追加 */}
                       <Flex mb={5}>
                         <Input
-                          placeholder="新しい選手名"
+                          placeholder="新しいチーム名"
                           value={newPlayerName}
                           onChange={(e) => setNewPlayerName(e.target.value)}
                           mr={2}
@@ -472,9 +507,9 @@ export default function SettingsPage() {
                             <Heading size="sm" mb={3} color="white">コース {index + 1}</Heading>
                             
                             <FormControl mb={3}>
-                              <FormLabel color="white">選手</FormLabel>
+                              <FormLabel color="white">チーム</FormLabel>
                               <Select
-                                placeholder="選手を選択"
+                                placeholder="チームを選択"
                                 value={course.playerId || ''}
                                 onChange={(e) => updateCourseAssignment(index, 'playerId', e.target.value)}
                                 bg="gray.800"
@@ -525,6 +560,54 @@ export default function SettingsPage() {
               </TabPanels>
             </Tabs>
           </Box>
+          
+          {/* データ管理セクション */}
+          <Box borderWidth="1px" borderRadius="lg" p={4} bg="gray.800" borderColor="gray.700">
+            <Heading size="md" mb={4} color="white">データ管理</Heading>
+            <VStack spacing={4} align="stretch">
+              <Box>
+                <Button
+                  colorScheme="red"
+                  variant="outline"
+                  onClick={onOpen}
+                  leftIcon={<DeleteIcon />}
+                  size="lg"
+                  width="full"
+                >
+                  レース記録を全て削除
+                </Button>
+              </Box>
+            </VStack>
+          </Box>
+
+          {/* 削除確認ダイアログ */}
+          <AlertDialog
+            isOpen={isOpen}
+            leastDestructiveRef={cancelRef}
+            onClose={onClose}
+          >
+            <AlertDialogOverlay>
+              <AlertDialogContent bg="gray.800" borderColor="gray.700">
+                <AlertDialogHeader fontSize="lg" fontWeight="bold" color="white">
+                  レース記録の削除
+                </AlertDialogHeader>
+
+                <AlertDialogBody color="white">
+                  すべてのレース記録を削除します。この操作は元に戻せません。
+                  本当に削除しますか？
+                </AlertDialogBody>
+
+                <AlertDialogFooter>
+                  <Button ref={cancelRef} onClick={onClose} variant="outline" color="white">
+                    キャンセル
+                  </Button>
+                  <Button colorScheme="red" onClick={handleClearRaceResults} ml={3}>
+                    削除する
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
         </VStack>
       </Container>
     </React.Fragment>
