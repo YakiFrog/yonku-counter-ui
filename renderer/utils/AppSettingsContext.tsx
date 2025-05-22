@@ -14,6 +14,8 @@ interface AppSettingsContextType {
   saveRaceResult: (race: Race) => AppSettings;
   clearRaceResults: () => AppSettings;  // 追加: レース記録をクリアする関数
   resetSettings: () => AppSettings;
+  currentRaceNumber: number;
+  updateRaceNumber: (newNumber: number) => void;
 }
 
 // コンテキストの作成
@@ -24,6 +26,17 @@ export const AppSettingsProvider: React.FC<{ children: ReactNode }> = ({ childre
   const settingsUtils = useAppSettings();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // レース番号を更新する関数
+  const updateRaceNumber = useCallback((newNumber: number) => {
+    if (!settings) return;
+    const updatedSettings = {
+      ...settings,
+      currentRaceNumber: newNumber
+    };
+    const savedSettings = settingsUtils.updateSettings(updatedSettings);
+    setSettings(savedSettings);
+  }, [settings, settingsUtils]);
 
   // settingsUtilsの値が変更されたら、ローカルのステートを更新
   useEffect(() => {
@@ -49,7 +62,9 @@ export const AppSettingsProvider: React.FC<{ children: ReactNode }> = ({ childre
       ...settingsUtils,
       settings: settings || settingsUtils.settings,  // nullの場合はsettingsUtilsの値を使用
       isLoading, 
-      clearRaceResults
+      clearRaceResults,
+      currentRaceNumber: (settings || settingsUtils.settings)?.currentRaceNumber || 1,
+      updateRaceNumber
     }}>
       {children}
     </AppSettingsContext.Provider>

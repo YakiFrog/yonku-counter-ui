@@ -55,4 +55,5 @@ export type AppSettings = {
   lapCount: number;
   soundEnabled: boolean;
   races: Race[];
+  currentRaceNumber: number;  // 追加: 現在のレース番号
 };

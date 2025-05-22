@@ -48,7 +48,7 @@ export default function HomePage() {
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [raceNumber, setRaceNumber] = useState(1);
+  const { currentRaceNumber, updateRaceNumber } = useAppSettingsContext();
   const [raceType, setRaceType] = useState('');
   const [courseData, setCourseData] = useState([
     { 
@@ -206,7 +206,7 @@ export default function HomePage() {
   const resetTimer = () => {
     setIsRunning(false);
     setElapsedTime(0);
-    setRaceNumber(1);  // レース番号も1に戻す
+    updateRaceNumber(1);  // レース番号も1に戻す
     setRaceType('');   // レースタイプをリセット
     setCourseData(prev => 
       prev.map(course => ({
@@ -273,9 +273,9 @@ export default function HomePage() {
     // レース情報を作成
     const race: Race = {
       id: `race-${Date.now()}`,
-      name: raceType || `第${raceNumber}レース`,
+      name: raceType || `第${currentRaceNumber}レース`,
       date: new Date().toISOString(),
-      raceNumber: raceNumber,
+      raceNumber: currentRaceNumber,
       raceType: raceType,
       totalLaps: settings.lapCount,
       results
@@ -286,12 +286,12 @@ export default function HomePage() {
     
     // 通常レースの場合のみレース番号をインクリメント
     if (!raceType) {
-      setRaceNumber(currentNumber => currentNumber + 1);
+      updateRaceNumber(currentRaceNumber + 1);
     }
     
     toast({
       title: 'レース終了',
-      description: `第${raceNumber}レースの結果が保存されました。`,
+      description: `第${currentRaceNumber}レースの結果が保存されました。`,
       status: 'success',
       duration: 3000,
       isClosable: true,
@@ -604,7 +604,7 @@ export default function HomePage() {
                     <HStack alignItems="center" gap={2} mb={2} width="100%">
                       <Text fontSize="lg" fontWeight="medium" color="white" minW="auto">レース番号</Text>
                       <Button
-                        onClick={() => setRaceNumber(prev => Math.max(1, prev - 1))}
+                        onClick={() => updateRaceNumber(Math.max(1, currentRaceNumber - 1))}
                         colorScheme="red"
                         variant="outline"
                         size="sm"
@@ -612,7 +612,7 @@ export default function HomePage() {
                         -
                       </Button>
                       <Button
-                        onClick={() => setRaceNumber(prev => prev + 1)}
+                        onClick={() => updateRaceNumber(currentRaceNumber + 1)}
                         colorScheme="blue"
                         variant="outline"
                         size="sm"
@@ -626,7 +626,7 @@ export default function HomePage() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setRaceNumber(0);
+                          updateRaceNumber(0);
                           setRaceType('敗者復活戦');
                         }}
                       >
@@ -637,7 +637,7 @@ export default function HomePage() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setRaceNumber(0);
+                          updateRaceNumber(0);
                           setRaceType('準決勝');
                         }}
                       >
@@ -648,7 +648,7 @@ export default function HomePage() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setRaceNumber(0);
+                          updateRaceNumber(0);
                           setRaceType('決勝');
                         }}
                       >
@@ -680,7 +680,7 @@ export default function HomePage() {
                         raceType === '決勝' ? 'red.400' :
                         '#FFFFFF'
                       }>
-                        {raceType ? raceType : `第${raceNumber}レース`}
+                        {raceType ? raceType : `第${currentRaceNumber}レース`}
                       </Text>
                     </Box>
                   </Box>
