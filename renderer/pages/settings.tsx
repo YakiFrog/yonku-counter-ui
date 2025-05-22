@@ -511,7 +511,14 @@ export default function SettingsPage() {
                               <Select
                                 placeholder="チームを選択"
                                 value={course.playerId || ''}
-                                onChange={(e) => updateCourseAssignment(index, 'playerId', e.target.value)}
+                                onChange={(e) => {
+                                  const playerId = e.target.value;
+                                  const player = playersState.find(p => p.id === playerId);
+                                  const vehicleId = player?.vehicle?.id || null;
+                                  
+                                  updateCourseAssignment(index, 'playerId', playerId);
+                                  updateCourseAssignment(index, 'vehicleId', vehicleId);
+                                }}
                                 bg="gray.800"
                                 borderColor="gray.600"
                                 color="white"
@@ -519,32 +526,9 @@ export default function SettingsPage() {
                               >
                                 {playersState.map((player) => (
                                   <option key={player.id} value={player.id} style={{ backgroundColor: "#1A202C" }}>
-                                    {player.name}
+                                    {player.name}{player.vehicle ? ` - ${player.vehicle.name}` : ''}
                                   </option>
                                 ))}
-                              </Select>
-                            </FormControl>
-                            
-                            <FormControl>
-                              <FormLabel color="white">車両</FormLabel>
-                              <Select
-                                placeholder="車両を選択"
-                                value={course.vehicleId || ''}
-                                onChange={(e) => updateCourseAssignment(index, 'vehicleId', e.target.value)}
-                                isDisabled={!course.playerId}
-                                bg="gray.800"
-                                borderColor="gray.600"
-                                color="white"
-                                _hover={{ borderColor: "gray.500" }}
-                              >
-                                {(() => {
-                                  const vehicle = getVehicleForPlayer(course.playerId);
-                                  return vehicle ? [
-                                    <option key={vehicle.id} value={vehicle.id} style={{ backgroundColor: "#1A202C" }}>
-                                      {vehicle.name}
-                                    </option>
-                                  ] : [];
-                                })()}
                               </Select>
                             </FormControl>
                           </Box>
