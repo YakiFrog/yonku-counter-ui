@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Head from 'next/head'
 import { 
   Box, 
@@ -17,6 +17,7 @@ import {
   NumberIncrementStepper,
   Select,
   SimpleGrid,
+  Switch,
   Tab,
   TabList,
   TabPanel,
@@ -35,10 +36,10 @@ import { TabNavigation } from '../components/TabNavigation'
 type Player = {
   id: string;
   name: string;
-  vehicles: {
+  vehicle: {
     id: string;
     name: string;
-  }[];
+  } | null;
 };
 
 // コースデータの型定義
@@ -48,51 +49,64 @@ type Course = {
 };
 
 export default function SettingsPage() {
+  // 設定データを保持するstate
+  const [settings, setSettings] = useState({
+    courses: [
+      { id: 1, player: null, machine: null },
+      { id: 2, player: null, machine: null },
+      { id: 3, player: null, machine: null },
+      { id: 4, player: null, machine: null }
+    ],
+    lapCount: 10,
+    soundEnabled: true,
+    // 他の設定項目があれば追加
+  });
   const toast = useToast();
-  
+
+  // コンポーネントマウント時に設定をロード
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('settings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings(parsedSettings);
+        console.log('設定をロードしました:', parsedSettings);
+      } catch (error) {
+        console.error('設定のロードに失敗しました:', error);
+        toast({
+          title: 'エラー',
+          description: '設定データの読み込みに失敗しました',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    }
+  }, [toast]);
+
   // 選手リスト管理
   const [players, setPlayers] = useState<Player[]>([
     { 
       id: 'p1', 
       name: '選手1', 
-      vehicles: [
-        { id: 'v1-1', name: '車両1' },
-        { id: 'v1-2', name: '車両1-改' }
-      ] 
+      vehicle: { id: 'v1-1', name: '車両1' }
     },
     { 
       id: 'p2', 
       name: '選手2', 
-      vehicles: [
-        { id: 'v2-1', name: '車両2' }
-      ] 
+      vehicle: { id: 'v2-1', name: '車両2' }
     },
     { 
       id: 'p3', 
       name: '選手3', 
-      vehicles: [
-        { id: 'v3-1', name: '車両3' }
-      ] 
+      vehicle: { id: 'v3-1', name: '車両3' }
     },
     { 
       id: 'p4', 
       name: '選手4', 
-      vehicles: [
-        { id: 'v4-1', name: '車両4' }
-      ] 
+      vehicle: { id: 'v4-1', name: '車両4' }
     },
   ]);
-
-  // 設定のステート
-  const [settings, setSettings] = useState({
-    totalLaps: 5,
-    courses: [
-      { playerId: 'p1', vehicleId: 'v1-1' },
-      { playerId: 'p2', vehicleId: 'v2-1' },
-      { playerId: 'p3', vehicleId: 'v3-1' },
-      { playerId: 'p4', vehicleId: 'v4-1' },
-    ] as Course[]
-  });
 
   // 新規選手・車両入力用の状態
   const [newPlayerName, setNewPlayerName] = useState('');
@@ -100,19 +114,30 @@ export default function SettingsPage() {
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [editingPlayerName, setEditingPlayerName] = useState('');
 
-  // フォーム送信ハンドラ
+  // 設定送信ハンドラ
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // 設定を保存する処理をここに実装
-    // 実際のアプリケーションではローカルストレージやデータベースに保存する
-    
-    toast({
-      title: '設定が保存されました',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+    // 実際のアプリケーションではローカルストレージに保存する
+    try {
+      localStorage.setItem('settings', JSON.stringify(settings));
+      console.log('設定を保存しました:', settings);
+      
+      toast({
+        title: '設定が保存されました',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('設定の保存に失敗しました:', error);
+      toast({
+        title: 'エラー',
+        description: '設定の保存に失敗しました',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   // 設定値変更ハンドラ
@@ -144,7 +169,7 @@ export default function SettingsPage() {
     const newPlayer: Player = {
       id: `p${Date.now()}`,
       name: newPlayerName,
-      vehicles: []
+      vehicle: null // 初期状態では車両なし
     };
     
     setPlayers(prev => [...prev, newPlayer]);
@@ -211,9 +236,46 @@ export default function SettingsPage() {
       isClosable: true,
     });
   };
+  
+  // 車両名編集モードの開始
+  const startEditingVehicle = (playerId: string) => {
+    const player = players.find(p => p.id === playerId);
+    if (!player || !player.vehicle) return;
+    
+    setEditingVehiclePlayerId(playerId);
+    setEditingVehicleName(player.vehicle.name);
+  };
+  
+  // 車両名の保存
+  const saveVehicleEdit = () => {
+    if (!editingVehiclePlayerId || editingVehicleName.trim() === '') return;
+    
+    const player = players.find(p => p.id === editingVehiclePlayerId);
+    if (!player || !player.vehicle) return;
+    
+    const vehicleId = player.vehicle.id;
+    
+    setPlayers(prev => 
+      prev.map(player => 
+        player.id === editingVehiclePlayerId && player.vehicle
+          ? { ...player, vehicle: { ...player.vehicle, name: editingVehicleName } }
+          : player
+      )
+    );
+    
+    setEditingVehiclePlayerId(null);
+    setEditingVehicleName('');
+    
+    toast({
+      title: '車両名を更新しました',
+      status: 'success',
+      duration: 2000,
+      isClosable: true,
+    });
+  };
 
-  // 選手に車両を追加
-  const addVehicleToPlayer = (playerId: string) => {
+  // 選手に車両を設定/更新
+  const setVehicleToPlayer = (playerId: string) => {
     if (newVehicleName.trim() === '') return;
     
     const newVehicle = {
@@ -224,15 +286,33 @@ export default function SettingsPage() {
     setPlayers(prev => 
       prev.map(player => 
         player.id === playerId
-          ? { ...player, vehicles: [...player.vehicles, newVehicle] }
+          ? { ...player, vehicle: newVehicle }
           : player
       )
     );
     
+    // コース割り当てを更新
+    const playerWithUpdatedVehicle = players.find(p => p.id === playerId);
+    if (playerWithUpdatedVehicle && playerWithUpdatedVehicle.vehicle) {
+      const oldVehicleId = playerWithUpdatedVehicle.vehicle.id;
+      
+      const updatedCourses = settings.courses.map(course => {
+        if (course.playerId === playerId && course.vehicleId === oldVehicleId) {
+          return { ...course, vehicleId: newVehicle.id };
+        }
+        return course;
+      });
+      
+      setSettings(prev => ({
+        ...prev,
+        courses: updatedCourses
+      }));
+    }
+    
     setNewVehicleName('');
     
     toast({
-      title: '車両を追加しました',
+      title: '車両を更新しました',
       status: 'success',
       duration: 2000,
       isClosable: true,
@@ -240,12 +320,17 @@ export default function SettingsPage() {
   };
 
   // 車両の削除
-  const deleteVehicle = (playerId: string, vehicleId: string) => {
+  const removeVehicle = (playerId: string) => {
     // プレイヤーから車両を削除
+    const playerToUpdate = players.find(p => p.id === playerId);
+    if (!playerToUpdate || !playerToUpdate.vehicle) return;
+    
+    const vehicleId = playerToUpdate.vehicle.id;
+    
     setPlayers(prev => 
       prev.map(player => 
         player.id === playerId
-          ? { ...player, vehicles: player.vehicles.filter(v => v.id !== vehicleId) }
+          ? { ...player, vehicle: null }
           : player
       )
     );
@@ -271,12 +356,16 @@ export default function SettingsPage() {
     });
   };
 
-  // 特定の選手の車両リストを取得する関数
-  const getVehiclesForPlayer = (playerId: string | null) => {
-    if (!playerId) return [];
+  // 特定の選手の車両を取得する関数
+  const getVehicleForPlayer = (playerId: string | null) => {
+    if (!playerId) return null;
     const player = players.find(p => p.id === playerId);
-    return player ? player.vehicles : [];
+    return player ? player.vehicle : null;
   };
+  
+  // 車両名の編集状態の管理
+  const [editingVehiclePlayerId, setEditingVehiclePlayerId] = useState<string | null>(null);
+  const [editingVehicleName, setEditingVehicleName] = useState('');
 
   return (
     <React.Fragment>
@@ -308,10 +397,10 @@ export default function SettingsPage() {
                       <FormControl id="totalLaps" mb={4}>
                         <FormLabel>周回数</FormLabel>
                         <NumberInput 
-                          value={settings.totalLaps} 
+                          value={settings.lapCount} 
                           min={1} 
                           max={20}
-                          onChange={(_, value) => updateSettings('totalLaps', value)}
+                          onChange={(_, value) => updateSettings('lapCount', value)}
                         >
                           <NumberInputField />
                           <NumberInputStepper>
@@ -319,6 +408,14 @@ export default function SettingsPage() {
                             <NumberDecrementStepper />
                           </NumberInputStepper>
                         </NumberInput>
+                      </FormControl>
+
+                      <FormControl mt={4} display="flex" alignItems="center">
+                        <FormLabel mb={0}>サウンド</FormLabel>
+                        <Switch 
+                          isChecked={settings.soundEnabled} 
+                          onChange={(e) => updateSettings('soundEnabled', e.target.checked)} 
+                        />
                       </FormControl>
                     </Box>
                     
@@ -390,44 +487,69 @@ export default function SettingsPage() {
                             )}
                           </Flex>
                           
-                          {/* 車両リスト */}
+                          {/* 車両情報 */}
                           <Box ml={4}>
-                            <Heading size="xs" mb={2}>車両一覧</Heading>
-                            {player.vehicles.length > 0 ? (
-                              player.vehicles.map((vehicle) => (
-                                <Flex key={vehicle.id} mb={1} alignItems="center">
-                                  <Text flex="1">{vehicle.name}</Text>
-                                  <IconButton
-                                    aria-label="Delete vehicle"
-                                    icon={<DeleteIcon />}
-                                    colorScheme="red"
-                                    size="xs"
-                                    onClick={() => deleteVehicle(player.id, vehicle.id)}
-                                  />
-                                </Flex>
-                              ))
+                            <Heading size="xs" mb={2}>車両情報</Heading>
+                            {player.vehicle ? (
+                              <Box borderWidth="1px" borderRadius="md" p={2}>
+                                {editingVehiclePlayerId === player.id ? (
+                                  <Flex>
+                                    <Input
+                                      size="sm"
+                                      value={editingVehicleName}
+                                      onChange={(e) => setEditingVehicleName(e.target.value)}
+                                      mr={2}
+                                    />
+                                    <Button size="sm" colorScheme="blue" onClick={saveVehicleEdit}>
+                                      保存
+                                    </Button>
+                                  </Flex>
+                                ) : (
+                                  <Flex justifyContent="space-between" alignItems="center">
+                                    <Text>{player.vehicle.name}</Text>
+                                    <Flex>
+                                      <IconButton
+                                        aria-label="Edit vehicle"
+                                        icon={<EditIcon />}
+                                        size="xs"
+                                        mr={2}
+                                        onClick={() => startEditingVehicle(player.id)}
+                                      />
+                                      <IconButton
+                                        aria-label="Remove vehicle"
+                                        icon={<DeleteIcon />}
+                                        colorScheme="red"
+                                        size="xs"
+                                        onClick={() => removeVehicle(player.id)}
+                                      />
+                                    </Flex>
+                                  </Flex>
+                                )}
+                              </Box>
                             ) : (
-                              <Text fontSize="sm" color="gray.500">車両がありません</Text>
+                              <Text fontSize="sm" color="gray.500">車両が登録されていません</Text>
                             )}
                             
-                            {/* 新規車両の追加 */}
-                            <Flex mt={3}>
-                              <Input
-                                placeholder="新しい車両名"
-                                size="sm"
-                                value={newVehicleName}
-                                onChange={(e) => setNewVehicleName(e.target.value)}
-                                mr={2}
-                              />
-                              <Button
-                                size="sm"
-                                leftIcon={<AddIcon />}
-                                colorScheme="green"
-                                onClick={() => addVehicleToPlayer(player.id)}
-                              >
-                                追加
-                              </Button>
-                            </Flex>
+                            {/* 車両の設定/更新 */}
+                            {!player.vehicle && (
+                              <Flex mt={3}>
+                                <Input
+                                  placeholder="車両名"
+                                  size="sm"
+                                  value={newVehicleName}
+                                  onChange={(e) => setNewVehicleName(e.target.value)}
+                                  mr={2}
+                                />
+                                <Button
+                                  size="sm"
+                                  leftIcon={<AddIcon />}
+                                  colorScheme="green"
+                                  onClick={() => setVehicleToPlayer(player.id)}
+                                >
+                                  追加
+                                </Button>
+                              </Flex>
+                            )}
                           </Box>
                         </Box>
                       ))}
@@ -479,11 +601,14 @@ export default function SettingsPage() {
                                 onChange={(e) => updateCourseAssignment(index, 'vehicleId', e.target.value)}
                                 isDisabled={!course.playerId}
                               >
-                                {getVehiclesForPlayer(course.playerId).map((vehicle) => (
-                                  <option key={vehicle.id} value={vehicle.id}>
-                                    {vehicle.name}
-                                  </option>
-                                ))}
+                                {(() => {
+                                  const vehicle = getVehicleForPlayer(course.playerId);
+                                  return vehicle ? [
+                                    <option key={vehicle.id} value={vehicle.id}>
+                                      {vehicle.name}
+                                    </option>
+                                  ] : [];
+                                })()}
                               </Select>
                             </FormControl>
                           </Box>

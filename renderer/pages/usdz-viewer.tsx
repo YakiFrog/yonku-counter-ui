@@ -8,7 +8,8 @@ import { USDZLoader } from 'three-usdz-loader';
 
 const USDZViewer = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [isModelLoaded, setIsModelLoaded] = useState(true); // デフォルトでモデルが無いので、読み込み中表示を非表示にする
+  const [model, setModel] = useState<string | null>(null);
   const toast = useToast();
 
   // Three.js関連のオブジェクトをコンポーネント内で再利用できるように参照として保持
@@ -166,10 +167,6 @@ const USDZViewer = () => {
     const modelGroup = new THREE.Group();
     scene.add(modelGroup);
     modelGroupRef.current = modelGroup;
-    
-    // サンプルUSDZファイルを読み込み
-    const modelPath = '/models/mouse.usdz';
-    loadUSDZModel(modelPath);
 
     // リサイズハンドラ
     const handleResize = () => {
@@ -218,8 +215,17 @@ const USDZViewer = () => {
         // FileオブジェクトからパスのURLを作成
         const fileUrl = URL.createObjectURL(file);
         loadUSDZModel(fileUrl, file);
+        setModel(fileUrl);
         // 入力フィールドをリセットして、同じファイルを再度選択できるようにする
         event.target.value = '';
+        
+        toast({
+          title: 'ファイルを読み込みました',
+          description: file.name,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
       } else {
         toast({
           title: "エラー",
@@ -283,12 +289,7 @@ const USDZViewer = () => {
                 />
               </Button>
               
-              <Button
-                onClick={() => loadUSDZModel('/models/mouse.usdz')}
-                colorScheme="green"
-              >
-                サンプルモデルを表示
-              </Button>
+
             </Flex>
           </Box>
         </Flex>

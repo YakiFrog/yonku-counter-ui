@@ -17,7 +17,8 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-  StatGroup
+  StatGroup,
+  SimpleGrid
 } from '@chakra-ui/react'
 
 import { Container } from '../components/Container'
@@ -26,7 +27,18 @@ import { Hero } from '../components/Hero'
 import { TabNavigation } from '../components/TabNavigation'
 
 export default function HomePage() {
-  // ストップウォッチの状態
+  // 設定データを保持するstate
+  const [settings, setSettings] = useState({
+    courses: [
+      { id: 1, player: null, machine: null },
+      { id: 2, player: null, machine: null },
+      { id: 3, player: null, machine: null },
+      { id: 4, player: null, machine: null }
+    ],
+    lapCount: 10,
+    soundEnabled: true,
+    // 他の設定項目があれば追加
+  });
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -69,6 +81,20 @@ export default function HomePage() {
     };
   }, [isRunning, startTime]);
 
+  // コンポーネントマウント時に設定をロード
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('settings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings(parsedSettings);
+        console.log('設定をロードしました:', parsedSettings);
+      } catch (error) {
+        console.error('設定のロードに失敗しました:', error);
+      }
+    }
+  }, []);
+
   // スタート/ストップ切り替え
   const toggleTimer = () => {
     if (!isRunning) {
@@ -81,7 +107,7 @@ export default function HomePage() {
     }
   };
 
-  // リセット
+  // タイマーのリセット
   const resetTimer = () => {
     setIsRunning(false);
     setElapsedTime(0);
