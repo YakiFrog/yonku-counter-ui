@@ -527,9 +527,9 @@ export default function HomePage() {
                           borderRadius="md" 
                           borderColor="gray.600" 
                           bg="gray.900"
-                          p={1}
+                          p={2}
                         >
-                          <Flex flexWrap="wrap" gap={1}>
+                          <Flex flexWrap="wrap" gap={2}>
                             {course.lapTimes.map((lap, index) => (
                               <Badge
                                 key={index}
@@ -538,8 +538,8 @@ export default function HomePage() {
                                     ? `${course.color.split('.')[0]}` 
                                     : "gray"
                                 }
-                                p={1}
-                                fontSize="xs"
+                                p={2}
+                                fontSize="md"
                                 borderRadius="md"
                                 variant={
                                   course.bestLap && lap.timestamp === course.bestLap.timestamp 
@@ -555,7 +555,7 @@ export default function HomePage() {
                         </Box>
                       ) : (                  
                     <Box 
-                    height="80px"
+                    height="60px"
                     borderWidth="1px" 
                     borderRadius="md" 
                     borderColor="gray.600"
@@ -564,19 +564,24 @@ export default function HomePage() {
                     justifyContent="center" 
                     alignItems="center"
                   >
-                    <Text color="gray.400" fontSize="xs">周回データがありません</Text>
+                    <Text color="gray.400" fontSize="sm">周回データがありません</Text>
                   </Box>
                       )}
                     </Box>
                     
                     {course.totalLaps > 0 && (
-                      <Progress 
-                        mt={3} 
-                        value={calculateProgress(course.currentLap, course.totalLaps)} 
-                        colorScheme={course.color.split('.')[0]} 
-                        height="8px"
-                        borderRadius="full"
-                      />
+                      <Flex gap={1} w="100%" h="20px" position="relative" overflow="hidden" borderRadius="full">
+                        {[...Array(course.totalLaps)].map((_, index) => (
+                          <Box
+                            key={index}
+                            flex={1}
+                            bg={index < course.currentLap ? course.color : 'gray.600'}
+                            transition="background-color 0.3s"
+                            _first={{ borderLeftRadius: 'full' }}
+                            _last={{ borderRightRadius: 'full' }}
+                          />
+                        ))}
+                      </Flex>
                     )}
                   </Box>
                 ))}
