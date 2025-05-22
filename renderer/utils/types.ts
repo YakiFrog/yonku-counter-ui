@@ -32,6 +32,7 @@ export type RaceResult = {
   teamName?: string; // チーム名を追加（オプショナル）
   vehicleId: string | null;
   vehicleName: string;
+  courseId: number;  // コースIDを追加
   totalTime: string;
   laps: RaceLap[];
   bestLap: RaceLap | null;

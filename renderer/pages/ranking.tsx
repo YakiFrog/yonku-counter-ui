@@ -62,9 +62,9 @@ export default function RankingPage() {
   // すべてのレース結果を表示用に変換
   const allRacesData = settings?.races ? [...settings.races].reverse().map(race => ({
     name: race.name || `第${race.raceNumber}レース`,
-    results: race.results.map((result, index) => ({
+    results: race.results.map((result) => ({
       position: result.position,
-      courseId: index + 1,
+      courseId: result.courseId,  // インデックスではなく、保存されたコースIDを使用
       name: result.teamName || result.playerName, // チーム名を優先、なければplayerNameを使用
       vehicle: result.vehicleName,
       time: result.totalTime,
@@ -132,9 +132,6 @@ export default function RankingPage() {
         <VStack spacing={4} align="stretch" width="full">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="ranking" />
-          
-          <Heading size="lg" mb={3} color="white">レースランキング</Heading>
-
           {/* スクロール可能なエリア */}
           <Box maxHeight="calc(100vh - 300px)" overflowY="auto">
             <VStack spacing={6} align="stretch" width="full">
@@ -182,7 +179,17 @@ export default function RankingPage() {
                                     {entry.position}位
                                   </Text>
                                 </Box>
-                                <Badge colorScheme="purple" variant="solid" ml={3}>
+                                <Badge 
+                                  colorScheme={
+                                    entry.courseId === 1 ? "yellow" :
+                                    entry.courseId === 2 ? "green" :
+                                    entry.courseId === 3 ? "blue" :
+                                    entry.courseId === 4 ? "red" :
+                                    "gray"
+                                  } 
+                                  variant="solid" 
+                                  ml={3}
+                                >
                                   {entry.courseId}コース
                                 </Badge>
                               </Flex>

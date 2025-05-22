@@ -55,6 +55,7 @@ export default function HomePage() {
       id: 1, 
       name: '', 
       vehicle: '', 
+      teamName: '', // チーム名を追加
       color: 'yellow.500', 
       currentLap: 0, 
       totalLaps: 0, 
@@ -68,6 +69,7 @@ export default function HomePage() {
       id: 2, 
       name: '', 
       vehicle: '', 
+      teamName: '', // チーム名を追加
       color: 'green.500', 
       currentLap: 0, 
       totalLaps: 0, 
@@ -81,6 +83,7 @@ export default function HomePage() {
       id: 3, 
       name: '', 
       vehicle: '', 
+      teamName: '', // チーム名を追加
       color: 'blue.500', 
       currentLap: 0, 
       totalLaps: 0, 
@@ -94,6 +97,7 @@ export default function HomePage() {
       id: 4, 
       name: '', 
       vehicle: '', 
+      teamName: '', // チーム名を追加
       color: 'red.500', 
       currentLap: 0, 
       totalLaps: 0, 
@@ -155,9 +159,10 @@ export default function HomePage() {
         return {
           id: course.id,
           name: player?.name || '',
+          teamName: player?.teamName || '',  // チーム名を追加
           vehicle: vehicle?.name || '',
           color: colorMap[course.id] || 'gray.500',
-          currentLap: 0, // レース開始時は0から
+          currentLap: 0,
           totalLaps: settings.lapCount || 0,
           time: 0,
           bestLap: null,
@@ -222,25 +227,30 @@ export default function HomePage() {
     setIsRunning(false);
     
     // レース結果を作成
-    const results: RaceResult[] = courseData.map((course, index) => {
+    const results: RaceResult[] = courseData.map((course) => {
       // ラップタイムをRaceLap配列に変換
       const laps = [...course.lapTimes];
+      
+      // 最後の周回完了時の時間を計算
+      const finishTime = course.finishTime || course.time;
       
       // ベストラップ
       const bestLap = course.bestLap;
       
       return {
-        id: `result-${Date.now()}-${index}`,
+        id: `result-${Date.now()}-${course.id}`,
         raceId: `race-${Date.now()}`,
-        position: index + 1, // 仮の順位（後でソート）
-        playerId: course.name ? `player-${index}` : null, // 仮のID
-        playerName: course.name || `未登録プレイヤー${index + 1}`,
-        vehicleId: course.vehicle ? `vehicle-${index}` : null, // 仮のID
-        vehicleName: course.vehicle || `未登録車両${index + 1}`,
-        totalTime: course.finishTime ? formatTime(course.finishTime) : formatTime(course.time),
+        position: 1, // 仮の順位（後でソート）
+        playerId: course.name ? `player-${course.id}` : null,
+        playerName: course.name || `コース${course.id}`,
+        teamName: course.teamName,
+        vehicleId: course.vehicle ? `vehicle-${course.id}` : null,
+        vehicleName: course.vehicle || '',
+        courseId: course.id,
+        totalTime: formatTime(finishTime), // 修正: 完了時の時間を使用
         laps,
         bestLap,
-        isCompleted: course.finishTime !== null
+        isCompleted: course.currentLap >= settings.lapCount
       };
     });
     
@@ -408,31 +418,27 @@ export default function HomePage() {
         <VStack spacing={3} align="stretch" width="full">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="race" />
-          
-          <Flex justifyContent="space-between" alignItems="center" pb={1}>
-            <Heading size="lg" color="white">レース管理</Heading>
-            <Badge colorScheme={isRunning ? "green" : "gray"} fontSize="xl" p={2} borderRadius="md">
-              {isRunning ? "レース中" : "準備中"}
-            </Badge>
-          </Flex>
-          
           {/* レイアウト: 左側にコース情報、右側に大きな経過時間表示 */}
           <Grid templateColumns="5fr 3fr" gap={4}>
             {/* 左側：4コース分のレース情報と周回表示 */}
-            <Box pl={"6.3%"}> {/* 左右の余白を縮小 */}
+            <Box pl={"7%"}> {/* 左右の余白を縮小 */}
               <VStack spacing={3} align="stretch"> {/* 間隔を狭くする */}
                 {[...courseData].reverse().map((course) => (                    <Box 
                     key={course.id}
-                    p={3} 
+                    p={4} 
                     pl={5}
                     borderWidth="1px" 
                     borderRadius="md"
-                    borderLeftWidth="6px"
-                    borderLeftColor={course.color} 
-                    shadow="md"
+                    borderLeftWidth="0"
+                    shadow="lg"
                     position="relative"
                     bg="gray.800"
                     borderColor="gray.700"
+                    transition="all 0.2s"
+                    _hover={{
+                      transform: "translateX(2px)",
+                      boxShadow: "xl"
+                    }}
                   >
                     {/* コース番号を左側に横長の背景色付きで表示 - 常に「4,3,2,1」の順で表示 */}
                     <Box
@@ -450,6 +456,10 @@ export default function HomePage() {
                       bg={course.color}
                       boxShadow="dark-lg"
                       zIndex={2}
+                      borderLeftRadius="md"
+                      sx={{
+                        textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
+                      }}
                     >
                       {course.id}
                     </Box>

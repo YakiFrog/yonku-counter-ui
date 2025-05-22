@@ -276,9 +276,6 @@ export default function SettingsPage() {
         <VStack spacing={4} align="stretch" width="full">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="settings" />
-          
-          <Heading size="lg" mb={4} color="white">レース設定</Heading>
-          
           <Box as="form" onSubmit={handleSubmit} borderWidth="1px" borderRadius="lg" p={6} shadow="md" bg="gray.800" borderColor="gray.700">
             <Tabs variant="enclosed" colorScheme="blue">
               <TabList mb={4} bg="gray.800" borderBottomColor="gray.700">
