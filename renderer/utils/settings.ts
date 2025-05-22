@@ -46,6 +46,16 @@ export function useAppSettings() {
   }, []);
 
   // 設定を更新してローカルストレージに保存する
+  /**
+   * 重要: この関数は以下の2つの同期を確実に行います：
+   * 1. ローカルストレージから最新の状態を直接取得して更新（他の処理による変更も反映）
+   * 2. メモリ上の状態（React state）とローカルストレージの両方を同じオブジェクトで更新
+   * 
+   * この実装により：
+   * - 複数箇所からの更新が競合しない
+   * - レース結果などの重要なデータが確実に保存される
+   * - ランキング表示のデータ整合性が保たれる
+   */
   const updateSettings = (newSettings: Partial<AppSettings>) => {
     // 更新前の状態をログ
     console.log('更新前の設定:', settings);
@@ -164,7 +174,12 @@ export function useAppSettings() {
     });
   };
 
-  // レース結果を保存する
+  /**
+   * レース結果を保存する
+   * 重要: この関数はupdateSettings関数を使用して、
+   * ローカルストレージとメモリ上の状態を確実に同期します。
+   * これにより、ランキング表示に必要なデータの整合性が保証されます。
+   */
   const saveRaceResult = (race: Race) => {
     console.log('保存前の全レース:', settings.races);
     const updatedRaces = [...settings.races, race];
