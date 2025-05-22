@@ -57,7 +57,8 @@ export default function RankingPage() {
     vehicle: result.vehicleName,
     time: result.totalTime,
     laps: result.laps?.map(lap => lap.time) || [],
-    wins: 0
+    wins: 0,
+    isCompleted: result.isCompleted || false
   })) : [];
     
   // 総合ランキングの計算
@@ -147,7 +148,14 @@ export default function RankingPage() {
                       <Td fontWeight="bold">{entry.position}</Td>
                       <Td>{entry.name}</Td>
                       <Td>{entry.vehicle}</Td>
-                      <Td>{entry.time}</Td>
+                      <Td>
+                        <Flex alignItems="center" gap={2}>
+                          {entry.time}
+                          {entry.isCompleted && (
+                            <Badge colorScheme="green" size="sm">完走</Badge>
+                          )}
+                        </Flex>
+                      </Td>
                       <Td>
                         <Flex wrap="wrap" gap={2}>
                           {(() => {

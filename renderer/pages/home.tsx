@@ -65,7 +65,8 @@ export default function HomePage() {
       time: 0, 
       bestLap: null, 
       lapTimes: [], // 各周回のタイム記録
-      lastLapTime: 0 // 前の周回が完了した時間
+      lastLapTime: 0, // 前の周回が完了した時間
+      finishTime: null, // 全周回完了時の時間
     },
     { 
       id: 2, 
@@ -77,7 +78,8 @@ export default function HomePage() {
       time: 0,
       bestLap: null,
       lapTimes: [],
-      lastLapTime: 0
+      lastLapTime: 0,
+      finishTime: null,
     },
     { 
       id: 3, 
@@ -89,7 +91,8 @@ export default function HomePage() {
       time: 0,
       bestLap: null,
       lapTimes: [],
-      lastLapTime: 0
+      lastLapTime: 0,
+      finishTime: null,
     },
     { 
       id: 4, 
@@ -101,7 +104,8 @@ export default function HomePage() {
       time: 0,
       bestLap: null,
       lapTimes: [],
-      lastLapTime: 0
+      lastLapTime: 0,
+      finishTime: null,
     },
   ]);
   
@@ -162,7 +166,8 @@ export default function HomePage() {
           time: 0,
           bestLap: null,
           lapTimes: [], // 周回ごとの記録時間
-          lastLapTime: 0 // 前回のラップ完了時間
+          lastLapTime: 0, // 前回のラップ完了時間
+          finishTime: null, // 全周回完了時の時間
         };
       });
       
@@ -193,7 +198,8 @@ export default function HomePage() {
         currentLap: 0,
         lapTimes: [],
         lastLapTime: 0,
-        bestLap: null
+        bestLap: null,
+        finishTime: null
       }))
     );
   };
@@ -219,9 +225,10 @@ export default function HomePage() {
         playerName: course.name || `未登録プレイヤー${index + 1}`,
         vehicleId: course.vehicle ? `vehicle-${index}` : null, // 仮のID
         vehicleName: course.vehicle || `未登録車両${index + 1}`,
-        totalTime: formatTime(course.time),
+        totalTime: course.finishTime ? formatTime(course.finishTime) : formatTime(course.time),
         laps,
-        bestLap
+        bestLap,
+        isCompleted: course.finishTime !== null
       };
     });
     
@@ -306,12 +313,18 @@ export default function HomePage() {
           // 周回時間の配列に追加
           const newLapTimes = [...course.lapTimes, newLapTime];
           
+          // 全周回完了したかチェック
+          const newLapCount = course.currentLap + 1;
+          const isFinished = course.totalLaps > 0 && newLapCount >= course.totalLaps;
+          
           return {
             ...course, 
-            currentLap: course.currentLap + 1,
+            currentLap: newLapCount,
             lapTimes: newLapTimes,
             lastLapTime: currentTime, // 現在の時間を最後のラップタイムとして記録
-            bestLap
+            bestLap,
+            // 目標周回数に達した場合、完了時間を記録
+            finishTime: isFinished && course.finishTime === null ? currentTime : course.finishTime
           };
         }
         return course;
@@ -373,11 +386,11 @@ export default function HomePage() {
         <title>レース管理システム</title>
       </Head>
       <Container maxHeight="100vh" maxWidth="full" px={2} py={4}>
-        <VStack spacing={6} align="stretch" width="full">
+        <VStack spacing={4} align="stretch" width="full">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="race" />
           
-          <Flex justifyContent="space-between" alignItems="center" pb={2}>
+          <Flex justifyContent="space-between" alignItems="center" pb={1}>
             <Heading size="lg">レース管理</Heading>
             <Badge colorScheme={isRunning ? "green" : "gray"} fontSize="xl" p={2} borderRadius="md">
               {isRunning ? "レース中" : "準備中"}
@@ -385,41 +398,41 @@ export default function HomePage() {
           </Flex>
           
           {/* レイアウト: 左側にコース情報、右側に大きな経過時間表示 */}
-          <Grid templateColumns="2fr 1fr" gap={6}>
+          <Grid templateColumns="5fr 3fr" gap={4}>
             {/* 左側：4コース分のレース情報と周回表示 */}
-            <Box pl={100} pr={2}> {/* 左右の余白を調整 */}
-              <VStack spacing={6} align="stretch"> {/* 間隔を広げる */}
+            <Box pl={"6.3%"}> {/* 左右の余白を縮小 */}
+              <VStack spacing={3} align="stretch"> {/* 間隔を狭くする */}
                 {[...courseData].reverse().map((course) => (
                   <Box 
                     key={course.id}
-                    p={4} 
-                    pl={6}  // 左側に余白を追加して数字のスペースを確保
+                    p={3} 
+                    pl={5}  // 左側の余白を少し縮小
                     borderWidth="1px" 
-                    borderRadius="lg" 
-                    borderLeftWidth="8px" 
+                    borderRadius="md" // より小さい角丸
+                    borderLeftWidth="6px" // 左ボーダーも細く
                     borderLeftColor={course.color} 
-                    shadow="md"
+                    shadow="sm" // 影も控えめに
                     position="relative"  // 絶対配置の基準点
                   >
                     {/* 大きなコース番号を左側に表示（枠外に） - 常に「4,3,2,1」の順で表示 */}
                     <Box
                       position="absolute"
-                      left="-100px"
+                      left="-80px"
                       top="50%"
                       transform="translateY(-50%)"
-                      fontSize="6xl"
+                      fontSize="5xl"
                       fontWeight="black"
                       color={course.color}
-                      w="80px"
-                      h="80px"
+                      w="60px"
+                      h="60px"
                       display="flex"
                       justifyContent="center"
                       alignItems="center"
                       borderRadius="full"
                       bg="white"
                       _dark={{ bg: "gray.800" }}
-                      boxShadow="lg"
-                      border="4px solid"
+                      boxShadow="md"
+                      border="3px solid"
                       borderColor={course.color}
                       zIndex={2}
                     >
@@ -427,71 +440,106 @@ export default function HomePage() {
                     </Box>
                     <Flex justifyContent="space-between" alignItems="center">
                       <Box>
-                        <Text fontWeight="bold" fontSize="lg">{course.name}</Text>
-                        <Text fontSize="sm">車両: {course.vehicle}</Text>
-                        {course.bestLap && (
-                          <Text fontSize="sm" color={`${course.color.split('.')[0]}.700`} fontWeight="bold">
-                            ベストタイム: {course.bestLap.time}
-                          </Text>
-                        )}
+                        <Text fontWeight="bold" fontSize="md">{course.name}</Text>
+                        <Flex alignItems="center" gap={2} flexWrap="wrap">
+                          <Text fontSize="xs">車両: {course.vehicle}</Text>
+                          {course.bestLap && (
+                            <Badge size="sm" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
+                              ベスト: {course.bestLap.time}
+                            </Badge>
+                          )}
+                          {course.finishTime && (
+                            <Badge size="sm" colorScheme="green" variant="solid">
+                              完走: {formatTime(course.finishTime)}
+                            </Badge>
+                          )}
+                        </Flex>
                       </Box>
                       <Flex direction="column" alignItems="center">
                         <Flex alignItems="center">
                           <Button 
-                            size="sm" 
+                            size="xs" 
                             onClick={() => decrementLap(course.id)}
                             isDisabled={course.currentLap <= 0}
                             colorScheme={course.color.split('.')[0]}
                             variant="outline"
-                            mr={2}
+                            mr={1}
+                            h="24px"
+                            minW="24px"
+                            p={0}
                           >
                             -
                           </Button>
-                          <Text fontWeight="bold" fontSize="2xl">
+                          <Text fontWeight="bold" fontSize="xl" mx={1}>
                             {course.currentLap}{course.totalLaps > 0 ? ` / ${course.totalLaps}` : ''}
                           </Text>
                           <Button 
-                            size="sm" 
+                            size="xs" 
                             onClick={() => incrementLap(course.id)}
                             isDisabled={course.totalLaps > 0 && course.currentLap >= course.totalLaps}
                             colorScheme={course.color.split('.')[0]}
                             variant="outline"
-                            ml={2}
+                            ml={1}
+                            h="24px"
+                            minW="24px"
+                            p={0}
                           >
                             +
                           </Button>
                         </Flex>
-                        <Text fontSize="sm" mt={1}>周回数</Text>
+                        <Text fontSize="xs" mt={0}>周回数</Text>
                       </Flex>
                     </Flex>
                     
                     {/* 周回時間の表示 */}
-                    {course.lapTimes.length > 0 && (
-                      <Box mt={4}>
-                        <Text fontSize="sm" fontWeight="semibold" mb={2}>周回タイム:</Text>
-                        <Flex flexWrap="wrap" gap={2}>
-                          {course.lapTimes.map((lap, index) => (
-                            <Badge
-                              key={index}
-                              colorScheme={
-                                course.bestLap && lap.timestamp === course.bestLap.timestamp 
-                                  ? `${course.color.split('.')[0]}` 
-                                  : "gray"
-                              }
-                              p={2}
-                              borderRadius="md"
-                              variant={
-                                course.bestLap && lap.timestamp === course.bestLap.timestamp 
-                                  ? "solid" 
-                                  : "subtle"
-                              }
-                            >
-                              {lap.lapNumber}周目: {lap.time}
-                            </Badge>
-                          ))}
-                        </Flex>
-                      </Box>
-                    )}
+                    <Box mt={2} height="80px"> {/* 高さを縮小 */}
+                      <Text fontSize="xs" fontWeight="semibold" mb={1}>周回タイム:</Text>
+                      {course.lapTimes.length > 0 ? (
+                        <Box 
+                          overflowY="auto" 
+                          maxHeight="60px" 
+                          borderWidth="1px" 
+                          borderRadius="md" 
+                          borderColor="gray.200" 
+                          p={1}
+                        >
+                          <Flex flexWrap="wrap" gap={1}>
+                            {course.lapTimes.map((lap, index) => (
+                              <Badge
+                                key={index}
+                                colorScheme={
+                                  course.bestLap && lap.timestamp === course.bestLap.timestamp 
+                                    ? `${course.color.split('.')[0]}` 
+                                    : "gray"
+                                }
+                                p={1}
+                                fontSize="xs"
+                                borderRadius="md"
+                                variant={
+                                  course.bestLap && lap.timestamp === course.bestLap.timestamp 
+                                    ? "solid" 
+                                    : "subtle"
+                                }
+                              >
+                                {lap.lapNumber}周目: {lap.time}
+                              </Badge>
+                            ))}
+                          </Flex>
+                        </Box>
+                      ) : (
+                        <Box 
+                          height="60px" 
+                          borderWidth="1px" 
+                          borderRadius="md" 
+                          borderColor="gray.200"
+                          display="flex" 
+                          justifyContent="center" 
+                          alignItems="center"
+                        >
+                          <Text color="gray.500" fontSize="xs">周回データがありません</Text>
+                        </Box>
+                      )}
+                    </Box>
                     
                     {course.totalLaps > 0 && (
                       <Progress 
@@ -520,15 +568,15 @@ export default function HomePage() {
               h="100%"
               w="full"
             >
-              <VStack spacing={5} w="full">
-                <Text fontSize="2xl" fontWeight="medium">総経過時間</Text>
+              <VStack spacing={3} w="full">
+                <Text fontSize="lg" fontWeight="medium">総経過時間</Text>
                 <Box 
-                  fontSize={["4xl", "5xl", "6xl", "7xl"]}
+                  fontSize={["3xl", "4xl", "5xl", "6xl"]}
                   fontWeight="bold"
                   color="blue.500"
-                  p={4}
-                  py={8}
-                  borderRadius="xl"
+                  p={3}
+                  py={6}
+                  borderRadius="lg"
                   bg="gray.50"
                   _dark={{ bg: "gray.700" }}
                   boxShadow="md"
@@ -554,32 +602,32 @@ export default function HomePage() {
           </Grid>
           
           {/* コントロールボタン */}
-          <Flex justifyContent="center" gap={3} mt={2}>
+          <Flex justifyContent="center" gap={2} mt={2}>
             <Button 
               colorScheme={isRunning ? "orange" : "green"} 
-              size="lg" 
+              size="md" 
               onClick={toggleTimer}
-              py={7}
-              fontSize="xl"
+              py={5}
+              fontSize="lg"
               flex={1}
             >
               {isRunning ? "一時停止" : "スタート"}
             </Button>
             <Button 
               colorScheme="red" 
-              size="lg" 
+              size="md" 
               onClick={resetTimer}
-              py={7}
-              fontSize="xl"
+              py={5}
+              fontSize="lg"
               flex={1}
             >
               リセット
             </Button>
             <Button 
               colorScheme="purple" 
-              size="lg"
-              py={7}
-              fontSize="xl"
+              size="md"
+              py={5}
+              fontSize="lg"
               flex={1}
               onClick={onOpen}
               isDisabled={!isRunning && elapsedTime === 0}

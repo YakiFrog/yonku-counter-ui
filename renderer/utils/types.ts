@@ -33,6 +33,7 @@ export type RaceResult = {
   totalTime: string;
   laps: RaceLap[];
   bestLap: RaceLap | null;
+  isCompleted?: boolean; // 全周回を完了したかどうか
 };
 
 export type Race = {
