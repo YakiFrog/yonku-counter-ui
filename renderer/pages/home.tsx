@@ -55,7 +55,7 @@ export default function HomePage() {
       id: 1, 
       name: '', 
       vehicle: '', 
-      color: 'red.500', 
+      color: 'yellow.500', 
       currentLap: 0, 
       totalLaps: 0, 
       time: 0, 
@@ -68,7 +68,7 @@ export default function HomePage() {
       id: 2, 
       name: '', 
       vehicle: '', 
-      color: 'blue.500', 
+      color: 'green.500', 
       currentLap: 0, 
       totalLaps: 0, 
       time: 0,
@@ -81,7 +81,7 @@ export default function HomePage() {
       id: 3, 
       name: '', 
       vehicle: '', 
-      color: 'green.500', 
+      color: 'blue.500', 
       currentLap: 0, 
       totalLaps: 0, 
       time: 0,
@@ -94,7 +94,7 @@ export default function HomePage() {
       id: 4, 
       name: '', 
       vehicle: '', 
-      color: 'purple.500', 
+      color: 'red.500', 
       currentLap: 0, 
       totalLaps: 0, 
       time: 0,
@@ -146,10 +146,10 @@ export default function HomePage() {
         
         // 色のマッピング - コースIDに基づいて決定
         const colorMap = {
-          1: 'red.500',
-          2: 'blue.500',
-          3: 'green.500',
-          4: 'purple.500'
+          1: 'yellow.500',
+          2: 'green.500',
+          3: 'blue.500',
+          4: 'red.500'
         };
         
         return {
@@ -434,25 +434,21 @@ export default function HomePage() {
                     bg="gray.800"
                     borderColor="gray.700"
                   >
-                    {/* 大きなコース番号を左側に表示（枠外に） - 常に「4,3,2,1」の順で表示 */}
+                    {/* コース番号を左側に横長の背景色付きで表示 - 常に「4,3,2,1」の順で表示 */}
                     <Box
                       position="absolute"
                       left="-80px"
-                      top="50%"
-                      transform="translateY(-50%)"
+                      top="0"
                       fontSize="5xl"
                       fontWeight="black"
-                      color={course.color}
-                      w="60px"
-                      h="60px"
+                      color="white"
+                      w="80px"
+                      h="100%"
                       display="flex"
                       justifyContent="center"
                       alignItems="center"
-                      borderRadius="full"
-                      bg="gray.900"
+                      bg={course.color}
                       boxShadow="dark-lg"
-                      border="3px solid"
-                      borderColor={course.color}
                       zIndex={2}
                     >
                       {course.id}
