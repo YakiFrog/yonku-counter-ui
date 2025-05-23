@@ -229,8 +229,10 @@ export default function HomePage() {
     // デバッグ: 保存前のローカルストレージの内容を確認
     console.log('保存前のローカルストレージ:', localStorage.getItem('yonkuAppSettings'));
     
-    // レース結果を作成
-    const results: RaceResult[] = courseData.map((course) => {
+    // レース結果を作成（チームなしのコースは除外）
+    const results: RaceResult[] = courseData
+      .filter(course => course.name) // チーム名があるコースのみを対象とする
+      .map((course) => {
       // ラップタイムをRaceLap配列に変換
       const laps = [...course.lapTimes];
       

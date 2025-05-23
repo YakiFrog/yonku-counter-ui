@@ -600,10 +600,9 @@ export default function SettingsPage() {
                             <FormControl mb={3}>
                               <FormLabel color="white">チーム</FormLabel>
                               <Select
-                                placeholder="チームを選択"
-                                value={course.playerId || ''}
+                                value={course.playerId || 'none'}
                                 onChange={(e) => {
-                                  const playerId = e.target.value;
+                                  const playerId = e.target.value === 'none' ? null : e.target.value;
                                   console.log('選択されたプレイヤーID:', playerId);
                                   console.log('コースの現在の状態:', course);
                                   
@@ -635,17 +634,18 @@ export default function SettingsPage() {
                                 color="white"
                                 _hover={{ borderColor: "gray.500" }}
                               >
-                                {playersState.length > 0 ? (
-                                  playersState.map((player) => (
-                                    <option key={player.id} value={player.id} style={{ backgroundColor: "#1A202C" }}>
-                                      {player.name}{player.vehicle ? ` - ${player.vehicle.name}` : ''}
-                                    </option>
-                                  ))
-                                ) : (
-                                  <option disabled style={{ backgroundColor: "#1A202C" }}>
-                                    チームが登録されていません
-                                  </option>
-                                )}
+                                <option value="none" style={{ backgroundColor: "#1A202C" }}>
+                                  チームなし
+                                </option>
+                                {playersState.length > 0 && 
+                                  playersState
+                                    .filter(player => !player.isSpecial) // 特別なプレイヤー（チームなし）を除外
+                                    .map((player) => (
+                                      <option key={player.id} value={player.id} style={{ backgroundColor: "#1A202C" }}>
+                                        {player.name}{player.vehicle ? ` - ${player.vehicle.name}` : ''}
+                                      </option>
+                                    ))
+                                }
                               </Select>
                             </FormControl>
                           </Box>
