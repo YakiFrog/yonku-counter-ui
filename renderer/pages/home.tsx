@@ -45,6 +45,12 @@ export default function HomePage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef();
   
+  // スライドショー関連のstate
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [slideshowImages, setSlideshowImages] = useState([]);
+  const [slideDirection, setSlideDirection] = useState('left');
+  const [isSliding, setIsSliding] = useState(false);
+  
   // すべてのステート hooks を先に宣言
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
@@ -112,8 +118,42 @@ export default function HomePage() {
   
   // タイマーのID保持用
   const timerRef = useRef(null);
+  const slideshowTimerRef = useRef(null);
 
   const { write: serialWrite, messages, clearMessages } = useSerial();
+
+  // スライドショーの初期化
+  useEffect(() => {
+    // slideshowフォルダの画像リストを設定
+    const images = [
+      '/slideshow/oit.png',
+      // 他の画像を追加する場合は以下のようにパスを追加
+      '/slideshow/miniyonku.png',
+      // '/slideshow/team2.png',
+      // '/slideshow/competition.jpg',
+    ];
+    setSlideshowImages(images);
+  }, []);
+
+  // スライドショーの自動切り替え
+  useEffect(() => {
+    if (slideshowImages.length > 1) {
+      slideshowTimerRef.current = setInterval(() => {
+        setSlideDirection('left');
+        setIsSliding(true);
+        setCurrentSlideIndex((prevIndex) => 
+          (prevIndex + 1) % slideshowImages.length
+        );
+        setTimeout(() => setIsSliding(false), 500);
+      }, 5000); // 5秒ごとに切り替え
+    }
+
+    return () => {
+      if (slideshowTimerRef.current) {
+        clearInterval(slideshowTimerRef.current);
+      }
+    };
+  }, [slideshowImages]);
 
   // シリアルポートからのデータを監視するeffect
   useEffect(() => {
@@ -933,15 +973,11 @@ export default function HomePage() {
                     </Box>
                   </Box>
 
-                  {/* ここにでか文字 */}
-                  <Box width="100%" mt={"10px"}></Box>
-                    <Text fontSize="3xl" fontWeight="medium" color="white" textAlign="center">↓↓↓このカウンター画面の製作者↓↓↓</Text>
+                  {/* スライドショー */}
+                  <Box width="100%" mt={"10px"}>
                     <Box 
-                      fontSize={["3xl", "4xl", "5xl", "6xl"]}
-                      fontWeight="bold"
-                      color="cyan.400"
-                      p={3}
-                      py={12}
+                      px={4}
+                      py={4}
                       borderRadius="lg"
                       bg="gray.900"
                       border="1px solid"
@@ -953,13 +989,90 @@ export default function HomePage() {
                       flexDirection="column"
                       justifyContent="center"
                       alignItems="center"
-                      fontFamily="mono"
+                      position="relative"
+                      overflow="hidden"
                     >
-                      <>
-                        <Text color="#FFFFFF" letterSpacing="0.1em">小谷 亮太</Text>
-                        <Text color="#FFFFFF" fontSize="2xl">ロボット工学専攻の院1年生！</Text>
-                      </>
+                      {/* スライドショー画像表示エリア */}
+                      <Box
+                        width="100%"
+                        height="270px"
+                        position="relative"
+                        borderRadius="md"
+                        overflow="hidden"
+                        bg="gray.800"
+                      >
+                        {slideshowImages.length > 0 && (
+                          <>
+                            {slideshowImages.map((image, index) => (
+                              <Box
+                                key={index}
+                                position="absolute"
+                                top={0}
+                                left={0}
+                                width="100%"
+                                height="100%"
+                                opacity={index === currentSlideIndex ? 1 : 0}
+                                transform={`translateX(${
+                                  index === currentSlideIndex ? "0" :
+                                  index > currentSlideIndex ? "100%" : "-100%"
+                                })`}
+                                transition="all 0.5s ease-in-out"
+                                display="flex"
+                                alignItems="center"
+                                justifyContent="center"
+                                style={{
+                                  transformOrigin: "center center"
+                                }}
+                              >
+                                <img
+                                  src={image}
+                                  alt={`Slideshow ${index + 1}`}
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "contain",
+                                    borderRadius: "8px"
+                                  }}
+                                />
+                              </Box>
+                            ))}
+                          </>
+                        )}
+
+                        {/* ローディング表示 */}
+                        {slideshowImages.length === 0 && (
+                          <Text color="gray.400" fontSize="lg">
+                            画像を読み込み中...
+                          </Text>
+                        )}
+                        
+                        {/* スライドインジケーター */}
+                        {slideshowImages.length > 1 && (
+                          <HStack
+                            position="absolute"
+                            bottom="10px"
+                            left="50%"
+                            transform="translateX(-50%)"
+                            spacing={2}
+                            zIndex={2}
+                          >
+                            {slideshowImages.map((_, index) => (
+                              <Box
+                                key={index}
+                                width="8px"
+                                height="8px"
+                                borderRadius="full"
+                                bg={index === currentSlideIndex ? "white" : "rgba(255,255,255,0.4)"}
+                                transition="background-color 0.3s"
+                                cursor="pointer"
+                                onClick={() => setCurrentSlideIndex(index)}
+                              />
+                            ))}
+                          </HStack>
+                        )}
+                      </Box>
                     </Box>
+                  </Box>
                 </VStack>
               </VStack>
             </Box>
