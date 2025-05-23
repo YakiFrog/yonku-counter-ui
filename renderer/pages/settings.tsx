@@ -732,21 +732,19 @@ export default function SettingsPage() {
                               <Select
                                 value={course.playerId || 'none'}
                                 onChange={(e) => {
-                                  const playerId = e.target.value === 'none' ? null : e.target.value;
+                                  const playerId = e.target.value === 'none' ? '' : e.target.value;
                                   console.log('選択されたプレイヤーID:', playerId);
                                   console.log('コースの現在の状態:', course);
                                   
                                   updateCourseAssignment(index, 'playerId', playerId)
                                     .then(() => {
-                                      if (playerId) {
-                                        toast({
-                                          title: '成功',
-                                          description: 'チームを割り当てました',
-                                          status: 'success',
-                                          duration: 2000,
-                                          isClosable: true,
-                                        });
-                                      }
+                                      toast({
+                                        title: '成功',
+                                        description: playerId ? 'チームを割り当てました' : 'チームの割り当てを解除しました',
+                                        status: 'success',
+                                        duration: 2000,
+                                        isClosable: true,
+                                      });
                                     })
                                     .catch((error) => {
                                       console.error('コース割り当てエラー:', error);
