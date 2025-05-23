@@ -707,11 +707,33 @@ export default function SettingsPage() {
                     <Box>
                       <Heading size="md" mb={4} color="white">コース割り当て</Heading>
                       
-                      {/* デバッグ情報表示 */}
-                      <Text color="gray.400" fontSize="sm" mb={4}>
-                        登録チーム数: {playersState.length} | 
-                        設定からのチーム数: {settings?.players?.length || 0}
-                      </Text>
+                        {/* デバッグ情報とクリアボタンを横に配置 */}
+                        <Flex justify="space-between" align="center" mb={4}>
+                        <Text color="gray.400" fontSize="sm">
+                          登録チーム数: {playersState.length} | 
+                          設定からのチーム数: {settings?.players?.length || 0}
+                        </Text>
+
+                        {/* 一括クリアボタン */}
+                        <Button
+                          colorScheme="red"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                          settings.courses.forEach((_, index) => {
+                            updateCourseAssignment(index, 'playerId', '');
+                          });
+                          toast({
+                            title: '全コースの割り当てを解除しました',
+                            status: 'info',
+                            duration: 2000,
+                            isClosable: true,
+                          });
+                          }}
+                        >
+                          全コースの割り当てを解除
+                        </Button>
+                        </Flex>
                       
                       <SimpleGrid columns={[1, 2]} spacing={6}>
                         {settings.courses.map((course, index) => (
