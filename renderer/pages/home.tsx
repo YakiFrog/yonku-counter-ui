@@ -541,18 +541,18 @@ export default function HomePage() {
                     </Box>
                     <Flex justifyContent="space-between" alignItems="center">
                       <Box maxW="60%">
-                        <Flex align="baseline" gap={2} flexWrap="wrap">
-                          <Text fontWeight="bold" fontSize={["xl", "2xl", "3xl"]} color="#FFFFFF" noOfLines={1} overflow="hidden" textOverflow="ellipsis">{course.name}</Text>
-                          <Text fontSize="md" color="rgba(255, 255, 255, 0.8)" noOfLines={1} overflow="hidden" textOverflow="ellipsis">/ {course.vehicle}</Text>
+                        <Flex align="center" gap={2} overflow="hidden" whiteSpace="nowrap">
+                          <Text fontWeight="bold" fontSize={["xl", "2xl", "3xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">{course.name}</Text>
+                          <Text fontSize="md" color="rgba(255, 255, 255, 0.8)" overflow="hidden" textOverflow="ellipsis">/ {course.vehicle}</Text>
                           {course.bestLap && (
-                            <Badge size="sm" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
-                              ベスト: {course.bestLap.time}
-                            </Badge>
+                          <Badge size="sm" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
+                            ベスト: {course.bestLap.time}
+                          </Badge>
                           )}
                           {course.finishTime && (
-                            <Badge size="sm" colorScheme="green" variant="solid">
-                              完走: {formatTime(course.finishTime)}
-                            </Badge>
+                          <Badge size="sm" colorScheme="green" variant="solid">
+                            完走: {formatTime(course.finishTime)}
+                          </Badge>
                           )}
                         </Flex>
                       </Box>
