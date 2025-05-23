@@ -216,7 +216,7 @@ export default function RankingPage() {
                             <Td color="white">{entry.vehicle}</Td>
                             <Td>
                               <Flex alignItems="center" gap={2}>
-                                <Text color="white">{entry.time}</Text>
+                                <Text color="white" fontSize="lg">{entry.time}</Text>
                                 {entry.isCompleted && (
                                   <Badge colorScheme="green" size="sm" px={2} py={1} borderRadius="md" variant="solid">完走</Badge>
                                 )}
