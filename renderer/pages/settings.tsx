@@ -443,6 +443,16 @@ export default function SettingsPage() {
     }
   };
 
+  // シリアルモニター用のref
+  const monitorRef = useRef<HTMLDivElement>(null);
+
+  // シリアルメッセージが更新されたら自動スクロール
+  useEffect(() => {
+    if (monitorRef.current) {
+      monitorRef.current.scrollTop = monitorRef.current.scrollHeight;
+    }
+  }, [serialState.messages]);
+
   // コンポーネントマウント時とボタンクリック時にポートリストを更新
   useEffect(() => {
     handleRefreshPorts();
@@ -461,16 +471,6 @@ export default function SettingsPage() {
       </Container>
     );
   }
-
-  // シリアルモニター用のref
-  const monitorRef = useRef<HTMLDivElement>(null);
-
-  // シリアルメッセージが更新されたら自動スクロール
-  useEffect(() => {
-    if (monitorRef.current) {
-      monitorRef.current.scrollTop = monitorRef.current.scrollHeight;
-    }
-  }, [serialState.messages]);
 
   return (
     <Container maxW="1920px" px={4} py={3}>
