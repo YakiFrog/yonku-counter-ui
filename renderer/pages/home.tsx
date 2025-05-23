@@ -193,6 +193,27 @@ export default function HomePage() {
 
   const { write: serialWrite } = useSerial();
 
+  // シリアルデータの受信処理を設定
+  useEffect(() => {
+    const handleSerialData = (data: string) => {
+      // ストップウォッチが動作中の時のみ処理を実行
+      if (isRunning) {
+        const courseNumber = parseInt(data.trim());
+        if (!isNaN(courseNumber) && courseNumber >= 1 && courseNumber <= 4) {
+          incrementLap(courseNumber);
+        }
+      }
+    };
+
+    // シリアルデータ受信のリスナーを設定
+    const unsubscribe = window.serialPort.onData(handleSerialData);
+
+    // クリーンアップ
+    return () => {
+      unsubscribe();
+    };
+  }, [isRunning]); // isRunningの変更を監視
+
   // ゲート準備コマンド送信
   const handleGatePrep = async () => {
     try {
@@ -557,8 +578,7 @@ export default function HomePage() {
                           </Text>
                           <Button 
                             size="xs" 
-                            onClick={() => incrementLap(course.id)}
-                            isDisabled={course.totalLaps > 0 && course.currentLap >= course.totalLaps}
+                            isDisabled={true} // マニュアルインクリメントを無効化
                             colorScheme={course.color.split('.')[0]}
                             variant="outline"
                             ml={1}
