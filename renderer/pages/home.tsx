@@ -646,7 +646,7 @@ export default function HomePage() {
                     
                     {/* 周回時間の表示 */}
                     <Box mt={2} height="100px">
-                      <Text fontSize="xs" fontWeight="semibold" mb={1} color="white">周回タイム:</Text>
+                      <Text fontSize="lg" fontWeight="semibold" mb={1} color="white">周回タイム:</Text>
                       {course.lapTimes.length > 0 ? (
                         <Box 
                           overflowY="auto" 
@@ -888,6 +888,7 @@ export default function HomePage() {
                       justifyContent="center"
                       alignItems="center"
                       fontFamily="RocknRoll One"
+                      letterSpacing={5}
                     >
                       <Text color={
                         raceType === '敗者復活戦' ? 'yellow.400' :
@@ -902,7 +903,7 @@ export default function HomePage() {
 
                   {/* 経過時間表示 */}
                   <Box width="100%">
-                    <Text fontSize="lg" fontWeight="medium" color="white">総経過時間</Text>
+                    <Text fontSize="lg" fontWeight="medium" color="white">ストップウォッチ</Text>
                     <Box 
                       fontSize={["3xl", "4xl", "5xl", "8xl"]} // フォントサイズを大きく
                       fontWeight="bold"

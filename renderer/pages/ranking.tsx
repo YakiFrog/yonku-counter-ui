@@ -128,17 +128,30 @@ export default function RankingPage() {
       <Head>
         <title>ランキング</title>
       </Head>
-      <Container maxWidth="1920px" px={4} py={3}>
-        <VStack spacing={4} align="stretch" width="full">
+      <Container maxWidth="1920px" px={4} py={3} height="100vh">
+        <VStack spacing={4} align="stretch" width="full" height="full">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="ranking" />
           {/* スクロール可能なエリア */}
-          <Box maxHeight="calc(100vh - 300px)" overflowY="auto">
+          <Box flex="1" overflowY="auto" minHeight="0">
             <VStack spacing={6} align="stretch" width="full">
               {/* 各レース結果の表示 */}
               {allRacesData.map((race, raceIndex) => (
-                <Box key={raceIndex} borderWidth="1px" borderRadius="lg" p={4} shadow="md" bg="gray.800" borderColor="gray.700">
-                  <Heading size="md" mb={3} color="white">
+                <Box 
+                  key={raceIndex} 
+                  borderWidth="1px" 
+                  borderRadius="lg" 
+                  p={4} 
+                  shadow="md" 
+                  bg="gray.800" 
+                  borderColor="gray.600"
+                >
+                  <Heading 
+                    size="lg" 
+                    mb={3} 
+                    color="white"
+                    letterSpacing={5}
+                  >
                     {race.name}
                   </Heading>
                   
