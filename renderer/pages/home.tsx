@@ -113,6 +113,25 @@ export default function HomePage() {
   // タイマーのID保持用
   const timerRef = useRef(null);
 
+  // キーボードイベントハンドラ
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // 1-4のキーが押された場合、対応するコースの周回数を増やす
+      const courseId = parseInt(event.key);
+      if (courseId >= 1 && courseId <= 4) {
+        incrementLap(courseId);
+      }
+    };
+
+    // イベントリスナーの登録
+    window.addEventListener('keypress', handleKeyPress);
+
+    // クリーンアップ
+    return () => {
+      window.removeEventListener('keypress', handleKeyPress);
+    };
+  }, []);  // 空の依存配列で一度だけ実行
+
   // ストップウォッチの更新
   useEffect(() => {
     if (isRunning) {
@@ -466,25 +485,6 @@ export default function HomePage() {
   // 周回の進捗を計算する関数
   const calculateProgress = (current, total) => (current / total) * 100;
 
-  // キーボードイベントハンドラ
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      // 1-4のキーが押された場合、対応するコースの周回数を増やす
-      const courseId = parseInt(event.key);
-      if (courseId >= 1 && courseId <= 4) {
-        incrementLap(courseId);
-      }
-    };
-
-    // イベントリスナーの登録
-    window.addEventListener('keypress', handleKeyPress);
-
-    // クリーンアップ
-    return () => {
-      window.removeEventListener('keypress', handleKeyPress);
-    };
-  }, []);  // 空の依存配列で一度だけ実行
-
   return (
     <React.Fragment>
       <Head>
@@ -808,6 +808,31 @@ export default function HomePage() {
                       </Text>
                     </Box>
                   </Box>
+
+                  {/* ここにでか文字 */}
+                  <Box width="100%"></Box>
+                    <Text fontSize="lg" fontWeight="medium" color="white">↓↓↓このスコアUIの製作者↓↓↓</Text>
+                    <Box 
+                      fontSize={["3xl", "4xl", "5xl", "6xl"]}
+                      fontWeight="bold"
+                      color="cyan.400"
+                      p={3}
+                      py={12}
+                      borderRadius="lg"
+                      bg="gray.900"
+                      border="1px solid"
+                      borderColor="gray.700"
+                      boxShadow="dark-lg"
+                      textAlign="center"
+                      width="100%"
+                      display="flex"
+                      flexDirection="column"
+                      justifyContent="center"
+                      alignItems="center"
+                      fontFamily="mono"
+                    >
+                      <Text color="#FFFFFF">MADE BY KOTANI</Text>
+                    </Box>
                 </VStack>
               </VStack>
             </Box>
