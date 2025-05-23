@@ -113,6 +113,23 @@ export default function HomePage() {
   // タイマーのID保持用
   const timerRef = useRef(null);
 
+  const { write: serialWrite, messages } = useSerial();
+
+  // シリアルポートからのデータを監視するeffect
+  useEffect(() => {
+    // messagesに変更があった場合、最新のメッセージを処理
+    if (messages.length > 0) {
+      const latestMessage = messages[messages.length - 1];
+      // 受信したデータを数値に変換
+      const courseNumber = parseInt(latestMessage);
+      
+      // 1から4の数値であれば対応するコースの周回数をインクリメント
+      if (courseNumber >= 1 && courseNumber <= 4) {
+        incrementLap(courseNumber);
+      }
+    }
+  }, [messages]);  // messagesが変更されたときに実行
+
   // キーボードイベントハンドラ
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -209,8 +226,6 @@ export default function HomePage() {
       </Container>
     );
   }
-
-  const { write: serialWrite } = useSerial();
 
   // ゲート準備コマンド送信
   const handleGatePrep = async () => {
