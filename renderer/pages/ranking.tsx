@@ -146,8 +146,8 @@ export default function RankingPage() {
                     <Thead>
                       <Tr>
                         <Th color="gray.100">順位</Th>
-                        <Th color="gray.100" width="15%">チーム名</Th>
-                        <Th color="gray.100" width="15%">車両</Th>
+                        <Th color="gray.100" width="10%">チーム名</Th>
+                        <Th color="gray.100" width="25%">車両</Th>
                         <Th color="gray.100" width="15%">総合タイム</Th>
                         <Th color="gray.100" width="40%">各周回ラップタイム</Th>
                       </Tr>
@@ -239,10 +239,10 @@ export default function RankingPage() {
                                     >
                                       <Tooltip label={`ベストタイム: ${bestLap.value}`} isDisabled={index !== bestLap.index}>
                                         <Flex alignItems="center" gap={1}>
-                                          <Text fontSize="sm" fontWeight="medium" color="gray.200">
+                                          <Text fontSize="md" fontWeight="medium" color="gray.200">
                                             {index + 1}:
                                           </Text>
-                                          <Text fontSize="sm" fontWeight={index === bestLap.index ? "bold" : "normal"} color={index === bestLap.index ? "green.200" : "white"}>
+                                          <Text fontSize="md" fontWeight={index === bestLap.index ? "bold" : "normal"} color={index === bestLap.index ? "green.200" : "white"}>
                                             {lap}
                                           </Text>
                                           {index === bestLap.index && (

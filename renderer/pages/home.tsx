@@ -810,8 +810,8 @@ export default function HomePage() {
                   </Box>
 
                   {/* ここにでか文字 */}
-                  <Box width="100%"></Box>
-                    <Text fontSize="lg" fontWeight="medium" color="white">↓↓↓このスコアUIの製作者↓↓↓</Text>
+                  <Box width="100%" mt={"10px"}></Box>
+                    <Text fontSize="3xl" fontWeight="medium" color="white" textAlign="center">↓↓↓このカウンター画面の製作者↓↓↓</Text>
                     <Box 
                       fontSize={["3xl", "4xl", "5xl", "6xl"]}
                       fontWeight="bold"
@@ -831,7 +831,7 @@ export default function HomePage() {
                       alignItems="center"
                       fontFamily="mono"
                     >
-                      <Text color="#FFFFFF">MADE BY KOTANI</Text>
+                      <Text color="#FFFFFF">KOTANI RYOTA</Text>
                     </Box>
                 </VStack>
               </VStack>
