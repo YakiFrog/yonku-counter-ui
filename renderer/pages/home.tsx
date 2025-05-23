@@ -127,10 +127,9 @@ export default function HomePage() {
     // slideshowフォルダの画像リストを設定
     const images = [
       '/slideshow/oit.png',
-      // 他の画像を追加する場合は以下のようにパスを追加
+      '/slideshow/thecrafters.png',
       '/slideshow/miniyonku.png',
-      // '/slideshow/team2.png',
-      // '/slideshow/competition.jpg',
+      '/slideshow/qr.png',
     ];
     setSlideshowImages(images);
   }, []);
@@ -139,13 +138,12 @@ export default function HomePage() {
   useEffect(() => {
     if (slideshowImages.length > 1) {
       slideshowTimerRef.current = setInterval(() => {
-        setSlideDirection('left');
         setIsSliding(true);
         setCurrentSlideIndex((prevIndex) => 
           (prevIndex + 1) % slideshowImages.length
         );
         setTimeout(() => setIsSliding(false), 500);
-      }, 5000); // 5秒ごとに切り替え
+      }, 6000); // 6秒ごとに切り替え
     }
 
     return () => {
@@ -999,7 +997,7 @@ export default function HomePage() {
                         position="relative"
                         borderRadius="md"
                         overflow="hidden"
-                        bg="gray.800"
+                        bg="gray.200"
                       >
                         {slideshowImages.length > 0 && (
                           <>
