@@ -466,6 +466,25 @@ export default function HomePage() {
   // 周回の進捗を計算する関数
   const calculateProgress = (current, total) => (current / total) * 100;
 
+  // キーボードイベントハンドラ
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // 1-4のキーが押された場合、対応するコースの周回数を増やす
+      const courseId = parseInt(event.key);
+      if (courseId >= 1 && courseId <= 4) {
+        incrementLap(courseId);
+      }
+    };
+
+    // イベントリスナーの登録
+    window.addEventListener('keypress', handleKeyPress);
+
+    // クリーンアップ
+    return () => {
+      window.removeEventListener('keypress', handleKeyPress);
+    };
+  }, []);  // 空の依存配列で一度だけ実行
+
   return (
     <React.Fragment>
       <Head>
