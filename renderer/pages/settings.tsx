@@ -536,7 +536,7 @@ export default function SettingsPage() {
                 <TabPanel>
                   <VStack spacing={6} align="stretch">
                     <Box>
-                      <Heading size="md" mb={4} color="white">チームリスト</Heading>
+                      <Heading size="md" mb={4} color="white">チームリスト ({playersState.length})</Heading>
                       
                       {/* 新規チームの追加 */}
                       <Flex mb={5}>
@@ -544,6 +544,11 @@ export default function SettingsPage() {
                           placeholder="新しいチーム名"
                           value={newPlayerName}
                           onChange={(e) => setNewPlayerName(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              addPlayer();
+                            }
+                          }}
                           mr={2}
                           bg="gray.900"
                           borderColor="gray.600"
@@ -576,6 +581,9 @@ export default function SettingsPage() {
                             <Box mb={3}>
                               {editingPlayerId === player.id ? (
                                 <Flex>
+                                  <Text color="gray.400" mr={4} fontSize="lg" fontWeight="bold">
+                                    {playersState.indexOf(player) + 1}.
+                                  </Text>
                                   <Input
                                     value={editingPlayerName}
                                     onChange={(e) => setEditingPlayerName(e.target.value)}
@@ -591,7 +599,12 @@ export default function SettingsPage() {
                                 </Flex>
                               ) : (
                                 <Flex justifyContent="space-between" alignItems="center">
-                                  <Text color="white">{player.name}</Text>
+                                  <Flex alignItems="center">
+                                    <Text color="gray.400" mr={4} fontSize="lg" fontWeight="bold">
+                                      {playersState.indexOf(player) + 1}.
+                                    </Text>
+                                    <Text color="white">{player.name}</Text>
+                                  </Flex>
                                   <Flex>
                                     <IconButton
                                       aria-label="Edit player"
@@ -666,6 +679,11 @@ export default function SettingsPage() {
                                     size="sm"
                                     value={newVehicleName}
                                     onChange={(e) => setNewVehicleName(e.target.value)}
+                                    onKeyPress={(e) => {
+                                      if (e.key === 'Enter') {
+                                        setVehicleToPlayer(player.id);
+                                      }
+                                    }}
                                     mr={2}
                                     bg="gray.800"
                                     borderColor="gray.600"
@@ -953,9 +971,10 @@ export default function SettingsPage() {
                   variant="outline"
                   onClick={() => {
                     if (window.confirm('全てのチームを削除します。この操作は元に戻せません。よろしいですか？')) {
-                      // 全てのチームを削除
-                      playersState.forEach(player => {
-                        removePlayerFromContext(player.id);
+                      // 全てのチームを一括で削除
+                      const playerIds = [...playersState].map(player => player.id);
+                      playerIds.forEach(id => {
+                        removePlayerFromContext(id);
                       });
                       toast({
                         title: '全チームを削除しました',
