@@ -35,6 +35,7 @@ import { Container } from '../components/Container'
 import { Footer } from '../components/Footer'
 import { TabNavigation } from '../components/TabNavigation'
 import { useAppSettingsContext } from '../utils/AppSettingsContext'
+import { useSerial } from '../utils/SerialContext'
 import { Race, RaceResult, RaceLap } from '../utils/types'
 
 export default function HomePage() {
@@ -167,7 +168,7 @@ export default function HomePage() {
           time: 0,
           bestLap: null,
           lapTimes: [], // 周回ごとの記録時間
-          lastLapTime: 0, // 前回のラップ完了時間
+          lastLapTime: 0, // 前回のラップ完了時の時間
           finishTime: null, // 全周回完了時の時間
         };
       });
@@ -190,12 +191,59 @@ export default function HomePage() {
     );
   }
 
+  const { write: serialWrite } = useSerial();
+
+  // ゲート準備コマンド送信
+  const handleGatePrep = async () => {
+    try {
+      await serialWrite('q');
+    } catch (error) {
+      console.error('Failed to send gate prep command:', error);
+      toast({
+        title: 'エラー',
+        description: 'ゲート準備コマンドの送信に失敗しました',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // ゲート自動コマンド送信
+  const handleGateAuto = async () => {
+    try {
+      await serialWrite('e');
+    } catch (error) {
+      console.error('Failed to send gate auto command:', error);
+      toast({
+        title: 'エラー',
+        description: 'ゲート自動コマンドの送信に失敗しました',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   // スタート/ストップ切り替え
-  const toggleTimer = () => {
+  const toggleTimer = async () => {
     if (!isRunning) {
       // スタート
       setStartTime(Date.now() - elapsedTime);
       setIsRunning(true);
+      // スタートコマンド送信
+      try {
+        await serialWrite('w');
+      } catch (error) {
+        console.error('Failed to send start command:', error);
+        toast({
+          title: 'エラー',
+          description: 'スタートコマンドの送信に失敗しました',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } else {
       // ストップ
       setIsRunning(false);
@@ -760,6 +808,7 @@ export default function HomePage() {
               _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
               _active={{ transform: "translateY(0px)" }}
               transition="all 0.2s"
+              onClick={handleGatePrep}
             >
               ゲート準備
             </Button>
@@ -791,6 +840,7 @@ export default function HomePage() {
               _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
               _active={{ transform: "translateY(0px)" }}
               transition="all 0.2s"
+              onClick={handleGateAuto}
             >
               ゲート自動
             </Button>
