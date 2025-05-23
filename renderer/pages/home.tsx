@@ -206,7 +206,6 @@ export default function HomePage() {
   const resetTimer = () => {
     setIsRunning(false);
     setElapsedTime(0);
-    updateRaceNumber(1);  // レース番号も1に戻す
     setRaceType('');   // レースタイプをリセット
     setCourseData(prev => 
       prev.map(course => ({
@@ -637,6 +636,16 @@ export default function HomePage() {
                       </Button>
                       {/* ここに隙間 */}
                       <div style={{ flexGrow: 1 }}></div>
+                      <Button
+                        colorScheme="cyan"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setRaceType('');  // レースタイプをクリア
+                        }}
+                      >
+                        通常レース
+                      </Button>
                       <Button
                         colorScheme="yellow"
                         variant="outline"
