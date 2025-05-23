@@ -749,6 +749,21 @@ export default function HomePage() {
           {/* コントロールボタン */}
           <Flex justifyContent="center" gap={3} mt={5} width="100%">
             <Button 
+              colorScheme="yellow" 
+              size="md" 
+              py={6}
+              px={8}
+              fontSize="lg"
+              fontWeight="bold"
+              flex={1}
+              boxShadow="lg"
+              _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
+              _active={{ transform: "translateY(0px)" }}
+              transition="all 0.2s"
+            >
+              ゲート準備
+            </Button>
+            <Button 
               colorScheme={isRunning ? "orange" : "cyan"} 
               size="md" 
               onClick={toggleTimer}
@@ -763,6 +778,21 @@ export default function HomePage() {
               transition="all 0.2s"
             >
               {isRunning ? "一時停止" : "スタート"}
+            </Button>
+            <Button 
+              colorScheme="blue" 
+              size="md" 
+              py={6}
+              px={8}
+              fontSize="lg"
+              fontWeight="bold"
+              flex={1}
+              boxShadow="lg"
+              _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
+              _active={{ transform: "translateY(0px)" }}
+              transition="all 0.2s"
+            >
+              ゲート自動
             </Button>
             <Button 
               colorScheme="red" 
