@@ -473,7 +473,7 @@ export default function SettingsPage() {
   }, [serialState.messages]);
 
   return (
-    <Container maxW="container.xl">
+    <Container maxW="1920px" px={4} py={3}>
       <Head>
         <title>設定 - 四駆カウンター</title>
       </Head>
@@ -481,12 +481,8 @@ export default function SettingsPage() {
       <TabNavigation currentTab="settings" />
 
       <Center flexDirection="column" pt={8} pb={16}>
-        <Heading as="h1" size="xl" mb={8} color="white">
-          設定
-        </Heading>
-        
         {/* メイン設定フォーム */}
-        <VStack spacing={6} align="stretch" w="full" maxW="4xl">
+        <VStack spacing={6} align="stretch" w="full">
           {/* 設定タブ */}
           <Box as="form" onSubmit={handleSubmit} borderWidth="1px" borderRadius="lg" p={6} shadow="md" bg="gray.800" borderColor="gray.700">
             <Tabs variant="enclosed" colorScheme="blue">
