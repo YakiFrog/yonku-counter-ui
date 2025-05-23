@@ -831,7 +831,10 @@ export default function HomePage() {
                       alignItems="center"
                       fontFamily="mono"
                     >
-                      <Text color="#FFFFFF">KOTANI RYOTA</Text>
+                      <>
+                        <Text color="#FFFFFF" letterSpacing="0.1em">小谷 亮太</Text>
+                        <Text color="#FFFFFF" fontSize="2xl">ロボット工学専攻の院1年生！</Text>
+                      </>
                     </Box>
                 </VStack>
               </VStack>
