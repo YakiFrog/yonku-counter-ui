@@ -931,6 +931,30 @@ export default function SettingsPage() {
                 <Button
                   colorScheme="red"
                   variant="outline"
+                  onClick={() => {
+                    if (window.confirm('全てのチームを削除します。この操作は元に戻せません。よろしいですか？')) {
+                      // 全てのチームを削除
+                      playersState.forEach(player => {
+                        removePlayerFromContext(player.id);
+                      });
+                      toast({
+                        title: '全チームを削除しました',
+                        status: 'info',
+                        duration: 2000,
+                        isClosable: true,
+                      });
+                    }
+                  }}
+                  leftIcon={<DeleteIcon />}
+                  size="lg"
+                  width="full"
+                  mb={4}
+                >
+                  全チームを削除
+                </Button>
+                <Button
+                  colorScheme="red"
+                  variant="outline"
                   onClick={onOpen}
                   leftIcon={<DeleteIcon />}
                   size="lg"
