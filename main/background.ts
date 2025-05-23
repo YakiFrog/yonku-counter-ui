@@ -1,7 +1,20 @@
 import path from 'path'
-import { app, ipcMain, session } from 'electron'
+import { app, ipcMain, session, BrowserWindow } from 'electron'
 import serve from 'electron-serve'
 import { createWindow } from './helpers'
+import { setupSerialPortHandlers } from './helpers/serial-port'
+
+// グローバル変数の型定義を拡張
+declare global {
+  namespace NodeJS {
+    interface Global {
+      mainWindow: BrowserWindow | null;
+    }
+  }
+}
+
+// グローバル変数の初期化
+global.mainWindow = null;
 
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -28,6 +41,9 @@ app.on('ready', () => {
 ;(async () => {
   await app.whenReady()
 
+  // シリアルポートハンドラーを設定
+  setupSerialPortHandlers();
+
   const mainWindow = createWindow('main', {
     width: 1000,
     height: 600,
@@ -39,6 +55,9 @@ app.on('ready', () => {
       nodeIntegration: false,
     },
   })
+
+  // グローバル変数にメインウィンドウを設定
+  global.mainWindow = mainWindow;
 
   if (isProd) {
     await mainWindow.loadURL('app://./home')
