@@ -542,7 +542,7 @@ export default function HomePage() {
                       shadow="lg"
                       position="relative"
                       bg={isFinished ? "gray.950" : "gray.800"}
-                      opacity={isFinished ? 0.4 : 1}
+                      opacity={isFinished ? 0.5 : 1}
                       transition="all 0.2s"
                       _hover={{
                         transform: "translateX(2px)",
@@ -716,44 +716,75 @@ export default function HomePage() {
               </VStack>
             </Box>
             
-            {/* 完走時のゴール表示オーバーレイ - 親要素の透明度の影響を受けないように独立配置 */}
-            {courseData.map((course) => {
-              const isFinished = (course.totalLaps > 0 && course.currentLap >= course.totalLaps) || course.finishTime !== null;
-              if (!isFinished) return null;
-              
-              const courseIndex = courseData.length - course.id; // reverse()されているため調整
-              const topOffset = 135 + (courseIndex * 225); // 各コースの位置に合わせて調整
-              
-              return (
-                <Box
-                  key={`goal-overlay-${course.id}`}
-                  position="fixed"
-                  top={`${topOffset}px`}
-                  left="50%"
-                  transform="translateX(-50%)"
-                  zIndex={1000}
-                  bg="rgba(0, 0, 0, 0.95)"
-                  borderRadius="xl"
-                  px={10}
-                  py={5}
-                  border="4px solid"
-                  borderColor="green.300"
-                  boxShadow="0 0 40px rgba(72, 187, 120, 1), 0 0 80px rgba(72, 187, 120, 0.6)"
-                  pointerEvents="none"
-                >
-                  <Text
-                    fontSize="4xl"
-                    fontWeight="black"
-                    color="green.100"
-                    textAlign="center"
-                    fontFamily="RocknRoll One"
-                    textShadow="0 0 15px rgba(72, 187, 120, 1), 0 0 30px rgba(72, 187, 120, 0.8)"
+            {/* 完走時の順位表示オーバーレイ - 親要素の透明度の影響を受けないように独立配置 */}
+            {(() => {
+              // 完走したコースのみを取得し、順位を計算
+              const finishedCourses = courseData
+                .filter(course => {
+                  const isFinished = (course.totalLaps > 0 && course.currentLap >= course.totalLaps) || course.finishTime !== null;
+                  return isFinished && course.name; // チーム名がある場合のみ
+                })
+                .map(course => ({
+                  ...course,
+                  finalTime: course.finishTime || course.time
+                }))
+                .sort((a, b) => {
+                  // 周回数が多い順、同じ場合は時間が短い順
+                  if (a.currentLap !== b.currentLap) {
+                    return b.currentLap - a.currentLap;
+                  }
+                  return a.finalTime - b.finalTime;
+                });
+
+              return finishedCourses.map((course, index) => {
+                const position = index + 1;
+                const courseIndex = courseData.length - course.id; // reverse()されているため調整
+                const topOffset = 135 + (courseIndex * 225); // 各コースの位置に合わせて調整
+                
+                // 順位に応じた色を設定（ランキングタブと統一）
+                const getPositionColor = (pos) => {
+                  switch (pos) {
+                    case 1: return { bg: "rgba(255, 215, 0, 0.95)", border: "yellow.400", shadow: "255, 215, 0" }; // 1位: 金色
+                    case 2: return { bg: "rgba(192, 192, 192, 0.95)", border: "gray.400", shadow: "192, 192, 192" }; // 2位: 銀色
+                    case 3: return { bg: "rgba(205, 127, 50, 0.95)", border: "orange.400", shadow: "205, 127, 50" }; // 3位: 銅色
+                    case 4: return { bg: "rgba(255, 0, 0, 0.95)", border: "red.400", shadow: "255, 0, 0" }; // 4位: 赤色
+                    default: return { bg: "rgba(0, 0, 0, 0.95)", border: "green.300", shadow: "72, 187, 120" }; // その他: 緑色
+                  }
+                };
+
+                const colorScheme = getPositionColor(position);
+                
+                return (
+                  <Box
+                    key={`position-overlay-${course.id}`}
+                    position="fixed"
+                    top={`${topOffset}px`}
+                    left="50%"
+                    transform="translateX(-50%)"
+                    zIndex={1000}
+                    bg={colorScheme.bg}
+                    borderRadius="full"
+                    px={14}
+                    py={4}
+                    border="4px solid"
+                    borderColor={colorScheme.border}
+                    boxShadow={`0 0 40px rgba(${colorScheme.shadow}, 1), 0 0 80px rgba(${colorScheme.shadow}, 0.6)`}
+                    pointerEvents="none"
                   >
-                    ゴール
-                  </Text>
-                </Box>
-              );
-            })}
+                    <Text
+                      fontSize="5xl"
+                      fontWeight="black"
+                      color="white"
+                      textAlign="center"
+                      fontFamily="RocknRoll One"
+                      textShadow="2px 2px 4px rgba(0,0,0,0.8)"
+                    >
+                      {position}位
+                    </Text>
+                  </Box>
+                );
+              });
+            })()}
             
             
             {/* 右側：大きな経過時間表示 */}
