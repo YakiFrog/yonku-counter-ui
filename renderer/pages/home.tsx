@@ -132,12 +132,24 @@ export default function HomePage() {
   }, [messages, isRunning, settings.serialCountEnabled]);  // settings.serialCountEnabledを依存配列に追加
 
   // キーボードイベントハンドラ
+  // 修正履歴: 2025/05/24 - キーボード操作でカウントアップできない問題を修正
+  // 問題: useEffectの依存配列が空[]だったため、isRunningの状態変更が反映されない
+  // 修正: 依存配列に[isRunning]を追加してキーボードイベントハンドラーが適切に更新されるように変更
+  // 追加履歴: 2025/05/24 - 5,6,7,8キーでRevert機能（直前の周回数増加を戻す）を追加
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      // タイマーが実行中で、1-4のキーが押された場合、対応するコースの周回数を増やす
-      const courseId = parseInt(event.key);
-      if (isRunning && courseId >= 1 && courseId <= 4) {
-        incrementLap(courseId);
+      const keyPressed = parseInt(event.key);
+      
+      if (isRunning) {
+        // 1-4のキーが押された場合、対応するコースの周回数を増やす
+        if (keyPressed >= 1 && keyPressed <= 4) {
+          incrementLap(keyPressed);
+        }
+        // 5-8のキーが押された場合、対応するコース（1-4）の周回数を減らす（Revert機能）
+        else if (keyPressed >= 6 && keyPressed <= 9) {
+          const courseId = keyPressed - 5; // 6は1、7は2、8は3、9は4にマッピング
+          decrementLap(courseId);
+        }
       }
     };
 
@@ -148,7 +160,7 @@ export default function HomePage() {
     return () => {
       window.removeEventListener('keypress', handleKeyPress);
     };
-  }, []);  // 空の依存配列で一度だけ実行
+  }, [isRunning]);  // 重要: isRunningを依存配列に追加（空の配列だとキーボード操作が機能しない）
 
   // ストップウォッチの更新
   useEffect(() => {
@@ -515,18 +527,17 @@ export default function HomePage() {
           <Grid templateColumns="5fr 3fr" gap={4}>
             {/* 左側：4コース分のレース情報と周回表示 */}
             <Box pl={"7%"}> {/* 左右の余白を縮小 */}
-              <VStack spacing={3} align="stretch"> {/* 間隔を狭くする */}
-                {[...courseData].reverse().map((course) => (                    <Box 
+              <VStack spacing={4} align="stretch"> {/* 間隔を狭くする */}
+                {[...courseData].reverse().map((course) => (
+                    <Box 
                     key={course.id}
                     p={4} 
                     pl={5}
-                    borderWidth="1px" 
+                    borderWidth="0" 
                     borderRadius="md"
-                    borderLeftWidth="0"
                     shadow="lg"
                     position="relative"
                     bg="gray.800"
-                    borderColor="gray.700"
                     transition="all 0.2s"
                     _hover={{
                       transform: "translateX(2px)",
@@ -550,13 +561,30 @@ export default function HomePage() {
                       boxShadow="dark-lg"
                       zIndex={2}
                       borderLeftRadius="md"
+                      borderWidth="3px"
+                      borderColor={course.color}
                       sx={{
                         textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
                       }}
                     >
                       {course.id}
                     </Box>
-                    <Flex justifyContent="space-between" alignItems="center">
+
+                    {/* 内側の枠 */}
+                    <Box
+                      position="absolute"
+                      top={0}
+                      right={0}
+                      bottom={0}
+                      left={-35}
+                      borderWidth="5px"
+                      borderRadius="xl"
+                      borderColor={course.color}
+                      opacity="0.8"
+                      pointerEvents="none"
+                    />
+
+                    <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
                       <Box maxW="60%">
                         <Flex align="center" gap={2} overflow="hidden" whiteSpace="nowrap">
                           <Text fontWeight="bold" fontSize={["xl", "2xl", "3xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">{course.name}</Text>
