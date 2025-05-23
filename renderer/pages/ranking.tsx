@@ -155,7 +155,16 @@ export default function RankingPage() {
                     <Tbody>
                       {race.results.length > 0 ? (
                         race.results.map((entry) => (
-                          <Tr key={entry.position}>
+                          <Tr 
+                            key={entry.position}
+                            bg={
+                              entry.position === 1 ? "rgba(255, 215, 0, 0.20)" :
+                              entry.position === 2 ? "rgba(192, 192, 192, 0.20)" :
+                              entry.position === 3 ? "rgba(205, 127, 50, 0.20)" :
+                              entry.position === 4 ? "rgba(255, 0, 0, 0.20)" :
+                              "transparent"
+                            }
+                          >
                             <Td>
                               <Flex gap={2} alignItems="center">
                                 <Box 
@@ -163,18 +172,25 @@ export default function RankingPage() {
                                   py={1} 
                                   borderRadius="full"
                                   bg={
+                                    entry.position === 1 ? "rgba(255, 215, 0, 0.2)" :
+                                    entry.position === 2 ? "rgba(192, 192, 192, 0.2)" :
+                                    entry.position === 3 ? "rgba(205, 127, 50, 0.2)" :
+                                    entry.position === 4 ? "rgba(255, 0, 0, 0.2)" :
+                                    "transparent"
+                                  }
+                                  borderWidth="1px"
+                                  borderColor={
                                     entry.position === 1 ? "yellow.400" :
                                     entry.position === 2 ? "gray.400" :
                                     entry.position === 3 ? "orange.400" :
-                                    "transparent"
+                                    entry.position === 4 ? "red.400" :
+                                    "gray.500"
                                   }
-                                  borderWidth={entry.position > 3 ? "1px" : "0"}
-                                  borderColor="gray.500"
                                 >
                                   <Text 
                                     fontWeight="bold" 
                                     fontSize="lg" 
-                                    color={entry.position <= 3 ? "gray.800" : "white"}
+                                    color="white"
                                   >
                                     {entry.position}位
                                   </Text>
