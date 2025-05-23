@@ -528,22 +528,27 @@ export default function HomePage() {
             {/* 左側：4コース分のレース情報と周回表示 */}
             <Box pl={"7%"}> {/* 左右の余白を縮小 */}
               <VStack spacing={4} align="stretch"> {/* 間隔を狭くする */}
-                {[...courseData].reverse().map((course) => (
+                {[...courseData].reverse().map((course) => {
+                  // 完走判定
+                  const isFinished = (course.totalLaps > 0 && course.currentLap >= course.totalLaps) || course.finishTime !== null;
+                  
+                  return (
                     <Box 
-                    key={course.id}
-                    p={4} 
-                    pl={5}
-                    borderWidth="0" 
-                    borderRadius="md"
-                    shadow="lg"
-                    position="relative"
-                    bg="gray.800"
-                    transition="all 0.2s"
-                    _hover={{
-                      transform: "translateX(2px)",
-                      boxShadow: "xl"
-                    }}
-                  >
+                      key={course.id}
+                      p={4} 
+                      pl={5}
+                      borderWidth="0" 
+                      borderRadius="md"
+                      shadow="lg"
+                      position="relative"
+                      bg={isFinished ? "gray.950" : "gray.800"}
+                      opacity={isFinished ? 0.4 : 1}
+                      transition="all 0.2s"
+                      _hover={{
+                        transform: "translateX(2px)",
+                        boxShadow: "xl"
+                      }}
+                    >
                     {/* コース番号を左側に横長の背景色付きで表示 - 常に「4,3,2,1」の順で表示 */}
                     <Box
                       position="absolute"
@@ -583,6 +588,8 @@ export default function HomePage() {
                       opacity="0.8"
                       pointerEvents="none"
                     />
+
+
 
                     <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
                       <Box maxW="60%">
@@ -705,9 +712,49 @@ export default function HomePage() {
                       </Flex>
                     )}
                   </Box>
-                ))}
+                )})}
               </VStack>
             </Box>
+            
+            {/* 完走時のゴール表示オーバーレイ - 親要素の透明度の影響を受けないように独立配置 */}
+            {courseData.map((course) => {
+              const isFinished = (course.totalLaps > 0 && course.currentLap >= course.totalLaps) || course.finishTime !== null;
+              if (!isFinished) return null;
+              
+              const courseIndex = courseData.length - course.id; // reverse()されているため調整
+              const topOffset = 135 + (courseIndex * 225); // 各コースの位置に合わせて調整
+              
+              return (
+                <Box
+                  key={`goal-overlay-${course.id}`}
+                  position="fixed"
+                  top={`${topOffset}px`}
+                  left="50%"
+                  transform="translateX(-50%)"
+                  zIndex={1000}
+                  bg="rgba(0, 0, 0, 0.95)"
+                  borderRadius="xl"
+                  px={10}
+                  py={5}
+                  border="4px solid"
+                  borderColor="green.300"
+                  boxShadow="0 0 40px rgba(72, 187, 120, 1), 0 0 80px rgba(72, 187, 120, 0.6)"
+                  pointerEvents="none"
+                >
+                  <Text
+                    fontSize="4xl"
+                    fontWeight="black"
+                    color="green.100"
+                    textAlign="center"
+                    fontFamily="RocknRoll One"
+                    textShadow="0 0 15px rgba(72, 187, 120, 1), 0 0 30px rgba(72, 187, 120, 0.8)"
+                  >
+                    ゴール
+                  </Text>
+                </Box>
+              );
+            })}
+            
             
             {/* 右側：大きな経過時間表示 */}
             <Box 
