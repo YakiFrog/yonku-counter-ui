@@ -159,8 +159,8 @@ export default function RankingPage() {
                     <Thead>
                       <Tr>
                         <Th color="gray.100">順位</Th>
-                        <Th color="gray.100" width="10%">チーム名</Th>
-                        <Th color="gray.100" width="25%">車両</Th>
+                        <Th color="gray.100" width="13%">チーム名</Th>
+                        <Th color="gray.100" width="22%">車両</Th>
                         <Th color="gray.100" width="15%">総合タイム</Th>
                         <Th color="gray.100" width="40%">各周回ラップタイム</Th>
                       </Tr>
@@ -202,7 +202,7 @@ export default function RankingPage() {
                                 >
                                   <Text 
                                     fontWeight="bold" 
-                                    fontSize="lg" 
+                                    fontSize="20px" 
                                     color="white"
                                   >
                                     {entry.position}位
@@ -218,6 +218,10 @@ export default function RankingPage() {
                                   } 
                                   variant="solid" 
                                   ml={3}
+                                  fontSize="sm"
+                                  px={2}
+                                  py={1}
+                                  borderRadius="md"
                                 >
                                   {entry.courseId}コース
                                 </Badge>
@@ -229,7 +233,7 @@ export default function RankingPage() {
                             <Td color="white">{entry.vehicle}</Td>
                             <Td>
                               <Flex alignItems="center" gap={2}>
-                                <Text color="white" fontSize="lg">{entry.time}</Text>
+                                <Text color="white" fontSize="xl" fontWeight="bold" letterSpacing={1}>{entry.time}</Text>
                                 {entry.isCompleted && (
                                   <Badge colorScheme="green" size="sm" px={2} py={1} borderRadius="md" variant="solid">完走</Badge>
                                 )}
