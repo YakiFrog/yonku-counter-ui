@@ -113,29 +113,30 @@ export default function HomePage() {
   // タイマーのID保持用
   const timerRef = useRef(null);
 
-  const { write: serialWrite, messages } = useSerial();
+  const { write: serialWrite, messages, clearMessages } = useSerial();
 
   // シリアルポートからのデータを監視するeffect
   useEffect(() => {
     // messagesに変更があった場合、最新のメッセージを処理
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1];
+      
       // 受信したデータを数値に変換
       const courseNumber = parseInt(latestMessage);
       
-      // 1から4の数値であれば対応するコースの周回数をインクリメント
-      if (courseNumber >= 1 && courseNumber <= 4) {
+      // タイマーが実行中、シリアル入力が有効、そして1から4の数値であれば対応するコースの周回数をインクリメント
+      if (isRunning && settings.serialCountEnabled && courseNumber >= 1 && courseNumber <= 4) {
         incrementLap(courseNumber);
       }
     }
-  }, [messages]);  // messagesが変更されたときに実行
+  }, [messages, isRunning, settings.serialCountEnabled]);  // settings.serialCountEnabledを依存配列に追加
 
   // キーボードイベントハンドラ
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      // 1-4のキーが押された場合、対応するコースの周回数を増やす
+      // タイマーが実行中で、1-4のキーが押された場合、対応するコースの周回数を増やす
       const courseId = parseInt(event.key);
-      if (courseId >= 1 && courseId <= 4) {
+      if (isRunning && courseId >= 1 && courseId <= 4) {
         incrementLap(courseId);
       }
     };
@@ -263,6 +264,7 @@ export default function HomePage() {
   const toggleTimer = async () => {
     if (!isRunning) {
       // スタート
+      clearMessages(); // シリアル入力メッセージをクリア
       setStartTime(Date.now() - elapsedTime);
       setIsRunning(true);
       // スタートコマンド送信

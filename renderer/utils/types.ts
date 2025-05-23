@@ -56,4 +56,5 @@ export type AppSettings = {
   soundEnabled: boolean;
   races: Race[];
   currentRaceNumber: number;  // 追加: 現在のレース番号
+  serialCountEnabled: boolean; // シリアル入力からのカウントアップを有効/無効にする設定
 };

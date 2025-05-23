@@ -524,6 +524,15 @@ export default function SettingsPage() {
                           colorScheme="cyan"
                         />
                       </FormControl>
+
+                      <FormControl mt="4" display="flex" alignItems="center">
+                        <FormLabel mb="0" color="white">シリアル入力からのカウントアップ</FormLabel>
+                        <Switch 
+                          isChecked={settings.serialCountEnabled} 
+                          onChange={(e) => handleUpdateSetting('serialCountEnabled', e.target.checked)} 
+                          colorScheme="cyan"
+                        />
+                      </FormControl>
                     </Box>
                     
                     <Button type="submit" colorScheme="blue" size="lg" mt={4}>
