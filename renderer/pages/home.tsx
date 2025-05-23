@@ -600,6 +600,7 @@ export default function HomePage() {
                       display="flex"
                       justifyContent="center"
                       alignItems="center"
+                      flexDirection="column"
                       bg={course.color}
                       boxShadow="dark-lg"
                       zIndex={2}
@@ -611,6 +612,7 @@ export default function HomePage() {
                       }}
                     >
                       {course.id}
+                      <Text fontSize="lg" mt="-2">コース</Text>
                     </Box>
 
                     {/* 内側の枠 */}
@@ -661,7 +663,7 @@ export default function HomePage() {
                           >
                             -
                           </Button>
-                          <Text fontWeight="bold" fontSize="xl" mx={1} color="white">
+                          <Text fontWeight="bold" fontSize="xl" mx={2} color="white">
                             {course.currentLap}{course.totalLaps > 0 ? ` / ${course.totalLaps}` : ''}
                           </Text>
                           <Button 
@@ -673,7 +675,7 @@ export default function HomePage() {
                             ml={1}
                             h="24px"
                             minW="24px"
-                            p={0}
+                            p={1}
                           >
                             +
                           </Button>
@@ -1091,6 +1093,10 @@ export default function HomePage() {
               _active={{ transform: "translateY(0px)" }}
               transition="all 0.2s"
               onClick={handleGatePrep}
+              color="white"
+              sx={{
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+              }}
             >
               ゲート準備
             </Button>
@@ -1107,6 +1113,10 @@ export default function HomePage() {
               _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
               _active={{ transform: "translateY(0px)" }}
               transition="all 0.2s"
+              color="white"
+              sx={{
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+              }}
             >
               {isRunning ? "一時停止" : "スタート"}
             </Button>
@@ -1123,6 +1133,10 @@ export default function HomePage() {
               _active={{ transform: "translateY(0px)" }}
               transition="all 0.2s"
               onClick={handleGateAuto}
+              color="white"
+              sx={{
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+              }}
             >
               ゲート自動
             </Button>
@@ -1139,6 +1153,10 @@ export default function HomePage() {
               _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
               _active={{ transform: "translateY(0px)" }}
               transition="all 0.2s"
+              color="white"
+              sx={{
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+              }}
             >
               リセット
             </Button>
@@ -1156,6 +1174,10 @@ export default function HomePage() {
               _hover={{ transform: "translateY(-2px)", boxShadow: "xl" }}
               _active={{ transform: "translateY(0px)" }}
               transition="all 0.2s"
+              color="white"
+              sx={{
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+              }}
             >
               レース終了
             </Button>
