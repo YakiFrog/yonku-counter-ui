@@ -517,15 +517,6 @@ export default function SettingsPage() {
                       </FormControl>
 
                       <FormControl mt="4" display="flex" alignItems="center">
-                        <FormLabel mb="0" color="white">サウンド</FormLabel>
-                        <Switch 
-                          isChecked={settings.soundEnabled} 
-                          onChange={(e) => handleUpdateSetting('soundEnabled', e.target.checked)} 
-                          colorScheme="cyan"
-                        />
-                      </FormControl>
-
-                      <FormControl mt="4" display="flex" alignItems="center">
                         <FormLabel mb="0" color="white">シリアル入力からのカウントアップ</FormLabel>
                         <Switch 
                           isChecked={settings.serialCountEnabled} 
