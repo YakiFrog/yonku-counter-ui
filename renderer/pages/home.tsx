@@ -130,6 +130,7 @@ export default function HomePage() {
       '/slideshow/thecrafters.png',
       '/slideshow/miniyonku.png',
       '/slideshow/qr.png',
+      '/slideshow/sirius.png',
     ];
     setSlideshowImages(images);
   }, []);
