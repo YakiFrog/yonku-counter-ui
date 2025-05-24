@@ -755,7 +755,19 @@ export default function SettingsPage() {
                       
                       <SimpleGrid columns={[1, 2]} spacing={6}>
                         {settings.courses.map((course, index) => (
-                          <Box key={index} p={4} borderWidth="1px" borderRadius="md" bg="gray.900" borderColor="gray.600">
+                          <Box 
+                            key={index} 
+                            p={4} 
+                            borderWidth="2px" 
+                            borderRadius="md" 
+                            bg="gray.900" 
+                            borderColor={
+                              index === 0 ? "yellow.500" : 
+                              index === 1 ? "green.500" : 
+                              index === 2 ? "blue.500" : 
+                              "red.500"
+                            }
+                          >
                             <Heading size="sm" mb={3} color="white">コース {index + 1}</Heading>
                             
                             <FormControl mb={3}>
