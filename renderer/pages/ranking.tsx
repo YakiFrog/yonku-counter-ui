@@ -18,8 +18,17 @@ import {
   Spinner,
   Center,
   Select,
-  HStack
-} from '@chakra-ui/react'
+  HStack,
+  useToast,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useDisclosure
+} from '@chakra-ui/react';
+import { DeleteIcon } from '@chakra-ui/icons';
 
 import { Container } from '../components/Container'
 import { TabNavigation } from '../components/TabNavigation'
@@ -38,7 +47,11 @@ interface PlayerStats {
 
 export default function RankingPage() {
   // グローバル設定コンテキスト
-  const { settings, isLoading } = useAppSettingsContext();
+  const { settings, isLoading, deleteRace } = useAppSettingsContext();
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedRaceId, setSelectedRaceId] = React.useState<string>("");
+  const cancelRef = React.useRef<HTMLButtonElement>(null);
 
   // ユーティリティ関数: 文字列形式の時間（mm:ss.ms）を比較して小さい方（速い方）を返す
   const findBestLap = (laps: string[]): { value: string | null, index: number } => {
@@ -60,12 +73,15 @@ export default function RankingPage() {
   };
   
   // すべてのレース結果を表示用に変換
+  // すべてのレース結果を表示用に変換
   const allRacesData = settings?.races ? [...settings.races].reverse().map(race => ({
+    id: race.id,
     name: race.name || `第${race.raceNumber}レース`,
+    raceNumber: race.raceNumber,
     results: race.results.map((result) => ({
       position: result.position,
-      courseId: result.courseId,  // インデックスではなく、保存されたコースIDを使用
-      name: result.teamName || result.playerName, // チーム名を優先、なければplayerNameを使用
+      courseId: result.courseId,
+      name: result.teamName || result.playerName,
       vehicle: result.vehicleName,
       time: result.totalTime,
       laps: result.laps?.map(lap => lap.time) || [],
@@ -123,6 +139,26 @@ export default function RankingPage() {
   
   const overallRankings = calculateOverallRankings();
 
+  // レース削除の確認を開始
+  const handleDeleteClick = (raceId: string) => {
+    setSelectedRaceId(raceId);
+    onOpen();
+  };
+
+  // レースを削除
+  const confirmDelete = () => {
+    if (selectedRaceId) {
+      deleteRace(selectedRaceId);
+      toast({
+        title: "レースを削除しました",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      onClose();
+    }
+  };
+
   return (
     <React.Fragment>
       <Head>
@@ -146,14 +182,26 @@ export default function RankingPage() {
                   bg="gray.800" 
                   borderColor="gray.600"
                 >
-                  <Heading 
-                    size="lg" 
-                    mb={3} 
-                    color="white"
-                    letterSpacing={5}
-                  >
-                    {race.name}
-                  </Heading>
+                  <Flex justify="space-between" align="center" mb={3}>
+                    <Heading 
+                      size="lg" 
+                      color="white"
+                      letterSpacing={5}
+                    >
+                      {race.name}
+                    </Heading>
+                    <Button
+                      leftIcon={<DeleteIcon />}
+                      colorScheme="red"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        handleDeleteClick(race.id);
+                      }}
+                    >
+                      削除
+                    </Button>
+                  </Flex>
                   
                   <Table variant="simple" size="sm" colorScheme="whiteAlpha">
                     <Thead>
@@ -291,6 +339,35 @@ export default function RankingPage() {
           </Box>
         </VStack>
       </Container>
+
+      {/* 削除確認ダイアログ */}
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent bg="gray.800" borderColor="gray.700">
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" color="white">
+              レースを削除
+            </AlertDialogHeader>
+
+            <AlertDialogBody color="white">
+              このレースの記録を削除します。この操作は元に戻せません。
+              本当に削除しますか？
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose} variant="outline" color="white">
+                キャンセル
+              </Button>
+              <Button colorScheme="red" onClick={confirmDelete} ml={3}>
+                削除する
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </React.Fragment>
   )
 }

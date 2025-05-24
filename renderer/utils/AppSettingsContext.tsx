@@ -16,6 +16,7 @@ interface AppSettingsContextType {
   resetSettings: () => AppSettings;
   currentRaceNumber: number;
   updateRaceNumber: (newNumber: number) => void;
+  deleteRace: (raceId: string) => AppSettings; // 追加: 個別のレースを削除する関数
 }
 
 // コンテキストの作成
@@ -79,10 +80,22 @@ export const AppSettingsProvider: React.FC<{ children: ReactNode }> = ({ childre
     return result;
   }, [settingsUtils]);
 
+  // レース削除のラッパー関数
+  const deleteRaceWrapper = useCallback((raceId: string) => {
+    if (!settings) return settings;
+    const updatedSettings = {
+      ...settings,
+      races: settings.races.filter(race => race.id !== raceId)
+    };
+    const savedSettings = settingsUtils.updateSettings(updatedSettings);
+    setSettings(savedSettings);
+    return savedSettings;
+  }, [settings, settingsUtils]);
+
   return (
     <AppSettingsContext.Provider value={{ 
       ...settingsUtils,
-      settings: settings || settingsUtils.settings,  // nullの場合はsettingsUtilsの値を使用
+      settings: settings || settingsUtils.settings,
       isLoading, 
       clearRaceResults,
       addPlayer: addPlayerWrapper,
@@ -90,7 +103,8 @@ export const AppSettingsProvider: React.FC<{ children: ReactNode }> = ({ childre
       removePlayer: removePlayerWrapper,
       updateCourse: updateCourseWrapper,
       currentRaceNumber: (settings || settingsUtils.settings)?.currentRaceNumber || 1,
-      updateRaceNumber
+      updateRaceNumber,
+      deleteRace: deleteRaceWrapper // 追加：レース削除関数
     }}>
       {children}
     </AppSettingsContext.Provider>
