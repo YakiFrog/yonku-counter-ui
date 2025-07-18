@@ -135,6 +135,17 @@ export default function HomePage() {
     setSlideshowImages(images);
   }, []);
 
+  // レースタイプの復元
+  useEffect(() => {
+    // ローカルストレージからレースタイプを復元
+    const savedRaceType = localStorage.getItem('currentRaceType');
+    console.log('レースタイプ復元:', savedRaceType);
+    if (savedRaceType !== null) { // null以外の場合は復元（空文字列も含む）
+      setRaceType(savedRaceType);
+      console.log('レースタイプ設定:', savedRaceType);
+    }
+  }, []);
+
   // スライドショーの自動切り替え
   useEffect(() => {
     if (slideshowImages.length > 1) {
@@ -337,11 +348,19 @@ export default function HomePage() {
     }
   };
 
+  // レースタイプを変更し、ローカルストレージに保存するヘルパー関数
+  const updateRaceType = (newRaceType) => {
+    console.log('レースタイプ更新:', newRaceType);
+    setRaceType(newRaceType);
+    localStorage.setItem('currentRaceType', newRaceType);
+    console.log('ローカルストレージに保存:', newRaceType);
+  };
+
   // タイマーのリセット
   const resetTimer = () => {
     setIsRunning(false);
     setElapsedTime(0);
-    setRaceType('');   // レースタイプをリセット
+    updateRaceType('');   // レースタイプをリセット（ローカルストレージも更新）
     setCourseData(prev => 
       prev.map(course => ({
         ...course,
@@ -429,9 +448,22 @@ export default function HomePage() {
     // デバッグ: 保存後のローカルストレージの内容を確認
     console.log('保存後のローカルストレージ:', localStorage.getItem('yonkuAppSettings'));
     
-    // タイムアタックと決勝以外はレース番号をインクリメント
-    if (raceType !== 'タイムアタック' && raceType !== '決勝') {
+    // レースタイプに応じて次のレースの準備
+    if (raceType === 'タイムアタック') {
+      // タイムアタックの場合は番号をインクリメントして、レースタイプを維持
       updateRaceNumber(currentRaceNumber + 1);
+      // レースタイプはそのまま維持（ローカルストレージは既に保存済み）
+    } else if (raceType === '決勝') {
+      // 決勝の場合は番号を変更せず、レースタイプをリセット
+      updateRaceType('');
+    } else if (raceType === '敗者復活戦' || raceType === '準決勝') {
+      // 敗者復活戦・準決勝の場合は番号をインクリメントして同じレースタイプを維持
+      updateRaceNumber(currentRaceNumber + 1);
+      // レースタイプはそのまま維持（ローカルストレージは既に保存済み）
+    } else {
+      // 通常レースの場合は番号をインクリメントしてレースタイプをリセット
+      updateRaceNumber(currentRaceNumber + 1);
+      updateRaceType('');
     }
     
     toast({
@@ -874,7 +906,7 @@ export default function HomePage() {
                         size="sm"
                         onClick={() => {
                           updateRaceNumber(0);
-                          setRaceType('タイムアタック');
+                          updateRaceType('タイムアタック');
                         }}
                       >
                         タイムアタック
@@ -884,7 +916,7 @@ export default function HomePage() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setRaceType('');  // レースタイプをクリア
+                          updateRaceType('');  // レースタイプをクリア
                         }}
                       >
                         通常レース
@@ -894,7 +926,7 @@ export default function HomePage() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setRaceType('敗者復活戦');
+                          updateRaceType('敗者復活戦');
                         }}
                       >
                         敗者復活戦
@@ -904,7 +936,7 @@ export default function HomePage() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setRaceType('準決勝');
+                          updateRaceType('準決勝');
                         }}
                       >
                         準決勝
@@ -915,7 +947,7 @@ export default function HomePage() {
                         size="sm"
                         onClick={() => {
                           updateRaceNumber(0);
-                          setRaceType('決勝');
+                          updateRaceType('決勝');
                         }}
                       >
                         決勝
