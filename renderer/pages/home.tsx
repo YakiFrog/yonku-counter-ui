@@ -412,7 +412,8 @@ export default function HomePage() {
     // レース情報を作成
     const race: Race = {
       id: `race-${Date.now()}`,
-      name: raceType || `第${currentRaceNumber}レース`,
+      name: raceType === '決勝' ? '決勝' : 
+            raceType ? `${raceType} 第${currentRaceNumber}レース` : `第${currentRaceNumber}レース`,
       date: new Date().toISOString(),
       raceNumber: currentRaceNumber,
       raceType: raceType,
@@ -428,8 +429,8 @@ export default function HomePage() {
     // デバッグ: 保存後のローカルストレージの内容を確認
     console.log('保存後のローカルストレージ:', localStorage.getItem('yonkuAppSettings'));
     
-    // 通常レースの場合のみレース番号をインクリメント
-    if (!raceType) {
+    // タイムアタックと決勝以外はレース番号をインクリメント
+    if (raceType !== 'タイムアタック' && raceType !== '決勝') {
       updateRaceNumber(currentRaceNumber + 1);
     }
     
@@ -848,7 +849,7 @@ export default function HomePage() {
                   {/* レース番号表示 */}
                   <Box width="100%">
                     <HStack alignItems="center" gap={2} mb={2} width="100%">
-                      <Text fontSize="lg" fontWeight="medium" color="white" minW="auto">レース番号</Text>
+                      <Text fontSize="md" fontWeight="medium" color="white" minW="auto">レース番号</Text>
                       <Button
                         onClick={() => updateRaceNumber(Math.max(1, currentRaceNumber - 1))}
                         colorScheme="red"
@@ -868,6 +869,17 @@ export default function HomePage() {
                       {/* ここに隙間 */}
                       <div style={{ flexGrow: 1 }}></div>
                       <Button
+                        colorScheme="purple"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          updateRaceNumber(0);
+                          setRaceType('タイムアタック');
+                        }}
+                      >
+                        タイムアタック
+                      </Button>
+                      <Button
                         colorScheme="cyan"
                         variant="outline"
                         size="sm"
@@ -882,7 +894,6 @@ export default function HomePage() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          updateRaceNumber(0);
                           setRaceType('敗者復活戦');
                         }}
                       >
@@ -893,7 +904,6 @@ export default function HomePage() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          updateRaceNumber(0);
                           setRaceType('準決勝');
                         }}
                       >
@@ -912,9 +922,7 @@ export default function HomePage() {
                       </Button>
                     </HStack>
                     <Box 
-                      fontSize={["4xl", "5xl", "6xl", "7xl"]}
                       fontWeight="bold"
-                      color="cyan.400"
                       p={3}
                       py={10} // パディングを増やして高さを調整
                       borderRadius="lg"
@@ -924,6 +932,7 @@ export default function HomePage() {
                       boxShadow="dark-lg"
                       textAlign="center"
                       width="100%"
+                      height="160px" // 固定の高さを設定
                       display="flex"
                       flexDirection="column"
                       justifyContent="center"
@@ -931,14 +940,43 @@ export default function HomePage() {
                       fontFamily="RocknRoll One"
                       letterSpacing={5}
                     >
-                      <Text color={
-                        raceType === '敗者復活戦' ? 'yellow.400' :
-                        raceType === '準決勝' ? 'orange.400' :
-                        raceType === '決勝' ? 'red.400' :
-                        '#FFFFFF'
-                      }>
-                        {raceType ? raceType : `第${currentRaceNumber}レース`}
-                      </Text>
+                      <Box 
+                        width="100%"
+                        height="100%"
+                        display="flex"
+                        flexDirection="column"
+                        justifyContent="center"
+                        alignItems="center"
+                        fontSize={["4xl", "5xl", "6xl", "7xl"]}
+                        color={
+                          raceType === 'タイムアタック' ? 'purple.400' :
+                          raceType === '敗者復活戦' ? 'yellow.400' :
+                          raceType === '準決勝' ? 'orange.400' :
+                          raceType === '決勝' ? 'red.400' :
+                          '#FFFFFF'
+                        }
+                      >
+                        {raceType === '決勝' ? (
+                          <Text fontSize="1em" lineHeight="1" color="red.400">決勝</Text>
+                        ) : raceType ? (
+                          <>
+                            <Text fontSize="0.8em" lineHeight="1.1" color={
+                              raceType === 'タイムアタック' ? 'purple.400' :
+                              raceType === '敗者復活戦' ? 'yellow.400' :
+                              raceType === '準決勝' ? 'orange.400' :
+                              '#FFFFFF'
+                            }>{raceType}</Text>
+                            <Text fontSize="0.5em" lineHeight="1" mt={1} color={
+                              raceType === 'タイムアタック' ? 'purple.400' :
+                              raceType === '敗者復活戦' ? 'yellow.400' :
+                              raceType === '準決勝' ? 'orange.400' :
+                              '#FFFFFF'
+                            }>第{currentRaceNumber}レース</Text>
+                          </>
+                        ) : (
+                          <Text fontSize="1em" lineHeight="1" color="#FFFFFF">第{currentRaceNumber}レース</Text>
+                        )}
+                      </Box>
                     </Box>
                   </Box>
 
