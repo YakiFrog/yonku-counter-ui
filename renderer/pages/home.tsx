@@ -139,10 +139,8 @@ export default function HomePage() {
   useEffect(() => {
     // ローカルストレージからレースタイプを復元
     const savedRaceType = localStorage.getItem('currentRaceType');
-    console.log('レースタイプ復元:', savedRaceType);
     if (savedRaceType !== null) { // null以外の場合は復元（空文字列も含む）
       setRaceType(savedRaceType);
-      console.log('レースタイプ設定:', savedRaceType);
     }
   }, []);
 
@@ -176,10 +174,18 @@ export default function HomePage() {
       
       // タイマーが実行中、シリアル入力が有効、そして1から4の数値であれば対応するコースの周回数をインクリメント
       if (isRunning && settings.serialCountEnabled && courseNumber >= 1 && courseNumber <= 4) {
-        incrementLap(courseNumber);
+        if (raceType === 'タイムアタック') {
+          // タイムアタックモードでは2,3,4コース目のセンサーデータのみでラップタイムを計算
+          if (courseNumber >= 2 && courseNumber <= 4) {
+            incrementLap(1); // 常に1コース目のデータを更新
+          }
+        } else {
+          // 通常レースモードでは各コースのセンサーデータでそのコースの周回数を更新
+          incrementLap(courseNumber);
+        }
       }
     }
-  }, [messages, isRunning, settings.serialCountEnabled]);  // settings.serialCountEnabledを依存配列に追加
+  }, [messages, isRunning, settings.serialCountEnabled, raceType]);  // raceTypeを依存配列に追加
 
   // キーボードイベントハンドラ
   // 修正履歴: 2025/05/24 - キーボード操作でカウントアップできない問題を修正
@@ -191,14 +197,25 @@ export default function HomePage() {
       const keyPressed = parseInt(event.key);
       
       if (isRunning) {
-        // 1-4のキーが押された場合、対応するコースの周回数を増やす
-        if (keyPressed >= 1 && keyPressed <= 4) {
-          incrementLap(keyPressed);
-        }
-        // 5-8のキーが押された場合、対応するコース（1-4）の周回数を減らす（Revert機能）
-        else if (keyPressed >= 6 && keyPressed <= 9) {
-          const courseId = keyPressed - 5; // 6は1、7は2、8は3、9は4にマッピング
-          decrementLap(courseId);
+        if (raceType === 'タイムアタック') {
+          // タイムアタックモードでは2,3,4キーでラップタイムを計算
+          if (keyPressed >= 2 && keyPressed <= 4) {
+            incrementLap(1); // 常に1コース目のデータを更新
+          }
+          // 7,8,9キーでRevert機能（2,3,4コース目に対応）
+          else if (keyPressed >= 7 && keyPressed <= 9) {
+            decrementLap(1); // 常に1コース目のデータを更新
+          }
+        } else {
+          // 通常レースモードでは1-4のキーが押された場合、対応するコースの周回数を増やす
+          if (keyPressed >= 1 && keyPressed <= 4) {
+            incrementLap(keyPressed);
+          }
+          // 6-9のキーが押された場合、対応するコース（1-4）の周回数を減らす（Revert機能）
+          else if (keyPressed >= 6 && keyPressed <= 9) {
+            const courseId = keyPressed - 5; // 6は1、7は2、8は3、9は4にマッピング
+            decrementLap(courseId);
+          }
         }
       }
     };
@@ -210,7 +227,7 @@ export default function HomePage() {
     return () => {
       window.removeEventListener('keypress', handleKeyPress);
     };
-  }, [isRunning]);  // 重要: isRunningを依存配列に追加（空の配列だとキーボード操作が機能しない）
+  }, [isRunning, raceType]);  // raceTypeを依存配列に追加
 
   // ストップウォッチの更新
   useEffect(() => {
@@ -263,7 +280,7 @@ export default function HomePage() {
           vehicle: vehicle?.name || '',
           color: colorMap[course.id] || 'gray.500',
           currentLap: 0,
-          totalLaps: settings.lapCount || 0,
+          totalLaps: raceType === 'タイムアタック' ? 3 : (settings.lapCount || 0), // タイムアタックの場合は3回
           time: 0,
           bestLap: null,
           lapTimes: [], // 周回ごとの記録時間
@@ -274,7 +291,7 @@ export default function HomePage() {
       
       setCourseData(updatedCourseData);
     }
-  }, [settings, isLoading]);
+  }, [settings, isLoading, raceType]); // raceTypeを依存配列に追加
 
   // settingsがロード中または未定義の場合はローディング表示
   if (isLoading || !settings) {
@@ -350,10 +367,8 @@ export default function HomePage() {
 
   // レースタイプを変更し、ローカルストレージに保存するヘルパー関数
   const updateRaceType = (newRaceType) => {
-    console.log('レースタイプ更新:', newRaceType);
     setRaceType(newRaceType);
     localStorage.setItem('currentRaceType', newRaceType);
-    console.log('ローカルストレージに保存:', newRaceType);
   };
 
   // タイマーのリセット
@@ -600,7 +615,10 @@ export default function HomePage() {
             {/* 左側：4コース分のレース情報と周回表示 */}
             <Box pl={"7%"}> {/* 左右の余白を縮小 */}
               <VStack spacing={4} align="stretch"> {/* 間隔を狭くする */}
-                {[...courseData].reverse().map((course) => {
+                {(raceType === 'タイムアタック' 
+                  ? [courseData[0]] // タイムアタックの場合は1コースのみ表示
+                  : [...courseData].reverse() // 通常レースの場合は4,3,2,1の順で表示
+                ).map((course) => {
                   // 完走判定
                   const isFinished = (course.totalLaps > 0 && course.currentLap >= course.totalLaps) || course.finishTime !== null;
                   
@@ -621,7 +639,7 @@ export default function HomePage() {
                         boxShadow: "xl"
                       }}
                     >
-                    {/* コース番号を左側に横長の背景色付きで表示 - 常に「4,3,2,1」の順で表示 */}
+                    {/* コース番号を左側に横長の背景色付きで表示 */}
                     <Box
                       position="absolute"
                       left="-80px"
@@ -645,8 +663,17 @@ export default function HomePage() {
                         textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
                       }}
                     >
-                      {course.id}
-                      <Text fontSize="lg" mt="-2">コース</Text>
+                      {raceType === 'タイムアタック' ? (
+                        <>
+                          <Text fontSize="lg" fontWeight="black">1-4</Text>
+                          <Text fontSize="lg" mt="-2">コース</Text>
+                        </>
+                      ) : (
+                        <>
+                          {course.id}
+                          <Text fontSize="lg" mt="-2">コース</Text>
+                        </>
+                      )}
                     </Box>
 
                     {/* 内側の枠 */}
