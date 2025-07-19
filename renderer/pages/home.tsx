@@ -608,8 +608,8 @@ export default function HomePage() {
       <Head>
         <title>レース管理システム</title>
       </Head>
-      <Container maxHeight="100vh" maxWidth="1920px" px={4} py={3}>
-        <VStack spacing={3} align="stretch" width="full">
+      <Container maxHeight="100vh" maxWidth="1920px" px={4} py={3} height="100vh" overflow="hidden">
+        <VStack spacing={3} align="stretch" width="full" pb={32}>
           {/* タブナビゲーション */}
           <TabNavigation currentTab="race" />
           {/* レイアウト: 左側にコース情報、右側に大きな経過時間表示 */}
@@ -1182,7 +1182,21 @@ export default function HomePage() {
           </Grid>
           
           {/* コントロールボタン */}
-          <Flex justifyContent="center" gap={3} mt={5} width="100%">
+          {/* コントロールボタンを画面下部に固定 */}
+          <Flex
+            justifyContent="center"
+            gap={3}
+            width="100%"
+            position="fixed"
+            left={0}
+            bottom={0}
+            zIndex={2000}
+            bg="rgba(30,30,30,0.98)"
+            py={4}
+            px={8}
+            boxShadow="0 -4px 24px rgba(0,0,0,0.3)"
+            style={{ backdropFilter: 'blur(6px)' }}
+          >
             <Button 
               colorScheme="yellow" 
               size="md" 
