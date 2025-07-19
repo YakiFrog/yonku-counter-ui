@@ -842,7 +842,10 @@ export default function HomePage() {
               return finishedCourses.map((course, index) => {
                 const position = index + 1;
                 const courseIndex = courseData.length - course.id; // reverse()されているため調整
-                const topOffset = 135 + (courseIndex * 225); // 各コースの位置に合わせて調整
+                // タイムアタック時は1コースのみ表示なので高さを固定
+                const topOffset = (raceType === 'タイムアタック')
+                  ? 135 // タイムアタック時は1コース目のBoxの高さに合わせて固定
+                  : 135 + (courseIndex * 225);
                 
                 // 順位に応じた色を設定（ランキングタブと統一）
                 const getPositionColor = (pos) => {
@@ -882,7 +885,7 @@ export default function HomePage() {
                       fontFamily="RocknRoll One"
                       textShadow="2px 2px 4px rgba(0,0,0,0.8)"
                     >
-                      {position}位
+                      {(raceType === 'タイムアタック') ? 'ゴール' : `${position}位`}
                     </Text>
                   </Box>
                 );
