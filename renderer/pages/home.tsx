@@ -1192,15 +1192,15 @@ export default function HomePage() {
             bottom={0}
             zIndex={2000}
             bg="rgba(30,30,30,0.98)"
-            py={4}
-            px={8}
+            py={3}
+            px={4}
             boxShadow="0 -4px 24px rgba(0,0,0,0.3)"
             style={{ backdropFilter: 'blur(6px)' }}
           >
             <Button 
               colorScheme="yellow" 
               size="md" 
-              py={6}
+              py={8}
               px={8}
               fontSize="lg"
               fontWeight="bold"
@@ -1221,7 +1221,7 @@ export default function HomePage() {
               colorScheme={isRunning ? "orange" : "cyan"} 
               size="md" 
               onClick={toggleTimer}
-              py={6}
+              py={8}
               px={8}
               fontSize="lg"
               fontWeight="bold"
@@ -1240,7 +1240,7 @@ export default function HomePage() {
             <Button 
               colorScheme="blue" 
               size="md" 
-              py={6}
+              py={8}
               px={8}
               fontSize="lg"
               fontWeight="bold"
@@ -1261,7 +1261,7 @@ export default function HomePage() {
               colorScheme="red" 
               size="md" 
               onClick={resetTimer}
-              py={6}
+              py={8}
               px={8}
               fontSize="lg"
               fontWeight="bold"
@@ -1280,7 +1280,7 @@ export default function HomePage() {
             <Button 
               colorScheme="purple" 
               size="md"
-              py={6}
+              py={8}
               px={8}
               fontSize="lg"
               fontWeight="bold"
