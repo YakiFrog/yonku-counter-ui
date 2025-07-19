@@ -116,6 +116,9 @@ export default function HomePage() {
     },
   ]);
   
+  // 完走コースIDを管理
+  const [finishedCourseIds, setFinishedCourseIds] = useState([]);
+
   // タイマーのID保持用
   const timerRef = useRef(null);
   const slideshowTimerRef = useRef(null);
@@ -507,9 +510,6 @@ export default function HomePage() {
     );
   };
   
-  // 完走コースIDを管理
-  const [finishedCourseIds, setFinishedCourseIds] = useState([]);
-
   // 特定コースの周回数を増やす
   const incrementLap = (courseId) => {
     setCourseData(prev => {
