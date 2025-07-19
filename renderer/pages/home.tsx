@@ -507,87 +507,79 @@ export default function HomePage() {
     );
   };
   
+  // 完走コースIDを管理
+  const [finishedCourseIds, setFinishedCourseIds] = useState([]);
+
   // 特定コースの周回数を増やす
   const incrementLap = (courseId) => {
-    setCourseData(prev => 
-      prev.map(course => {
-        if (course.id === courseId && 
-            (course.totalLaps === 0 || course.currentLap < course.totalLaps)) {
-          
-          // 現在のタイムスタンプ
+    setCourseData(prev => {
+      let finished = false;
+      const updated = prev.map(course => {
+        if (course.id === courseId && (course.totalLaps === 0 || course.currentLap < course.totalLaps)) {
           const currentTime = course.time;
-          
-          // 周回のラップタイム計算（今の時間 - 前回の周回完了時間）
           const lapTime = currentTime - course.lastLapTime;
-          
-          // 新しいラップタイム記録を追加
           const newLapTime = {
-            lapNumber: course.currentLap + 1, // 新しい周回番号
-            time: formatTime(lapTime), // 表示用フォーマット時間
-            timestamp: lapTime // ミリ秒単位の生データ
+            lapNumber: course.currentLap + 1,
+            time: formatTime(lapTime),
+            timestamp: lapTime
           };
-          
-          // ベストラップの更新
           let bestLap = course.bestLap;
           if (!bestLap || (lapTime < bestLap.timestamp && lapTime > 0)) {
             bestLap = newLapTime;
           }
-          
-          // 周回時間の配列に追加
           const newLapTimes = [...course.lapTimes, newLapTime];
-          
-          // 全周回完了したかチェック
           const newLapCount = course.currentLap + 1;
           const isFinished = course.totalLaps > 0 && newLapCount >= course.totalLaps;
-          
+          if (isFinished && course.finishTime === null) finished = true;
           return {
-            ...course, 
+            ...course,
             currentLap: newLapCount,
             lapTimes: newLapTimes,
-            lastLapTime: currentTime, // 現在の時間を最後のラップタイムとして記録
+            lastLapTime: currentTime,
             bestLap,
-            // 目標周回数に達した場合、完了時間を記録
             finishTime: isFinished && course.finishTime === null ? currentTime : course.finishTime
           };
         }
         return course;
-      })
-    );
+      });
+      if (finished) setFinishedCourseIds(ids => [...ids, courseId]);
+      return updated;
+    });
   };
   
   // 特定コースの周回数を減らす
   const decrementLap = (courseId) => {
-    setCourseData(prev => 
-      prev.map(course => {
+    setCourseData(prev => {
+      let wasFinished = false;
+      const updated = prev.map(course => {
         if (course.id === courseId && course.currentLap > 0) {
-          // 最後のラップタイム記録を削除
           const newLapTimes = [...course.lapTimes];
           newLapTimes.pop();
-          
-          // 新しいbestLapを計算
           let bestLap = null;
           if (newLapTimes.length > 0) {
-            bestLap = newLapTimes.reduce((best, current) => 
-              best.timestamp < current.timestamp ? best : current
-            );
+            bestLap = newLapTimes.reduce((best, current) => best.timestamp < current.timestamp ? best : current);
           }
-          
-          // 前の周回の完了時間を計算
           const lastLapTime = course.currentLap > 1 
             ? course.lastLapTime - (course.lapTimes[course.lapTimes.length - 1]?.timestamp || 0)
             : 0;
-          
+          // 完走状態から解除されたか判定
+          const wasCourseFinished = (course.totalLaps > 0 && course.currentLap >= course.totalLaps) || course.finishTime !== null;
+          const nowCourseFinished = (course.totalLaps > 0 && (course.currentLap - 1) >= course.totalLaps) || ((course.finishTime !== null) && ((course.currentLap - 1) >= course.totalLaps));
+          if (wasCourseFinished && !nowCourseFinished) wasFinished = true;
           return {
-            ...course, 
+            ...course,
             currentLap: course.currentLap - 1,
             lapTimes: newLapTimes,
             lastLapTime,
-            bestLap
+            bestLap,
+            finishTime: nowCourseFinished ? course.finishTime : null
           };
         }
         return course;
-      })
-    );
+      });
+      if (wasFinished) setFinishedCourseIds(ids => ids.filter(id => id !== courseId));
+      return updated;
+    });
   };
   
   // 時間のフォーマット (mm:ss.ms)
@@ -825,14 +817,13 @@ export default function HomePage() {
               const finishedCourses = courseData
                 .filter(course => {
                   const isFinished = (course.totalLaps > 0 && course.currentLap >= course.totalLaps) || course.finishTime !== null;
-                  return isFinished && course.name; // チーム名がある場合のみ
+                  return isFinished && course.name && finishedCourseIds.includes(course.id);
                 })
                 .map(course => ({
                   ...course,
                   finalTime: course.finishTime || course.time
                 }))
                 .sort((a, b) => {
-                  // 周回数が多い順、同じ場合は時間が短い順
                   if (a.currentLap !== b.currentLap) {
                     return b.currentLap - a.currentLap;
                   }
