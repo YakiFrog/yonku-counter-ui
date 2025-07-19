@@ -53,6 +53,18 @@ export default function RankingPage() {
   const [selectedRaceId, setSelectedRaceId] = React.useState<string>("");
   const cancelRef = React.useRef<HTMLButtonElement>(null);
 
+  // 時間文字列をミリ秒に変換するヘルパー関数
+  const parseTime = (timeStr: string): number => {
+    const [minutesSeconds, ms] = timeStr.split('.');
+    const [minutes, seconds] = minutesSeconds.split(':');
+    
+    return (
+      parseInt(minutes) * 60 * 1000 +
+      parseInt(seconds) * 1000 +
+      parseInt(ms) * 10
+    );
+  };
+
   // ユーティリティ関数: 文字列形式の時間（mm:ss.ms）を比較して小さい方（速い方）を返す
   const findBestLap = (laps: string[]): { value: string | null, index: number } => {
     if (!laps || laps.length === 0) {
@@ -73,22 +85,74 @@ export default function RankingPage() {
   };
   
   // すべてのレース結果を表示用に変換
-  // すべてのレース結果を表示用に変換
-  const allRacesData = settings?.races ? [...settings.races].reverse().map(race => ({
-    id: race.id,
-    name: race.name || `第${race.raceNumber}レース`,
-    raceNumber: race.raceNumber,
-    results: race.results.map((result) => ({
-      position: result.position,
-      courseId: result.courseId,
-      name: result.teamName || result.playerName,
-      vehicle: result.vehicleName,
-      time: result.totalTime,
-      laps: result.laps?.map(lap => lap.time) || [],
-      wins: 0,
-      isCompleted: result.isCompleted || false
-    }))
-  })) : [];
+  const allRacesData = settings?.races ? [...settings.races].reverse().map(race => {
+    // タイムアタックの場合は全体での順位を計算
+    if (race.raceType === 'タイムアタック') {
+      // 全てのタイムアタック結果を取得
+      const allTimeAttackResults = settings.races
+        .filter(r => r.raceType === 'タイムアタック')
+        .flatMap(r => r.results)
+        .map(result => ({
+          ...result,
+          // 時間を比較用に変換
+          timeForSort: parseTime(result.totalTime)
+        }))
+        .sort((a, b) => {
+          // 周回数が多い順、同じ場合は時間が短い順
+          const aLaps = a.laps?.length || 0;
+          const bLaps = b.laps?.length || 0;
+          if (aLaps !== bLaps) return bLaps - aLaps;
+          return a.timeForSort - b.timeForSort;
+        });
+      
+      // 全体での順位を計算
+      const globalRankedResults = allTimeAttackResults.map((result, index) => ({
+        ...result,
+        globalPosition: index + 1
+      }));
+      
+      // このレースの結果に全体順位を適用
+      const raceResults = race.results.map(result => {
+        const globalResult = globalRankedResults.find(gr => gr.id === result.id);
+        return {
+          position: globalResult?.globalPosition || result.position,
+          courseId: result.courseId,
+          name: result.teamName || result.playerName,
+          vehicle: result.vehicleName,
+          time: result.totalTime,
+          laps: result.laps?.map(lap => lap.time) || [],
+          wins: 0,
+          isCompleted: result.isCompleted || false
+        };
+      });
+      
+      return {
+        id: race.id,
+        name: race.name || `第${race.raceNumber}レース`,
+        raceNumber: race.raceNumber,
+        raceType: race.raceType,
+        results: raceResults
+      };
+    } else {
+      // 通常レースの場合は従来通り
+      return {
+        id: race.id,
+        name: race.name || `第${race.raceNumber}レース`,
+        raceNumber: race.raceNumber,
+        raceType: race.raceType,
+        results: race.results.map((result) => ({
+          position: result.position,
+          courseId: result.courseId,
+          name: result.teamName || result.playerName,
+          vehicle: result.vehicleName,
+          time: result.totalTime,
+          laps: result.laps?.map(lap => lap.time) || [],
+          wins: 0,
+          isCompleted: result.isCompleted || false
+        }))
+      };
+    }
+  }) : [];
 
   // 総合ランキングの計算
   const calculateOverallRankings = (): PlayerStats[] => {
@@ -219,11 +283,13 @@ export default function RankingPage() {
                           <Tr 
                             key={entry.position}
                             bg={
-                              entry.position === 1 ? "rgba(255, 215, 0, 0.20)" :
-                              entry.position === 2 ? "rgba(192, 192, 192, 0.20)" :
-                              entry.position === 3 ? "rgba(205, 127, 50, 0.20)" :
-                              entry.position === 4 ? "rgba(255, 0, 0, 0.20)" :
-                              "transparent"
+                              race.raceType === 'タイムアタック' ? "rgba(138, 43, 226, 0.20)" : (
+                                entry.position === 1 ? "rgba(255, 215, 0, 0.20)" :
+                                entry.position === 2 ? "rgba(192, 192, 192, 0.20)" :
+                                entry.position === 3 ? "rgba(205, 127, 50, 0.20)" :
+                                entry.position === 4 ? "rgba(255, 0, 0, 0.20)" :
+                                "transparent"
+                              )
                             }
                           >
                             <Td>
@@ -233,19 +299,23 @@ export default function RankingPage() {
                                   py={1} 
                                   borderRadius="full"
                                   bg={
-                                    entry.position === 1 ? "rgba(255, 215, 0, 0.2)" :
-                                    entry.position === 2 ? "rgba(192, 192, 192, 0.2)" :
-                                    entry.position === 3 ? "rgba(205, 127, 50, 0.2)" :
-                                    entry.position === 4 ? "rgba(255, 0, 0, 0.2)" :
-                                    "transparent"
+                                    race.raceType === 'タイムアタック' ? "rgba(138, 43, 226, 0.3)" : (
+                                      entry.position === 1 ? "rgba(255, 215, 0, 0.2)" :
+                                      entry.position === 2 ? "rgba(192, 192, 192, 0.2)" :
+                                      entry.position === 3 ? "rgba(205, 127, 50, 0.2)" :
+                                      entry.position === 4 ? "rgba(255, 0, 0, 0.2)" :
+                                      "transparent"
+                                    )
                                   }
                                   borderWidth="1px"
                                   borderColor={
-                                    entry.position === 1 ? "yellow.400" :
-                                    entry.position === 2 ? "gray.400" :
-                                    entry.position === 3 ? "orange.400" :
-                                    entry.position === 4 ? "red.400" :
-                                    "gray.500"
+                                    race.raceType === 'タイムアタック' ? "purple.400" : (
+                                      entry.position === 1 ? "yellow.400" :
+                                      entry.position === 2 ? "gray.400" :
+                                      entry.position === 3 ? "orange.400" :
+                                      entry.position === 4 ? "red.400" :
+                                      "gray.500"
+                                    )
                                   }
                                 >
                                   <Text 

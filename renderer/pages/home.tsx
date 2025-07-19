@@ -413,7 +413,7 @@ export default function HomePage() {
       return {
         id: `result-${Date.now()}-${course.id}`,
         raceId: `race-${Date.now()}`,
-        position: 1, // 仮の順位（後でソート）
+        position: 1, // 仮の順位（タイムアタックの場合は後でランキング画面で計算）
         playerId: course.name ? `player-${course.id}` : null,
         playerName: course.name || `コース${course.id}`,
         teamName: course.teamName,
@@ -427,21 +427,23 @@ export default function HomePage() {
       };
     });
     
-    // 結果をソート - 周回数が多い順、同じ場合は時間が短い順
-    results.sort((a, b) => {
-      const aLaps = a.laps.length;
-      const bLaps = b.laps.length;
-      if (aLaps !== bLaps) return bLaps - aLaps; // 周回数降順
+    // 通常レースの場合のみ順位を計算（タイムアタックは表示時に計算）
+    if (raceType !== 'タイムアタック') {
+      results.sort((a, b) => {
+        const aLaps = a.laps.length;
+        const bLaps = b.laps.length;
+        if (aLaps !== bLaps) return bLaps - aLaps; // 周回数降順
+        
+        const aTime = parseTime(a.totalTime);
+        const bTime = parseTime(b.totalTime);
+        return aTime - bTime; // 時間昇順
+      });
       
-      const aTime = parseTime(a.totalTime);
-      const bTime = parseTime(b.totalTime);
-      return aTime - bTime; // 時間昇順
-    });
-    
-    // 正しい順位を設定
-    results.forEach((result, idx) => {
-      result.position = idx + 1;
-    });
+      // 正しい順位を設定
+      results.forEach((result, idx) => {
+        result.position = idx + 1;
+      });
+    }
     
     // レース情報を作成
     const race: Race = {
