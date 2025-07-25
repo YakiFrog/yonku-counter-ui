@@ -298,6 +298,7 @@ export default function RankingPage() {
                                   px={3} 
                                   py={1} 
                                   borderRadius="full"
+                                  minWidth="60px"
                                   bg={
                                     race.raceType === 'タイムアタック' ? "rgba(138, 43, 226, 0.3)" : (
                                       entry.position === 1 ? "rgba(255, 215, 0, 0.2)" :
@@ -317,11 +318,15 @@ export default function RankingPage() {
                                       "gray.500"
                                     )
                                   }
+                                  display="flex"
+                                  alignItems="center"
+                                  justifyContent="center"
                                 >
                                   <Text 
                                     fontWeight="bold" 
                                     fontSize="20px" 
                                     color="white"
+                                    whiteSpace="nowrap"
                                   >
                                     {entry.position}位
                                   </Text>
