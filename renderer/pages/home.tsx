@@ -712,7 +712,7 @@ export default function HomePage() {
           <Grid templateColumns="5fr 3fr" gap={4} flex={1} height="100%">
             {/* 左側：4コース分のレース情報と周回表示 */}
             <Box pl={"7%"} minHeight="100%"> {/* 左右の余白を縮小 */}
-              <VStack spacing={14} align="stretch" minHeight="100%" justify="center"> {/* 縦方向中央揃え */}
+              <VStack spacing={4} align="stretch" minHeight="100%" justify="center"> {/* 縦方向中央揃え */}
                 {(raceType === 'タイムアタック' 
                   ? [courseData[0]] // タイムアタックの場合は1コースのみ表示
                   : [...courseData].reverse() // 通常レースの場合は4,3,2,1の順で表示
@@ -969,6 +969,36 @@ export default function HomePage() {
                     )}
                   </Box>
                 )})}
+
+                {/* 走者と暫定順位の区切り線 */}
+                {raceType === 'タイムアタック' && getTimeAttackRanking().length > 0 && (
+                  <Box
+                    width="calc(100% + 80px)"
+                    height="2px"
+                    bg="gray.600"
+                    borderRadius="full"
+                    my={5}
+                    ml="-80px"
+                    position="relative"
+                  >
+                    <Box
+                      position="absolute"
+                      top="50%"
+                      left="50%"
+                      transform="translate(-50%, -50%)"
+                      bg="gray.800"
+                      px={4}
+                      py={1}
+                      borderRadius="md"
+                      border="1px solid"
+                      borderColor="gray.600"
+                    >
+                      <Text fontSize="sm" color="gray.300" fontWeight="medium">
+                        ランキング
+                      </Text>
+                    </Box>
+                  </Box>
+                )}
 
                 {/* タイムアタック時の暫定順位表示 */}
                 {raceType === 'タイムアタック' && (() => {
