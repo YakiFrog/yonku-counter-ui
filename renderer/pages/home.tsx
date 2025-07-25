@@ -712,7 +712,7 @@ export default function HomePage() {
           <Grid templateColumns="5fr 3fr" gap={4} flex={1} height="100%">
             {/* 左側：4コース分のレース情報と周回表示 */}
             <Box pl={"7%"} minHeight="100%"> {/* 左右の余白を縮小 */}
-              <VStack spacing={4} align="stretch" minHeight="100%" justify="center"> {/* 縦方向中央揃え */}
+              <VStack spacing={14} align="stretch" minHeight="100%" justify="center"> {/* 縦方向中央揃え */}
                 {(raceType === 'タイムアタック' 
                   ? [courseData[0]] // タイムアタックの場合は1コースのみ表示
                   : [...courseData].reverse() // 通常レースの場合は4,3,2,1の順で表示
@@ -975,7 +975,9 @@ export default function HomePage() {
                   const ranking = getTimeAttackRanking();
                   if (ranking.length === 0) return null;
                   
-                  return ranking.map((ranker, index) => {
+                  return (
+                    <VStack spacing={4} align="stretch">
+                      {ranking.map((ranker, index) => {
                     const position = index + 1;
                     const completedLaps = ranker.laps?.length || 0;
                     const totalLaps = 3; // タイムアタックは3周回
@@ -1155,7 +1157,9 @@ export default function HomePage() {
                         </Box>
                       </Box>
                     );
-                  });
+                  })}
+                    </VStack>
+                  );
                 })()}
               </VStack>
             </Box>
