@@ -669,19 +669,32 @@ export default function HomePage() {
                       justifyContent="center"
                       alignItems="center"
                       flexDirection="column"
-                      bg={course.color}
+                      bg={raceType === 'タイムアタック' ? 
+                        `repeating-linear-gradient(
+                          45deg,
+                          var(--chakra-colors-yellow-500) -20px,
+                          var(--chakra-colors-yellow-500) 40px,
+                          var(--chakra-colors-green-500) 40px,
+                          var(--chakra-colors-green-500) 100px,
+                          var(--chakra-colors-blue-500) 100px,
+                          var(--chakra-colors-blue-500) 160px,
+                          var(--chakra-colors-red-500) 160px,
+                          var(--chakra-colors-red-500) 220px
+                        )` : 
+                        course.color
+                      }
                       boxShadow="dark-lg"
                       zIndex={2}
                       borderLeftRadius="md"
                       borderWidth="3px"
-                      borderColor={course.color}
+                      borderColor={raceType === 'タイムアタック' ? "gray.400" : course.color}
                       sx={{
                         textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
                       }}
                     >
                       {raceType === 'タイムアタック' ? (
                         <>
-                          <Text fontSize="lg" fontWeight="black">1-4</Text>
+                          <Text fontSize="3xl" fontWeight="black" letterSpacing="wider">1~4</Text>
                           <Text fontSize="lg" mt="-2">コース</Text>
                         </>
                       ) : (
@@ -699,14 +712,37 @@ export default function HomePage() {
                       right={0}
                       bottom={0}
                       left={-35}
-                      borderWidth="5px"
                       borderRadius="xl"
-                      borderColor={course.color}
                       opacity="0.8"
                       pointerEvents="none"
+                      borderWidth={raceType === 'タイムアタック' ? "0" : "5px"}
+                      borderColor={raceType !== 'タイムアタック' ? course.color : 'transparent'}
+                      sx={raceType === 'タイムアタック' ? {
+                        background: `repeating-linear-gradient(
+                          45deg,
+                          var(--chakra-colors-yellow-500) -20px,
+                          var(--chakra-colors-yellow-500) 40px,
+                          var(--chakra-colors-green-500) 40px,
+                          var(--chakra-colors-green-500) 100px,
+                          var(--chakra-colors-blue-500) 100px,
+                          var(--chakra-colors-blue-500) 160px,
+                          var(--chakra-colors-red-500) 160px,
+                          var(--chakra-colors-red-500) 220px
+                        )`,
+                        padding: '5px',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: '5px',
+                          left: '5px',
+                          right: '5px',
+                          bottom: '5px',
+                          borderRadius: 'calc(1rem - 5px)',
+                          background: 'var(--chakra-colors-gray-800)',
+                          zIndex: -1
+                        }
+                      } : {}}
                     />
-
-
 
                     <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
                       <Box maxW="60%">
@@ -879,7 +915,7 @@ export default function HomePage() {
                         }}
                       >
                         <Text fontSize="lg" fontWeight="black">暫定</Text>
-                        <Text fontSize="2xl" mt="-1">1位</Text>
+                        <Text fontSize="4xl" mt="-1">1位</Text>
                       </Box>
 
                       {/* 内側の枠 */}
