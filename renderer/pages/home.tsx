@@ -29,6 +29,7 @@ import {
   AlertDialogOverlay,
   useDisclosure
 } from '@chakra-ui/react'
+import { keyframes } from '@emotion/react'
 import { useRouter } from 'next/router'
 
 import { Container } from '../components/Container'
@@ -37,6 +38,19 @@ import { TabNavigation } from '../components/TabNavigation'
 import { useAppSettingsContext } from '../utils/AppSettingsContext'
 import { useSerial } from '../utils/SerialContext'
 import { Race, RaceResult, RaceLap } from '../utils/types'
+
+// 光るアニメーション
+const glowAnimation = keyframes`
+  0% { 
+    box-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor, 0 0 20px currentColor; 
+  }
+  50% { 
+    box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor, 0 0 40px currentColor; 
+  }
+  100% { 
+    box-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor, 0 0 20px currentColor; 
+  }
+`;
 
 export default function HomePage() {
   const { settings, isLoading, saveRaceResult } = useAppSettingsContext();
@@ -118,10 +132,35 @@ export default function HomePage() {
   
   // 完走コースIDを管理
   const [finishedCourseIds, setFinishedCourseIds] = useState([]);
+  
+  // 最後に押されたボタンを追跡
+  const [lastPressedButton, setLastPressedButton] = useState(null);
 
   // タイマーのID保持用
   const timerRef = useRef(null);
   const slideshowTimerRef = useRef(null);
+  const buttonGlowTimerRef = useRef(null);
+  
+  // 光るボタンエフェクトを一定時間後に消去
+  useEffect(() => {
+    if (lastPressedButton) {
+      // 既存のタイマーをクリア
+      if (buttonGlowTimerRef.current) {
+        clearTimeout(buttonGlowTimerRef.current);
+      }
+      
+      // 3秒後に光るエフェクトを停止
+      buttonGlowTimerRef.current = setTimeout(() => {
+        setLastPressedButton(null);
+      }, 3000);
+    }
+    
+    return () => {
+      if (buttonGlowTimerRef.current) {
+        clearTimeout(buttonGlowTimerRef.current);
+      }
+    };
+  }, [lastPressedButton]);
 
   const { write: serialWrite, messages, clearMessages } = useSerial();
 
@@ -312,6 +351,7 @@ export default function HomePage() {
 
   // ゲート準備コマンド送信
   const handleGatePrep = async () => {
+    setLastPressedButton('gatePrep');
     try {
       await serialWrite('q');
     } catch (error) {
@@ -328,6 +368,7 @@ export default function HomePage() {
 
   // ゲート自動コマンド送信
   const handleGateAuto = async () => {
+    setLastPressedButton('gateAuto');
     try {
       await serialWrite('e');
     } catch (error) {
@@ -344,6 +385,7 @@ export default function HomePage() {
 
   // スタート/ストップ切り替え
   const toggleTimer = async () => {
+    setLastPressedButton('startStop');
     if (!isRunning) {
       // スタート
       clearMessages(); // シリアル入力メッセージをクリア
@@ -376,6 +418,7 @@ export default function HomePage() {
 
   // タイマーのリセット
   const resetTimer = () => {
+    setLastPressedButton('reset');
     setIsRunning(false);
     setElapsedTime(0);
     updateRaceType('');   // レースタイプをリセット（ローカルストレージも更新）
@@ -394,6 +437,7 @@ export default function HomePage() {
   
   // レース終了処理
   const finishRace = () => {
+    setLastPressedButton('finish');
     // レースを一時停止
     setIsRunning(false);
     
@@ -1460,7 +1504,10 @@ export default function HomePage() {
               onClick={handleGatePrep}
               color="white"
               sx={{
-                textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+                ...(lastPressedButton === 'gatePrep' && {
+                  animation: `${glowAnimation} 1.5s ease-in-out infinite`
+                })
               }}
             >
               ゲート準備
@@ -1480,7 +1527,10 @@ export default function HomePage() {
               transition="all 0.2s"
               color="white"
               sx={{
-                textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+                ...(lastPressedButton === 'startStop' && {
+                  animation: `${glowAnimation} 1.5s ease-in-out infinite`
+                })
               }}
             >
               {isRunning ? "一時停止" : "スタート"}
@@ -1500,7 +1550,10 @@ export default function HomePage() {
               onClick={handleGateAuto}
               color="white"
               sx={{
-                textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+                ...(lastPressedButton === 'gateAuto' && {
+                  animation: `${glowAnimation} 1.5s ease-in-out infinite`
+                })
               }}
             >
               ゲート自動
@@ -1520,7 +1573,10 @@ export default function HomePage() {
               transition="all 0.2s"
               color="white"
               sx={{
-                textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+                ...(lastPressedButton === 'reset' && {
+                  animation: `${glowAnimation} 1.5s ease-in-out infinite`
+                })
               }}
             >
               リセット
@@ -1541,7 +1597,10 @@ export default function HomePage() {
               transition="all 0.2s"
               color="white"
               sx={{
-                textShadow: "2px 2px 4px rgba(0,0,0,0.5)"
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+                ...(lastPressedButton === 'finish' && {
+                  animation: `${glowAnimation} 1.5s ease-in-out infinite`
+                })
               }}
             >
               レース終了
