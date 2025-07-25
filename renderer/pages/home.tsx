@@ -571,9 +571,9 @@ export default function HomePage() {
     );
   };
   
-  // タイムアタックの暫定1位を取得する関数
-  const getTimeAttackLeader = () => {
-    if (!settings?.races || settings.races.length === 0) return null;
+  // タイムアタックの暫定上位を取得する関数
+  const getTimeAttackRanking = () => {
+    if (!settings?.races || settings.races.length === 0) return [];
     
     // 全てのタイムアタック結果を取得
     const allTimeAttackResults = settings.races
@@ -590,7 +590,28 @@ export default function HomePage() {
         return a.timeForSort - b.timeForSort;
       });
     
-    return allTimeAttackResults.length > 0 ? allTimeAttackResults[0] : null;
+    // 上位3位まで返す
+    return allTimeAttackResults.slice(0, 3);
+  };
+
+  // 現在走行中の選手を取得する関数
+  const getCurrentRunner = () => {
+    if (raceType !== 'タイムアタック' || !isRunning) return null;
+    
+    // タイムアタック時の現在の走者情報を取得（1コース目のデータ）
+    const currentCourse = courseData[0];
+    if (!currentCourse || !currentCourse.name) return null;
+    
+    return {
+      name: currentCourse.name,
+      teamName: currentCourse.teamName,
+      vehicleName: currentCourse.vehicle,
+      currentLap: currentCourse.currentLap,
+      totalLaps: currentCourse.totalLaps,
+      lapTimes: currentCourse.lapTimes,
+      bestLap: currentCourse.bestLap,
+      time: currentCourse.time
+    };
   };
 
   // 特定コースの周回数を増やす
@@ -691,7 +712,7 @@ export default function HomePage() {
           <Grid templateColumns="5fr 3fr" gap={4} flex={1} height="100%">
             {/* 左側：4コース分のレース情報と周回表示 */}
             <Box pl={"7%"} minHeight="100%"> {/* 左右の余白を縮小 */}
-              <VStack spacing={4} align="stretch" minHeight="100%"> {/* 間隔を狭くする */}
+              <VStack spacing={4} align="stretch" minHeight="100%" justify="center"> {/* 縦方向中央揃え */}
                 {(raceType === 'タイムアタック' 
                   ? [courseData[0]] // タイムアタックの場合は1コースのみ表示
                   : [...courseData].reverse() // 通常レースの場合は4,3,2,1の順で表示
@@ -949,178 +970,192 @@ export default function HomePage() {
                   </Box>
                 )})}
 
-                {/* タイムアタック時の暫定1位表示 */}
+                {/* タイムアタック時の暫定順位表示 */}
                 {raceType === 'タイムアタック' && (() => {
-                  const leader = getTimeAttackLeader();
-                  if (!leader) return null;
+                  const ranking = getTimeAttackRanking();
+                  if (ranking.length === 0) return null;
                   
-                  const completedLaps = leader.laps?.length || 0;
-                  const totalLaps = 3; // タイムアタックは3周回
-                  
-                  return (
-                    <Box 
-                      p={4} 
-                      pl={5}
-                      borderWidth="0" 
-                      borderRadius="md"
-                      shadow="lg"
-                      position="relative"
-                      bg="gray.800"
-                      transition="all 0.2s"
-                      _hover={{
-                        transform: "translateX(2px)",
-                        boxShadow: "xl"
-                      }}
-                    >
-                      {/* 暫定1位ラベル */}
-                      <Box
-                        position="absolute"
-                        left="-80px"
-                        top="0"
-                        fontSize="3xl"
-                        fontWeight="black"
-                        color="white"
-                        w="80px"
-                        h="100%"
-                        display="flex"
-                        justifyContent="center"
-                        alignItems="center"
-                        flexDirection="column"
-                        bg="yellow.500"
-                        boxShadow="dark-lg"
-                        zIndex={2}
-                        borderLeftRadius="md"
-                        borderWidth="3px"
-                        borderColor="yellow.500"
-                        sx={{
-                          textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
+                  return ranking.map((ranker, index) => {
+                    const position = index + 1;
+                    const completedLaps = ranker.laps?.length || 0;
+                    const totalLaps = 3; // タイムアタックは3周回
+                    
+                    // 順位に応じた色とラベル設定
+                    const getPositionStyle = (pos) => {
+                      switch (pos) {
+                        case 1: return { 
+                          bg: "yellow.500", 
+                          borderColor: "yellow.500", 
+                          label: "暫定", 
+                          rank: "1位",
+                          badgeColor: "yellow"
+                        };
+                        case 2: return { 
+                          bg: "gray.500", 
+                          borderColor: "gray.500", 
+                          label: "暫定", 
+                          rank: "2位",
+                          badgeColor: "gray"
+                        };
+                        case 3: return { 
+                          bg: "orange.600", 
+                          borderColor: "orange.600", 
+                          label: "暫定", 
+                          rank: "3位",
+                          badgeColor: "orange"
+                        };
+                        default: return { 
+                          bg: "blue.500", 
+                          borderColor: "blue.500", 
+                          label: "暫定", 
+                          rank: `${pos}位`,
+                          badgeColor: "blue"
+                        };
+                      }
+                    };
+                    
+                    const positionStyle = getPositionStyle(position);
+                    
+                    return (
+                      <Box 
+                        key={`ranking-${index}`}
+                        p={4} 
+                        pl={5}
+                        borderWidth="0" 
+                        borderRadius="md"
+                        shadow="lg"
+                        position="relative"
+                        bg="gray.800"
+                        transition="all 0.2s"
+                        _hover={{
+                          transform: "translateX(2px)",
+                          boxShadow: "xl"
                         }}
                       >
-                        <Text fontSize="lg" fontWeight="black">暫定</Text>
-                        <Text fontSize="4xl" mt="-1">1位</Text>
-                      </Box>
-
-                      {/* 内側の枠 */}
-                      <Box
-                        position="absolute"
-                        top={0}
-                        right={0}
-                        bottom={0}
-                        left={-35}
-                        borderWidth="5px"
-                        borderRadius="xl"
-                        borderColor="yellow.400"
-                        opacity="0.8"
-                        pointerEvents="none"
-                      />
-
-                      <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
-                        <Box maxW="60%">
-                          <Flex align="center" gap={2} overflow="hidden" whiteSpace="nowrap">
-                            <Text fontWeight="bold" fontSize={["xl", "2xl", "3xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">
-                              {leader.teamName || leader.playerName}
-                            </Text>
-                            <Text fontSize="md" color="rgba(255, 255, 255, 0.8)" overflow="hidden" textOverflow="ellipsis">
-                              / {leader.vehicleName}
-                            </Text>
-                            {leader.bestLap && (
-                              <Badge size="sm" colorScheme="yellow" variant="subtle">
-                                ベスト: {leader.bestLap.time}
-                              </Badge>
-                            )}
-                            <Badge size="sm" colorScheme="green" variant="solid">
-                              記録: {leader.totalTime}
-                            </Badge>
-                          </Flex>
+                        {/* 暫定順位ラベル */}
+                        <Box
+                          position="absolute"
+                          left="-80px"
+                          top="0"
+                          fontSize="3xl"
+                          fontWeight="black"
+                          color="white"
+                          w="80px"
+                          h="100%"
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          flexDirection="column"
+                          bg={positionStyle.bg}
+                          boxShadow="dark-lg"
+                          zIndex={2}
+                          borderLeftRadius="md"
+                          borderWidth="3px"
+                          borderColor={positionStyle.borderColor}
+                          sx={{
+                            textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
+                          }}
+                        >
+                          <Text fontSize="lg" fontWeight="black">{positionStyle.label}</Text>
+                          <Text fontSize="4xl" mt="-1">{positionStyle.rank}</Text>
                         </Box>
-                        <Flex direction="column" alignItems="center">
-                          <Text fontSize="xl" fontWeight="bold" color="white">
-                            {completedLaps} / {totalLaps}
-                          </Text>
-                          <Text fontSize="xs" mt={0} color="white">周回数</Text>
-                        </Flex>
-                      </Flex>
-                      
-                      {/* ラップタイム表示 */}
-                      <Box mt={2} height="100px">
-                        <Text fontSize="lg" fontWeight="semibold" mb={1} color="white">周回タイム:</Text>
-                        {leader.laps && leader.laps.length > 0 ? (
-                          <Box 
-                            overflowY="auto" 
-                            maxHeight="80px"
-                            borderWidth="1px" 
-                            borderRadius="md" 
-                            borderColor="gray.600" 
-                            bg="gray.900"
-                            p={2}
-                          >
-                            <Flex flexWrap="wrap" gap={2}>
-                              {leader.laps.map((lap, index) => (
-                                <Badge
-                                  key={index}
-                                  colorScheme={
-                                    leader.bestLap && lap.time === leader.bestLap.time 
-                                      ? "yellow" 
-                                      : "gray"
-                                  }
-                                  p={2}
-                                  fontSize="md"
-                                  borderRadius="md"
-                                  variant={
-                                    leader.bestLap && lap.time === leader.bestLap.time 
-                                      ? "solid" 
-                                      : "outline"
-                                  }
-                                  color="white"
-                                >
-                                  {index + 1}周目: {lap.time}
+
+                        {/* 内側の枠 */}
+                        <Box
+                          position="absolute"
+                          top={0}
+                          right={0}
+                          bottom={0}
+                          left={-35}
+                          borderWidth="5px"
+                          borderRadius="xl"
+                          borderColor={positionStyle.borderColor}
+                          opacity="0.8"
+                          pointerEvents="none"
+                        />
+
+                        <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
+                          <Box maxW="60%">
+                            <Flex align="center" gap={2} overflow="hidden" whiteSpace="nowrap">
+                              <Text fontWeight="bold" fontSize={["xl", "2xl", "3xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">
+                                {ranker.teamName || ranker.playerName}
+                              </Text>
+                              <Text fontSize="md" color="rgba(255, 255, 255, 0.8)" overflow="hidden" textOverflow="ellipsis">
+                                / {ranker.vehicleName}
+                              </Text>
+                              {ranker.bestLap && (
+                                <Badge size="sm" colorScheme={positionStyle.badgeColor} variant="subtle">
+                                  ベスト: {ranker.bestLap.time}
                                 </Badge>
-                              ))}
+                              )}
+                              <Badge size="sm" colorScheme="green" variant="solid">
+                                記録: {ranker.totalTime}
+                              </Badge>
                             </Flex>
                           </Box>
-                        ) : (
-                          <Box 
-                            height="60px"
-                            borderWidth="1px" 
-                            borderRadius="md" 
-                            borderColor="gray.600"
-                            bg="gray.900"
-                            display="flex" 
-                            justifyContent="center" 
-                            alignItems="center"
-                          >
-                            <Text color="gray.400" fontSize="sm">周回データがありません</Text>
-                          </Box>
-                        )}
+                          <Flex direction="column" alignItems="center">
+                            <Text fontSize="xl" fontWeight="bold" color="white">
+                              {completedLaps} / {totalLaps}
+                            </Text>
+                            <Text fontSize="xs" mt={0} color="white">周回数</Text>
+                          </Flex>
+                        </Flex>
+                        
+                        {/* ラップタイム表示 */}
+                        <Box mt={2} height="100px">
+                          <Text fontSize="lg" fontWeight="semibold" mb={1} color="white">周回タイム:</Text>
+                          {ranker.laps && ranker.laps.length > 0 ? (
+                            <Box 
+                              overflowY="auto" 
+                              maxHeight="80px"
+                              borderWidth="1px" 
+                              borderRadius="md" 
+                              borderColor="gray.600" 
+                              bg="gray.900"
+                              p={2}
+                            >
+                              <Flex flexWrap="wrap" gap={2}>
+                                {ranker.laps.map((lap, lapIndex) => (
+                                  <Badge
+                                    key={lapIndex}
+                                    colorScheme={
+                                      ranker.bestLap && lap.time === ranker.bestLap.time 
+                                        ? positionStyle.badgeColor 
+                                        : "gray"
+                                    }
+                                    p={2}
+                                    fontSize="md"
+                                    borderRadius="md"
+                                    variant={
+                                      ranker.bestLap && lap.time === ranker.bestLap.time 
+                                        ? "solid" 
+                                        : "outline"
+                                    }
+                                    color="white"
+                                  >
+                                    {lapIndex + 1}周目: {lap.time}
+                                  </Badge>
+                                ))}
+                              </Flex>
+                            </Box>
+                          ) : (
+                            <Box 
+                              height="60px"
+                              borderWidth="1px" 
+                              borderRadius="md" 
+                              borderColor="gray.600"
+                              bg="gray.900"
+                              display="flex" 
+                              justifyContent="center" 
+                              alignItems="center"
+                            >
+                              <Text color="gray.400" fontSize="sm">周回データがありません</Text>
+                            </Box>
+                          )}
+                        </Box>
                       </Box>
-
-                      {/* プログレスバー */}
-                      <Flex gap={1} w="100%" h="20px" position="relative" overflow="hidden" borderRadius="full">
-                        {[...Array(totalLaps)].map((_, index) => {
-                          // プログレスバーの色を順番に設定（緑、青、赤）
-                          const getProgressColor = (lapIndex) => {
-                            switch (lapIndex) {
-                              case 0: return "green.400";
-                              case 1: return "blue.400";
-                              case 2: return "red.400";
-                              default: return "gray.600";
-                            }
-                          };
-                          
-                          return (
-                            <Box
-                              key={index}
-                              flex={1}
-                              bg={index < completedLaps ? getProgressColor(index) : 'gray.600'}
-                              transition="background-color 0.3s"
-                              _first={{ borderLeftRadius: 'full' }}
-                              _last={{ borderRightRadius: 'full' }}
-                            />
-                          );
-                        })}
-                      </Flex>
-                    </Box>
-                  );
+                    );
+                  });
                 })()}
               </VStack>
             </Box>
