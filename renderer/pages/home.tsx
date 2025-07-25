@@ -510,6 +510,28 @@ export default function HomePage() {
     );
   };
   
+  // タイムアタックの暫定1位を取得する関数
+  const getTimeAttackLeader = () => {
+    if (!settings?.races || settings.races.length === 0) return null;
+    
+    // 全てのタイムアタック結果を取得
+    const allTimeAttackResults = settings.races
+      .filter(r => r.raceType === 'タイムアタック')
+      .flatMap(r => r.results)
+      .map(result => ({
+        ...result,
+        timeForSort: parseTime(result.totalTime)
+      }))
+      .sort((a, b) => {
+        const aLaps = a.laps?.length || 0;
+        const bLaps = b.laps?.length || 0;
+        if (aLaps !== bLaps) return bLaps - aLaps;
+        return a.timeForSort - b.timeForSort;
+      });
+    
+    return allTimeAttackResults.length > 0 ? allTimeAttackResults[0] : null;
+  };
+
   // 特定コースの周回数を増やす
   const incrementLap = (courseId) => {
     setCourseData(prev => {
@@ -808,6 +830,168 @@ export default function HomePage() {
                     )}
                   </Box>
                 )})}
+
+                {/* タイムアタック時の暫定1位表示 */}
+                {raceType === 'タイムアタック' && (() => {
+                  const leader = getTimeAttackLeader();
+                  if (!leader) return null;
+                  
+                  const completedLaps = leader.laps?.length || 0;
+                  const totalLaps = 3; // タイムアタックは3周回
+                  
+                  return (
+                    <Box 
+                      p={4} 
+                      pl={5}
+                      borderWidth="0" 
+                      borderRadius="md"
+                      shadow="lg"
+                      position="relative"
+                      bg="gray.800"
+                      transition="all 0.2s"
+                      _hover={{
+                        transform: "translateX(2px)",
+                        boxShadow: "xl"
+                      }}
+                    >
+                      {/* 暫定1位ラベル */}
+                      <Box
+                        position="absolute"
+                        left="-80px"
+                        top="0"
+                        fontSize="3xl"
+                        fontWeight="black"
+                        color="white"
+                        w="80px"
+                        h="100%"
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        flexDirection="column"
+                        bg="yellow.500"
+                        boxShadow="dark-lg"
+                        zIndex={2}
+                        borderLeftRadius="md"
+                        borderWidth="3px"
+                        borderColor="yellow.500"
+                        sx={{
+                          textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
+                        }}
+                      >
+                        <Text fontSize="lg" fontWeight="black">暫定</Text>
+                        <Text fontSize="2xl" mt="-1">1位</Text>
+                      </Box>
+
+                      {/* 内側の枠 */}
+                      <Box
+                        position="absolute"
+                        top={0}
+                        right={0}
+                        bottom={0}
+                        left={-35}
+                        borderWidth="5px"
+                        borderRadius="xl"
+                        borderColor="yellow.400"
+                        opacity="0.8"
+                        pointerEvents="none"
+                      />
+
+                      <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
+                        <Box maxW="60%">
+                          <Flex align="center" gap={2} overflow="hidden" whiteSpace="nowrap">
+                            <Text fontWeight="bold" fontSize={["xl", "2xl", "3xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">
+                              {leader.teamName || leader.playerName}
+                            </Text>
+                            <Text fontSize="md" color="rgba(255, 255, 255, 0.8)" overflow="hidden" textOverflow="ellipsis">
+                              / {leader.vehicleName}
+                            </Text>
+                            {leader.bestLap && (
+                              <Badge size="sm" colorScheme="yellow" variant="subtle">
+                                ベスト: {leader.bestLap.time}
+                              </Badge>
+                            )}
+                            <Badge size="sm" colorScheme="green" variant="solid">
+                              記録: {leader.totalTime}
+                            </Badge>
+                          </Flex>
+                        </Box>
+                        <Flex direction="column" alignItems="center">
+                          <Text fontSize="xl" fontWeight="bold" color="white">
+                            {completedLaps} / {totalLaps}
+                          </Text>
+                          <Text fontSize="xs" mt={0} color="white">周回数</Text>
+                        </Flex>
+                      </Flex>
+                      
+                      {/* ラップタイム表示 */}
+                      <Box mt={2} height="100px">
+                        <Text fontSize="lg" fontWeight="semibold" mb={1} color="white">周回タイム:</Text>
+                        {leader.laps && leader.laps.length > 0 ? (
+                          <Box 
+                            overflowY="auto" 
+                            maxHeight="80px"
+                            borderWidth="1px" 
+                            borderRadius="md" 
+                            borderColor="gray.600" 
+                            bg="gray.900"
+                            p={2}
+                          >
+                            <Flex flexWrap="wrap" gap={2}>
+                              {leader.laps.map((lap, index) => (
+                                <Badge
+                                  key={index}
+                                  colorScheme={
+                                    leader.bestLap && lap.time === leader.bestLap.time 
+                                      ? "yellow" 
+                                      : "gray"
+                                  }
+                                  p={2}
+                                  fontSize="md"
+                                  borderRadius="md"
+                                  variant={
+                                    leader.bestLap && lap.time === leader.bestLap.time 
+                                      ? "solid" 
+                                      : "outline"
+                                  }
+                                  color="white"
+                                >
+                                  {index + 1}周目: {lap.time}
+                                </Badge>
+                              ))}
+                            </Flex>
+                          </Box>
+                        ) : (
+                          <Box 
+                            height="60px"
+                            borderWidth="1px" 
+                            borderRadius="md" 
+                            borderColor="gray.600"
+                            bg="gray.900"
+                            display="flex" 
+                            justifyContent="center" 
+                            alignItems="center"
+                          >
+                            <Text color="gray.400" fontSize="sm">周回データがありません</Text>
+                          </Box>
+                        )}
+                      </Box>
+
+                      {/* プログレスバー */}
+                      <Flex gap={1} w="100%" h="20px" position="relative" overflow="hidden" borderRadius="full">
+                        {[...Array(totalLaps)].map((_, index) => (
+                          <Box
+                            key={index}
+                            flex={1}
+                            bg={index < completedLaps ? "yellow.400" : 'gray.600'}
+                            transition="background-color 0.3s"
+                            _first={{ borderLeftRadius: 'full' }}
+                            _last={{ borderRightRadius: 'full' }}
+                          />
+                        ))}
+                      </Flex>
+                    </Box>
+                  );
+                })()}
               </VStack>
             </Box>
             
