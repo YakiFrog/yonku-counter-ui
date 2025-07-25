@@ -798,8 +798,8 @@ export default function HomePage() {
                     </Flex>
                     
                     {/* 周回時間の表示 */}
-                    <Box mt={2} height="100px">
-                      <Text fontSize="lg" fontWeight="semibold" mb={1} color="white">周回タイム:</Text>
+                    <Box mt={2} height="100px" position="relative" zIndex={10}>
+                      <Text fontSize="lg" fontWeight="semibold" mb={1} color="white" position="relative" zIndex={10}>周回タイム:</Text>
                       {course.lapTimes.length > 0 ? (
                         <Box 
                           overflowY="auto" 
@@ -809,6 +809,8 @@ export default function HomePage() {
                           borderColor="gray.600" 
                           bg="gray.900"
                           p={2}
+                          position="relative"
+                          zIndex={10}
                         >
                           <Flex flexWrap="wrap" gap={2}>
                             {course.lapTimes.map((lap, index) => (
@@ -828,6 +830,8 @@ export default function HomePage() {
                                     : "outline"
                                 }
                                 color="white"
+                                position="relative"
+                                zIndex={10}
                               >
                                 {lap.lapNumber}周目: {lap.time}
                               </Badge>
@@ -844,24 +848,41 @@ export default function HomePage() {
                     display="flex" 
                     justifyContent="center" 
                     alignItems="center"
+                    position="relative"
+                    zIndex={10}
                   >
-                    <Text color="gray.400" fontSize="sm">周回データがありません</Text>
+                    <Text color="gray.400" fontSize="sm" position="relative" zIndex={10}>周回データがありません</Text>
                   </Box>
                       )}
                     </Box>
                     
                     {course.totalLaps > 0 && (
                       <Flex gap={1} w="100%" h="20px" position="relative" overflow="hidden" borderRadius="full">
-                        {[...Array(course.totalLaps)].map((_, index) => (
-                          <Box
-                            key={index}
-                            flex={1}
-                            bg={index < course.currentLap ? course.color : 'gray.600'}
-                            transition="background-color 0.3s"
-                            _first={{ borderLeftRadius: 'full' }}
-                            _last={{ borderRightRadius: 'full' }}
-                          />
-                        ))}
+                        {[...Array(course.totalLaps)].map((_, index) => {
+                          // タイムアタックの場合のプログレスバーの色を順番に設定（緑、青、赤）
+                          const getProgressColor = (lapIndex) => {
+                            if (raceType === 'タイムアタック') {
+                              switch (lapIndex) {
+                                case 0: return "green.400";
+                                case 1: return "blue.400";
+                                case 2: return "red.400";
+                                default: return "gray.600";
+                              }
+                            }
+                            return course.color; // 通常レースの場合は元の色
+                          };
+                          
+                          return (
+                            <Box
+                              key={index}
+                              flex={1}
+                              bg={index < course.currentLap ? getProgressColor(index) : 'gray.600'}
+                              transition="background-color 0.3s"
+                              _first={{ borderLeftRadius: 'full' }}
+                              _last={{ borderRightRadius: 'full' }}
+                            />
+                          );
+                        })}
                       </Flex>
                     )}
                   </Box>
@@ -1014,16 +1035,28 @@ export default function HomePage() {
 
                       {/* プログレスバー */}
                       <Flex gap={1} w="100%" h="20px" position="relative" overflow="hidden" borderRadius="full">
-                        {[...Array(totalLaps)].map((_, index) => (
-                          <Box
-                            key={index}
-                            flex={1}
-                            bg={index < completedLaps ? "yellow.400" : 'gray.600'}
-                            transition="background-color 0.3s"
-                            _first={{ borderLeftRadius: 'full' }}
-                            _last={{ borderRightRadius: 'full' }}
-                          />
-                        ))}
+                        {[...Array(totalLaps)].map((_, index) => {
+                          // プログレスバーの色を順番に設定（緑、青、赤）
+                          const getProgressColor = (lapIndex) => {
+                            switch (lapIndex) {
+                              case 0: return "green.400";
+                              case 1: return "blue.400";
+                              case 2: return "red.400";
+                              default: return "gray.600";
+                            }
+                          };
+                          
+                          return (
+                            <Box
+                              key={index}
+                              flex={1}
+                              bg={index < completedLaps ? getProgressColor(index) : 'gray.600'}
+                              transition="background-color 0.3s"
+                              _first={{ borderLeftRadius: 'full' }}
+                              _last={{ borderRightRadius: 'full' }}
+                            />
+                          );
+                        })}
                       </Flex>
                     </Box>
                   );
