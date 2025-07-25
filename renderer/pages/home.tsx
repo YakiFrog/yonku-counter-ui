@@ -623,14 +623,14 @@ export default function HomePage() {
         <title>レース管理システム</title>
       </Head>
       <Container maxHeight="100vh" maxWidth="1920px" px={4} py={3} height="100vh" overflow="hidden">
-        <VStack spacing={3} align="stretch" width="full" pb={32}>
+        <VStack spacing={3} align="stretch" width="full" pb={32} flex={1} height="100%">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="race" />
           {/* レイアウト: 左側にコース情報、右側に大きな経過時間表示 */}
-          <Grid templateColumns="5fr 3fr" gap={4}>
+          <Grid templateColumns="5fr 3fr" gap={4} flex={1} height="100%">
             {/* 左側：4コース分のレース情報と周回表示 */}
-            <Box pl={"7%"}> {/* 左右の余白を縮小 */}
-              <VStack spacing={4} align="stretch"> {/* 間隔を狭くする */}
+            <Box pl={"7%"} minHeight="100%"> {/* 左右の余白を縮小 */}
+              <VStack spacing={4} align="stretch" minHeight="100%"> {/* 間隔を狭くする */}
                 {(raceType === 'タイムアタック' 
                   ? [courseData[0]] // タイムアタックの場合は1コースのみ表示
                   : [...courseData].reverse() // 通常レースの場合は4,3,2,1の順で表示
@@ -1148,12 +1148,13 @@ export default function HomePage() {
               justifyContent="flex-start"
               alignItems="stretch"
               h="100%"
+              minHeight="750px"
               w="100%"
               bg="gray.800"
               borderColor="gray.700"
             >
-              <VStack spacing={3} width="100%" align="stretch">
-                <VStack spacing={4} width="100%" align="stretch">
+              <VStack spacing={3} width="100%" align="stretch" flex={1}>
+                <VStack spacing={4} width="100%" align="stretch" flex={1}>
                   {/* レース番号表示 */}
                   <Box width="100%">
                     <HStack alignItems="center" gap={2} mb={2} width="100%">
@@ -1321,7 +1322,7 @@ export default function HomePage() {
                   </Box>
 
                   {/* スライドショー */}
-                  <Box width="100%" mt={"10px"}>
+                  <Box width="100%" mt={"10px"} flex={1} minHeight="335px">
                     <Box 
                       px={4}
                       py={4}
@@ -1332,6 +1333,8 @@ export default function HomePage() {
                       boxShadow="dark-lg"
                       textAlign="center"
                       width="100%"
+                      height="100%"
+                      minHeight="335px"
                       display="flex"
                       flexDirection="column"
                       justifyContent="center"
@@ -1342,7 +1345,8 @@ export default function HomePage() {
                       {/* スライドショー画像表示エリア */}
                       <Box
                         width="100%"
-                        height="270px"
+                        flex={1}
+                        minHeight="300px"
                         position="relative"
                         borderRadius="md"
                         overflow="hidden"
