@@ -234,9 +234,26 @@ export default function HomePage() {
   // 問題: useEffectの依存配列が空[]だったため、isRunningの状態変更が反映されない
   // 修正: 依存配列に[isRunning]を追加してキーボードイベントハンドラーが適切に更新されるように変更
   // 追加履歴: 2025/05/24 - 5,6,7,8キーでRevert機能（直前の周回数増加を戻す）を追加
+  // 追加履歴: 2025/07/26 - a,s,d,fキーでシリアル送信機能を追加
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       const keyPressed = parseInt(event.key);
+      const keyChar = event.key.toLowerCase();
+      
+      // a,s,d,fキーの処理（シリアル送信）
+      if (['a', 's', 'd', 'f'].includes(keyChar)) {
+        serialWrite(keyChar).catch(error => {
+          console.error(`Failed to send ${keyChar} command:`, error);
+          toast({
+            title: 'エラー',
+            description: `${keyChar}コマンドの送信に失敗しました`,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+        });
+        return;
+      }
       
       if (isRunning) {
         if (raceType === 'タイムアタック') {
@@ -269,7 +286,7 @@ export default function HomePage() {
     return () => {
       window.removeEventListener('keypress', handleKeyPress);
     };
-  }, [isRunning, raceType]);  // raceTypeを依存配列に追加
+  }, [isRunning, raceType, serialWrite, toast]);  // serialWriteとtoastを依存配列に追加
 
   // ストップウォッチの更新
   useEffect(() => {
