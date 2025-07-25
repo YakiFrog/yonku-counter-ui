@@ -421,7 +421,7 @@ export default function HomePage() {
     setLastPressedButton('reset');
     setIsRunning(false);
     setElapsedTime(0);
-    updateRaceType('');   // レースタイプをリセット（ローカルストレージも更新）
+    // レースタイプはリセットしない（現在の状態を維持）
     setCourseData(prev => 
       prev.map(course => ({
         ...course,
