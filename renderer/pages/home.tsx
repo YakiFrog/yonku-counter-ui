@@ -140,9 +140,13 @@ export default function HomePage() {
   const timerRef = useRef(null);
   const slideshowTimerRef = useRef(null);
   const buttonGlowTimerRef = useRef(null);
+  const mouseCursorTimerRef = useRef(null);
   
   // コースパネルの参照を保持
   const coursePanelRef = useRef(null);
+  
+  // マウスカーソルの表示状態
+  const [showCursor, setShowCursor] = useState(true);
   
   // 光るボタンエフェクトを一定時間後に消去
   useEffect(() => {
@@ -164,6 +168,39 @@ export default function HomePage() {
       }
     };
   }, [lastPressedButton]);
+
+  // マウスカーソルの自動非表示機能
+  useEffect(() => {
+    const handleMouseMove = () => {
+      setShowCursor(true);
+      
+      // 既存のタイマーをクリア
+      if (mouseCursorTimerRef.current) {
+        clearTimeout(mouseCursorTimerRef.current);
+      }
+      
+      // 3秒後にカーソルを非表示
+      mouseCursorTimerRef.current = setTimeout(() => {
+        setShowCursor(false);
+      }, 3000);
+    };
+
+    // マウスイベントリスナーを追加
+    document.addEventListener('mousemove', handleMouseMove);
+    
+    // 初期タイマーを設定
+    mouseCursorTimerRef.current = setTimeout(() => {
+      setShowCursor(false);
+    }, 3000);
+
+    // クリーンアップ
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      if (mouseCursorTimerRef.current) {
+        clearTimeout(mouseCursorTimerRef.current);
+      }
+    };
+  }, []);
 
   const { write: serialWrite, messages, clearMessages } = useSerial();
 
@@ -715,7 +752,17 @@ export default function HomePage() {
       <Head>
         <title>レース管理システム</title>
       </Head>
-      <Container maxHeight="100vh" maxWidth="1920px" px={4} py={3} height="100vh" overflow="hidden">
+      <Container 
+        maxHeight="100vh" 
+        maxWidth="1920px" 
+        px={4} 
+        py={3} 
+        height="100vh" 
+        overflow="hidden"
+        style={{
+          cursor: showCursor ? 'default' : 'none'
+        }}
+      >
         <VStack spacing={3} align="stretch" width="full" pb={32} flex={1} height="100%">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="race" />
