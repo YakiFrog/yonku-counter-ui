@@ -1543,7 +1543,7 @@ export default function HomePage() {
                         }
                       >
                         {raceType === '決勝' ? (
-                          <Text fontSize="1.4em" lineHeight="1" color="red.400">決勝</Text>
+                          <Text fontSize="1.8em" lineHeight="1" color="red.400">決勝</Text>
                         ) : raceType ? (
                           <>
                             <Text fontSize="1.1em" lineHeight="1.1" color={
