@@ -303,6 +303,31 @@ export default function HomePage() {
         return;
       }
       
+      // q,w,e,r,tキーの処理（ゲート操作とレース制御）
+      if (keyChar === 'q') {
+        // ゲート準備
+        handleGatePrep();
+        return;
+      } else if (keyChar === 'w') {
+        // スタート/ストップ
+        toggleTimer();
+        return;
+      } else if (keyChar === 'e') {
+        // ゲート自動
+        handleGateAuto();
+        return;
+      } else if (keyChar === 'r') {
+        // リセット
+        resetTimer();
+        return;
+      } else if (keyChar === 't') {
+        // レース終了（レースが開始済みまたは計測時間がある場合のみ）
+        if (isRunning || elapsedTime > 0) {
+          onOpen(); // レース終了の確認ダイアログを表示
+        }
+        return;
+      }
+      
       if (isRunning) {
         if (raceType === 'タイムアタック') {
           // タイムアタックモードでは2,3,4キーでラップタイムを計算
