@@ -141,6 +141,9 @@ export default function HomePage() {
   const slideshowTimerRef = useRef(null);
   const buttonGlowTimerRef = useRef(null);
   
+  // コースパネルの参照を保持
+  const coursePanelRef = useRef(null);
+  
   // 光るボタンエフェクトを一定時間後に消去
   useEffect(() => {
     if (lastPressedButton) {
@@ -171,8 +174,8 @@ export default function HomePage() {
       '/slideshow/oit.png',
       '/slideshow/thecrafters.png',
       '/slideshow/miniyonku.png',
-      '/slideshow/qr.png',
-      '/slideshow/sirius.png',
+      // '/slideshow/qr.png',
+      // '/slideshow/sirius.png',
     ];
     setSlideshowImages(images);
   }, []);
@@ -723,6 +726,7 @@ export default function HomePage() {
                   return (
                     <Box 
                       key={course.id}
+                      ref={raceType === 'タイムアタック' ? coursePanelRef : null}
                       p={4} 
                       pl={5}
                       borderWidth="0" 
@@ -1216,10 +1220,22 @@ export default function HomePage() {
               return finishedCourses.map((course, index) => {
                 const position = index + 1;
                 const courseIndex = courseData.length - course.id; // reverse()されているため調整
-                // タイムアタック時は1コースのみ表示なので高さを固定
-                const topOffset = (raceType === 'タイムアタック')
-                  ? 135 // タイムアタック時は1コース目のBoxの高さに合わせて固定
-                  : 135 + (courseIndex * 225);
+                
+                // タイムアタック時は実際のコースパネルの位置を計算
+                let topOffset;
+                if (raceType === 'タイムアタック') {
+                  // パネルの実際の位置を取得
+                  if (coursePanelRef.current) {
+                    const panelRect = coursePanelRef.current.getBoundingClientRect();
+                    // パネルの中央位置を計算
+                    topOffset = panelRect.top + (panelRect.height / 2) - 50;
+                  } else {
+                    // フォールバック：パネルの参照が取得できない場合
+                    topOffset = window.innerHeight / 2 - 100;
+                  }
+                } else {
+                  topOffset = 135 + (courseIndex * 225);
+                }
                 
                 // 順位に応じた色を設定（ランキングタブと統一）
                 const getPositionColor = (pos) => {
