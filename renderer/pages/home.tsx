@@ -906,12 +906,12 @@ export default function HomePage() {
                           <Text fontWeight="bold" fontSize={["xl", "2xl", "3xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">{course.name}</Text>
                           <Text fontSize="md" color="rgba(255, 255, 255, 0.8)" overflow="hidden" textOverflow="ellipsis">/ {course.vehicle}</Text>
                           {course.bestLap && (
-                          <Badge size="sm" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
+                          <Badge size="xl" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
                             ベスト: {course.bestLap.time}
                           </Badge>
                           )}
                           {course.finishTime && (
-                          <Badge size="sm" colorScheme="green" variant="solid">
+                          <Badge size="xl" colorScheme="green" variant="solid">
                             完走: {formatTime(course.finishTime)}
                           </Badge>
                           )}
@@ -1190,11 +1190,11 @@ export default function HomePage() {
                                 / {ranker.vehicleName}
                               </Text>
                               {ranker.bestLap && (
-                                <Badge size="sm" colorScheme={positionStyle.badgeColor} variant="subtle">
+                                <Badge size="md" colorScheme={positionStyle.badgeColor} variant="subtle">
                                   ベスト: {ranker.bestLap.time}
                                 </Badge>
                               )}
-                              <Badge size="sm" colorScheme="green" variant="solid">
+                              <Badge size="md" colorScheme="green" variant="solid">
                                 記録: {ranker.totalTime}
                               </Badge>
                             </Flex>
@@ -1230,7 +1230,7 @@ export default function HomePage() {
                                         : "gray"
                                     }
                                     p={2}
-                                    fontSize="md"
+                                    fontSize="lg"
                                     borderRadius="md"
                                     variant={
                                       ranker.bestLap && lap.time === ranker.bestLap.time 
