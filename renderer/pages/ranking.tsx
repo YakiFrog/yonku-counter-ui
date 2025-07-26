@@ -26,14 +26,16 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-  useDisclosure
+  useDisclosure,
+  Input
 } from '@chakra-ui/react';
-import { DeleteIcon } from '@chakra-ui/icons';
+import { DeleteIcon, DownloadIcon, AddIcon } from '@chakra-ui/icons';
 
 import { Container } from '../components/Container'
 import { TabNavigation } from '../components/TabNavigation'
 import { useAppSettingsContext } from '../utils/AppSettingsContext'
 import { Race, RaceResult } from '../utils/types'
+import { exportRacesToCSV, downloadCSV, importRacesFromCSV, generateCSVFilename } from '../utils/csvUtils'
 
 interface PlayerStats {
     playerId: string;
@@ -47,11 +49,12 @@ interface PlayerStats {
 
 export default function RankingPage() {
   // グローバル設定コンテキスト
-  const { settings, isLoading, deleteRace } = useAppSettingsContext();
+  const { settings, isLoading, deleteRace, importRaces } = useAppSettingsContext();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedRaceId, setSelectedRaceId] = React.useState<string>("");
   const cancelRef = React.useRef<HTMLButtonElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // 時間文字列をミリ秒に変換するヘルパー関数
   const parseTime = (timeStr: string): number => {
@@ -223,6 +226,96 @@ export default function RankingPage() {
     }
   };
 
+  // CSVエクスポート機能
+  const handleExportCSV = () => {
+    if (!settings?.races || settings.races.length === 0) {
+      toast({
+        title: "エクスポートできません",
+        description: "レースデータがありません",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const csvContent = exportRacesToCSV(settings.races);
+      const filename = generateCSVFilename();
+      downloadCSV(csvContent, filename);
+      
+      toast({
+        title: "CSVファイルをダウンロードしました",
+        description: `ファイル名: ${filename}`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "エクスポートエラー",
+        description: "CSVファイルの作成に失敗しました",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // CSVインポート機能
+  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const csvContent = e.target?.result as string;
+        const importedRaces = await importRacesFromCSV(csvContent);
+        
+        if (importedRaces.length === 0) {
+          toast({
+            title: "インポートエラー",
+            description: "有効なレースデータが見つかりませんでした",
+            status: "warning",
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        importRaces(importedRaces);
+        
+        toast({
+          title: "CSVファイルをインポートしました",
+          description: `${importedRaces.length}件のレースデータを読み込みました`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: "インポートエラー",
+          description: error.message || "CSVファイルの読み込みに失敗しました",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+    
+    reader.readAsText(file, 'UTF-8');
+    // ファイル選択をリセット
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // CSVファイル選択を開始
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <React.Fragment>
       <Head>
@@ -232,11 +325,60 @@ export default function RankingPage() {
         <VStack spacing={4} align="stretch" width="full" height="full">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="ranking" />
+          
+          {/* エクスポート・インポートボタン */}
+          <HStack spacing={3} justify="flex-end">
+            <Button
+              leftIcon={<DownloadIcon />}
+              colorScheme="blue"
+              variant="solid"
+              size="sm"
+              onClick={handleExportCSV}
+              isDisabled={!settings?.races || settings.races.length === 0}
+            >
+              CSVエクスポート
+            </Button>
+            <Button
+              leftIcon={<AddIcon />}
+              colorScheme="green"
+              variant="solid"
+              size="sm"
+              onClick={triggerFileSelect}
+            >
+              CSVインポート
+            </Button>
+            {/* 隠されたファイル入力 */}
+            <Input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleImportCSV}
+              display="none"
+            />
+          </HStack>
+          
           {/* スクロール可能なエリア */}
           <Box flex="1" overflowY="auto" minHeight="0">
             <VStack spacing={6} align="stretch" width="full">
-              {/* 各レース結果の表示 */}
-              {allRacesData.map((race, raceIndex) => (
+              {allRacesData.length === 0 ? (
+                <Box 
+                  textAlign="center" 
+                  py={8}
+                  borderWidth="1px" 
+                  borderRadius="lg" 
+                  borderColor="gray.600"
+                  bg="gray.800"
+                >
+                  <Text color="gray.300" fontSize="lg" mb={4}>
+                    レース結果がありません
+                  </Text>
+                  <Text color="gray.400" fontSize="sm">
+                    レースを実行するか、CSVファイルからデータをインポートしてください
+                  </Text>
+                </Box>
+              ) : (
+                /* 各レース結果の表示 */
+                allRacesData.map((race, raceIndex) => (
                 <Box 
                   key={raceIndex} 
                   borderWidth="1px" 
@@ -409,7 +551,7 @@ export default function RankingPage() {
                     </Tbody>
                   </Table>
                 </Box>
-              ))}
+              )))}
             </VStack>
           </Box>
         </VStack>

@@ -17,6 +17,7 @@ interface AppSettingsContextType {
   currentRaceNumber: number;
   updateRaceNumber: (newNumber: number) => void;
   deleteRace: (raceId: string) => AppSettings; // 追加: 個別のレースを削除する関数
+  importRaces: (races: Race[]) => AppSettings; // 追加: レースデータをインポートする関数
 }
 
 // コンテキストの作成
@@ -92,6 +93,18 @@ export const AppSettingsProvider: React.FC<{ children: ReactNode }> = ({ childre
     return savedSettings;
   }, [settings, settingsUtils]);
 
+  // レースインポートのラッパー関数
+  const importRacesWrapper = useCallback((races: Race[]) => {
+    if (!settings) return settings;
+    const updatedSettings = {
+      ...settings,
+      races: [...settings.races, ...races]
+    };
+    const savedSettings = settingsUtils.updateSettings(updatedSettings);
+    setSettings(savedSettings);
+    return savedSettings;
+  }, [settings, settingsUtils]);
+
   return (
     <AppSettingsContext.Provider value={{ 
       ...settingsUtils,
@@ -104,7 +117,8 @@ export const AppSettingsProvider: React.FC<{ children: ReactNode }> = ({ childre
       updateCourse: updateCourseWrapper,
       currentRaceNumber: (settings || settingsUtils.settings)?.currentRaceNumber || 1,
       updateRaceNumber,
-      deleteRace: deleteRaceWrapper // 追加：レース削除関数
+      deleteRace: deleteRaceWrapper, // 追加：レース削除関数
+      importRaces: importRacesWrapper // 追加：レースインポート関数
     }}>
       {children}
     </AppSettingsContext.Provider>
