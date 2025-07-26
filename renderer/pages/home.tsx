@@ -978,7 +978,7 @@ export default function HomePage() {
                                     : "gray"
                                 }
                                 p={2}
-                                fontSize="md"
+                                fontSize="xl"
                                 borderRadius="md"
                                 variant={
                                   course.bestLap && lap.timestamp === course.bestLap.timestamp 
