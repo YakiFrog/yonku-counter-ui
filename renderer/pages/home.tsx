@@ -966,7 +966,7 @@ export default function HomePage() {
                     <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
                       <Box maxW="60%">
                         <Flex align="center" gap={3} overflow="hidden" whiteSpace="nowrap">
-                          <Text fontWeight="bold" fontSize={["2xl", "3xl", "4xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">{course.name}</Text>
+                          <Text fontWeight="bold" fontSize={["2xl", "3xl", "2.4em"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">{course.name}</Text>
                           <Text fontSize="4xl" color="rgba(255, 255, 255, 0.8)" overflow="hidden" textOverflow="ellipsis">/ {course.vehicle}</Text>
                           {course.bestLap && (
                           <Badge size="xl" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
