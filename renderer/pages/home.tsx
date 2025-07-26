@@ -1226,7 +1226,7 @@ export default function HomePage() {
                           }}
                         >
                           <Text fontSize="lg" fontWeight="black">{positionStyle.label}</Text>
-                          <Text fontSize="4xl" mt="-1">{positionStyle.rank}</Text>
+                          <Text fontSize="6xl" mt="-1">{positionStyle.rank}</Text>
                         </Box>
 
                         {/* 内側の枠 */}
@@ -1401,7 +1401,7 @@ export default function HomePage() {
                     pointerEvents="none"
                   >
                     <Text
-                      fontSize="5xl"
+                      fontSize="7xl"
                       fontWeight="black"
                       color="white"
                       textAlign="center"
