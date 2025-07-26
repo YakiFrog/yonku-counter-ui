@@ -117,13 +117,25 @@ export default function RankingPage() {
       // このレースの結果に全体順位を適用
       const raceResults = race.results.map(result => {
         const globalResult = globalRankedResults.find(gr => gr.id === result.id);
+        // デバッグ: ラップデータの構造を確認
+        console.log('レース結果のラップデータ:', result.laps);
+        
+        // ラップデータの処理を改善
+        let processedLaps = [];
+        if (result.laps && Array.isArray(result.laps)) {
+          processedLaps = result.laps.map(lap => {
+            // lap.timeが存在する場合はそれを使用、そうでなければlapそのものが時間文字列の場合もある
+            return typeof lap === 'object' && lap.time ? lap.time : lap;
+          });
+        }
+        
         return {
           position: globalResult?.globalPosition || result.position,
           courseId: result.courseId,
           name: result.teamName || result.playerName,
           vehicle: result.vehicleName,
           time: result.totalTime,
-          laps: result.laps?.map(lap => lap.time) || [],
+          laps: processedLaps,
           wins: 0,
           isCompleted: result.isCompleted || false
         };
@@ -143,16 +155,30 @@ export default function RankingPage() {
         name: race.name || `第${race.raceNumber}レース`,
         raceNumber: race.raceNumber,
         raceType: race.raceType,
-        results: race.results.map((result) => ({
-          position: result.position,
-          courseId: result.courseId,
-          name: result.teamName || result.playerName,
-          vehicle: result.vehicleName,
-          time: result.totalTime,
-          laps: result.laps?.map(lap => lap.time) || [],
-          wins: 0,
-          isCompleted: result.isCompleted || false
-        }))
+        results: race.results.map((result) => {
+          // デバッグ: ラップデータの構造を確認
+          console.log('通常レースのラップデータ:', result.laps);
+          
+          // ラップデータの処理を改善
+          let processedLaps = [];
+          if (result.laps && Array.isArray(result.laps)) {
+            processedLaps = result.laps.map(lap => {
+              // lap.timeが存在する場合はそれを使用、そうでなければlapそのものが時間文字列の場合もある
+              return typeof lap === 'object' && lap.time ? lap.time : lap;
+            });
+          }
+          
+          return {
+            position: result.position,
+            courseId: result.courseId,
+            name: result.teamName || result.playerName,
+            vehicle: result.vehicleName,
+            time: result.totalTime,
+            laps: processedLaps,
+            wins: 0,
+            isCompleted: result.isCompleted || false
+          };
+        })
       };
     }
   }) : [];
@@ -507,8 +533,18 @@ export default function RankingPage() {
                             <Td>
                               <Flex wrap="wrap" gap={2}>
                                 {(() => {
-                                  const bestLap = findBestLap(entry.laps);
-                                  return entry.laps.map((lap, index) => (
+                                  // entry.lapsが配列でない場合は空配列を使用
+                                  const laps = Array.isArray(entry.laps) ? entry.laps : [];
+                                  if (laps.length === 0) {
+                                    return (
+                                      <Text color="gray.400" fontSize="sm">
+                                        ラップデータなし
+                                      </Text>
+                                    );
+                                  }
+                                  
+                                  const bestLap = findBestLap(laps);
+                                  return laps.map((lap, index) => (
                                     <Box 
                                       key={index} 
                                       borderWidth="1px"

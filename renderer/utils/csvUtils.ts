@@ -135,11 +135,9 @@ export const importRacesFromCSV = (csvContent: string): Promise<Race[]> => {
           // ラップタイムをパース
           const laps: RaceLap[] = [];
           if (lapTimesStr && lapTimesStr.trim() !== '') {
-            console.log('パース前のラップタイム文字列:', lapTimesStr); // デバッグログ
             const lapEntries = lapTimesStr.split(';');
             lapEntries.forEach(entry => {
               const [lapNumStr, time] = entry.split('|'); // 区切り文字を|に変更
-              console.log('ラップエントリー:', entry, '分割後:', { lapNumStr, time }); // デバッグログ
               if (lapNumStr && time) {
                 laps.push({
                   lapNumber: parseInt(lapNumStr) || 1,
@@ -148,7 +146,6 @@ export const importRacesFromCSV = (csvContent: string): Promise<Race[]> => {
                 });
               }
             });
-            console.log('パース後のラップデータ:', laps); // デバッグログ
           }
 
           // ベストラップを計算
