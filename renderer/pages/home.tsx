@@ -1504,7 +1504,7 @@ export default function HomePage() {
                         position="relative"
                         borderRadius="md"
                         overflow="hidden"
-                        bg="gray.200"
+                        bg="gray.900"
                       >
                         {slideshowImages.length > 0 && (
                           <>
