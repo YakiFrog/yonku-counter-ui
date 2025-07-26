@@ -439,7 +439,7 @@ export default function RankingPage() {
                     <Thead>
                       <Tr>
                         <Th color="gray.100">順位</Th>
-                        <Th color="gray.100" width="13%">チーム名</Th>
+                        <Th color="gray.100" width="17%">チーム名</Th>
                         <Th color="gray.100" width="22%">車両</Th>
                         <Th color="gray.100" width="15%">総合タイム</Th>
                         <Th color="gray.100" width="40%">各周回ラップタイム</Th>
