@@ -52,6 +52,22 @@ const glowAnimation = keyframes`
   }
 `;
 
+// コースパネルのハイライトアニメーション
+const coursePanelHighlight = keyframes`
+  0% { 
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+  30% { 
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.6);
+  }
+  70% { 
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+  }
+  100% { 
+    box-shadow: 0 0 0px rgba(255, 255, 255, 0), 0 0 0px rgba(255, 255, 255, 0);
+  }
+`;
+
 export default function HomePage() {
   const { settings, isLoading, saveRaceResult } = useAppSettingsContext();
   const toast = useToast();
@@ -135,12 +151,16 @@ export default function HomePage() {
   
   // 最後に押されたボタンを追跡
   const [lastPressedButton, setLastPressedButton] = useState(null);
+  
+  // コースパネルのハイライト状態を管理
+  const [highlightedCourses, setHighlightedCourses] = useState([]);
 
   // タイマーのID保持用
   const timerRef = useRef(null);
   const slideshowTimerRef = useRef(null);
   const buttonGlowTimerRef = useRef(null);
   const mouseCursorTimerRef = useRef(null);
+  const courseHighlightTimersRef = useRef({});
   
   // コースパネルの参照を保持
   const coursePanelRef = useRef(null);
@@ -156,6 +176,16 @@ export default function HomePage() {
       if (buttonGlowTimerRef.current) {
         clearTimeout(buttonGlowTimerRef.current);
       }
+    };
+  }, []);
+
+  // コースハイライトタイマーのクリーンアップ
+  useEffect(() => {
+    return () => {
+      // コンポーネントがアンマウントされる時にすべてのタイマーをクリア
+      Object.values(courseHighlightTimersRef.current).forEach(timer => {
+        clearTimeout(timer as NodeJS.Timeout);
+      });
     };
   }, []);
 
@@ -712,6 +742,20 @@ export default function HomePage() {
       if (finished) setFinishedCourseIds(ids => [...ids, courseId]);
       return updated;
     });
+    
+    // コースパネルのハイライト効果を追加
+    setHighlightedCourses(prev => [...prev.filter(id => id !== courseId), courseId]);
+    
+    // 既存のタイマーがあればクリア
+    if (courseHighlightTimersRef.current[courseId]) {
+      clearTimeout(courseHighlightTimersRef.current[courseId]);
+    }
+    
+    // 2秒後にハイライトを解除
+    courseHighlightTimersRef.current[courseId] = setTimeout(() => {
+      setHighlightedCourses(prev => prev.filter(id => id !== courseId));
+      delete courseHighlightTimersRef.current[courseId];
+    }, 2000);
   };
   
   // 特定コースの周回数を減らす
@@ -793,6 +837,9 @@ export default function HomePage() {
                   // 完走判定
                   const isFinished = (course.totalLaps > 0 && course.currentLap >= course.totalLaps) || course.finishTime !== null;
                   
+                  // ハイライト状態をチェック
+                  const isHighlighted = highlightedCourses.includes(course.id);
+                  
                   return (
                     <Box 
                       key={course.id}
@@ -810,6 +857,10 @@ export default function HomePage() {
                         transform: "translateX(2px)",
                         boxShadow: "xl"
                       }}
+                      sx={isHighlighted ? {
+                        animation: `${coursePanelHighlight} 2s ease-out`,
+                        zIndex: 10
+                      } : {}}
                     >
                     {/* コース番号を左側に横長の背景色付きで表示 */}
                     <Box
