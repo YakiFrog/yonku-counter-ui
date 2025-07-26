@@ -1447,11 +1447,11 @@ export default function HomePage() {
                   <Box width="100%">
                     <Text fontSize="lg" fontWeight="medium" color="white">ストップウォッチ</Text>
                     <Box 
-                      fontSize={["3xl", "4xl", "5xl", "8xl"]} // フォントサイズを大きく
+                      fontSize={["3xl", "4xl", "5xl", "7.5em"]} // フォントサイズを大きく
                       fontWeight="bold"
                       color="cyan.400"
-                      p={3}
-                      py={12} // パディングを増やしてさらに高さを調整
+                      p={1}
+                      py={1} // パディングを増やしてさらに高さを調整
                       borderRadius="lg"
                       bg="gray.900"
                       border="1px solid"
@@ -1463,7 +1463,7 @@ export default function HomePage() {
                       flexDirection="column"
                       justifyContent="center"
                       alignItems="center"
-                      fontFamily="mono"
+                      // fontFamily="mono" 
                     >
                       <Text as="span" display="flex" gap={0.1} color="#FFFFFF">
                       <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(0, 2)}</Text>
