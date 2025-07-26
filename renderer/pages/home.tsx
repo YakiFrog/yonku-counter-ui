@@ -73,7 +73,9 @@ export default function HomePage() {
   const toast = useToast();
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isResetOpen, onOpen: onResetOpen, onClose: onResetClose } = useDisclosure();
   const cancelRef = React.useRef();
+  const resetCancelRef = React.useRef();
   
   // スライドショー関連のstate
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -526,9 +528,14 @@ export default function HomePage() {
     localStorage.setItem('currentRaceType', newRaceType);
   };
 
-  // タイマーのリセット
+  // タイマーのリセット（確認ダイアログを表示）
   const resetTimer = () => {
     setLastPressedButton('reset');
+    onResetOpen();
+  };
+
+  // 実際のリセット処理
+  const executeReset = () => {
     setIsRunning(false);
     setElapsedTime(0);
     // レースタイプはリセットしない（現在の状態を維持）
@@ -543,6 +550,11 @@ export default function HomePage() {
         finishTime: null
       }))
     );
+    // ハイライト状態もクリア
+    setHighlightedCourses([]);
+    // 完走状態もクリア
+    setFinishedCourseIds([]);
+    onResetClose();
   };
   
   // レース終了処理
@@ -1869,6 +1881,48 @@ export default function HomePage() {
                     ml={3}
                   >
                     終了して保存
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialogOverlay>
+          </AlertDialog>
+
+          {/* リセット確認ダイアログ */}
+          <AlertDialog
+            isOpen={isResetOpen}
+            leastDestructiveRef={resetCancelRef}
+            onClose={onResetClose}
+          >
+            <AlertDialogOverlay>
+              <AlertDialogContent bg="gray.800" borderColor="gray.700">
+                <AlertDialogHeader fontSize="lg" fontWeight="bold" color="white">
+                  レースをリセットする
+                </AlertDialogHeader>
+
+                <AlertDialogBody color="white">
+                  レースをリセットしますか？現在の記録は全て削除されます。この操作は元に戻せません。
+                </AlertDialogBody>
+
+                <AlertDialogFooter>
+                  <Button 
+                    ref={resetCancelRef} 
+                    onClick={onResetClose} 
+                    variant="outline"
+                    color="white"
+                    borderColor="gray.400"
+                    _hover={{
+                      bg: "gray.700",
+                      borderColor: "white"
+                    }}
+                  >
+                    キャンセル
+                  </Button>
+                  <Button 
+                    colorScheme="red" 
+                    onClick={executeReset} 
+                    ml={3}
+                  >
+                    リセット実行
                   </Button>
                 </AlertDialogFooter>
               </AlertDialogContent>
