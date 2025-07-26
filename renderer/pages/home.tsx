@@ -150,24 +150,14 @@ export default function HomePage() {
   
   // 光るボタンエフェクトを一定時間後に消去
   useEffect(() => {
-    if (lastPressedButton) {
-      // 既存のタイマーをクリア
-      if (buttonGlowTimerRef.current) {
-        clearTimeout(buttonGlowTimerRef.current);
-      }
-      
-      // 3秒後に光るエフェクトを停止
-      buttonGlowTimerRef.current = setTimeout(() => {
-        setLastPressedButton(null);
-      }, 3000);
-    }
-    
+    // タブ移動時にのみハイライトをクリアするため、自動消去機能は削除
+    // ハイライトはタブ移動やページ遷移時にのみリセットされる
     return () => {
       if (buttonGlowTimerRef.current) {
         clearTimeout(buttonGlowTimerRef.current);
       }
     };
-  }, [lastPressedButton]);
+  }, []);
 
   // マウスカーソルの自動非表示機能
   useEffect(() => {
