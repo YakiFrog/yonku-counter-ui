@@ -208,13 +208,13 @@ export default function HomePage() {
   useEffect(() => {
     // slideshowフォルダの画像リストを設定
     const images = [
-      // '/slideshow/oit.png',
       // '/slideshow/thecrafters.png',
       // '/slideshow/miniyonku.png',
       // '/slideshow/qr.png',
       // '/slideshow/sirius.png',
       '/slideshow/1.JPG',
       '/slideshow/2.JPG',
+      '/slideshow/oit.png',
       '/slideshow/3.JPG',
       '/slideshow/4.JPG',
       '/slideshow/5.JPG',
