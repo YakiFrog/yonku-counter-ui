@@ -1467,16 +1467,16 @@ export default function HomePage() {
                         }
                       >
                         {raceType === '決勝' ? (
-                          <Text fontSize="1em" lineHeight="1" color="red.400">決勝</Text>
+                          <Text fontSize="1.4em" lineHeight="1" color="red.400">決勝</Text>
                         ) : raceType ? (
                           <>
-                            <Text fontSize="0.8em" lineHeight="1.1" color={
+                            <Text fontSize="1.1em" lineHeight="1.1" color={
                               raceType === 'タイムアタック' ? 'purple.400' :
                               raceType === '敗者復活戦' ? 'yellow.400' :
                               raceType === '準決勝' ? 'orange.400' :
                               '#FFFFFF'
                             }>{raceType}</Text>
-                            <Text fontSize="0.5em" lineHeight="1" mt={1} color={
+                            <Text fontSize="0.7em" lineHeight="1" mt={1} mb={3}color={
                               raceType === 'タイムアタック' ? 'purple.400' :
                               raceType === '敗者復活戦' ? 'yellow.400' :
                               raceType === '準決勝' ? 'orange.400' :
@@ -1484,7 +1484,7 @@ export default function HomePage() {
                             }>第{currentRaceNumber}レース</Text>
                           </>
                         ) : (
-                          <Text fontSize="1em" lineHeight="1" color="#FFFFFF">第{currentRaceNumber}レース</Text>
+                          <Text fontSize="1.3em" lineHeight="1" color="#FFFFFF">第{currentRaceNumber}レース</Text>
                         )}
                       </Box>
                     </Box>
