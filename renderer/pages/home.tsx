@@ -1225,7 +1225,7 @@ export default function HomePage() {
                           }}
                         >
                           <Text fontSize="lg" fontWeight="black">{positionStyle.label}</Text>
-                          <Text fontSize="6xl" mt="-1">{positionStyle.rank}</Text>
+                          <Text fontSize="4xl" mt="-1">{positionStyle.rank}</Text>
                         </Box>
 
                         {/* 内側の枠 */}
