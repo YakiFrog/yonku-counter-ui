@@ -439,10 +439,10 @@ export default function RankingPage() {
                     <Thead>
                       <Tr>
                         <Th color="gray.100">順位</Th>
-                        <Th color="gray.100" width="17%">チーム名</Th>
-                        <Th color="gray.100" width="22%">車両</Th>
+                        <Th color="gray.100" width="25%">チーム名</Th>
+                        <Th color="gray.100" width="13%">車両</Th>
                         <Th color="gray.100" width="15%">総合タイム</Th>
-                        <Th color="gray.100" width="40%">各周回ラップタイム</Th>
+                        <Th color="gray.100" width="45%">各周回ラップタイム</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -464,7 +464,7 @@ export default function RankingPage() {
                               <Flex gap={2} alignItems="center">
                                 <Box 
                                   px={3} 
-                                  py={1} 
+                                  py={4} 
                                   borderRadius="full"
                                   minWidth="60px"
                                   bg={
@@ -511,20 +511,20 @@ export default function RankingPage() {
                                   ml={3}
                                   fontSize="sm"
                                   px={2}
-                                  py={1}
-                                  borderRadius="md"
+                                  py={2}
+                                  borderRadius="lg"
                                 >
                                   {entry.courseId}コース
                                 </Badge>
                               </Flex>
                             </Td>
                             <Td>
-                              <Text color="white" fontSize="lg" fontWeight="semibold">{entry.name}</Text>
+                              <Text color="white" fontSize="3xl" fontWeight="semibold">{entry.name}</Text>
                             </Td>
-                            <Td color="white">{entry.vehicle}</Td>
+                            <Td color="white" fontSize="3xl">{entry.vehicle}</Td>
                             <Td>
                               <Flex alignItems="center" gap={2}>
-                                <Text color="white" fontSize="xl" fontWeight="bold" letterSpacing={1}>{entry.time}</Text>
+                                <Text color="white" fontSize="3xl" fontWeight="bold" letterSpacing={1}>{entry.time}</Text>
                                 {entry.isCompleted && (
                                   <Badge colorScheme="green" size="sm" px={2} py={1} borderRadius="md" variant="solid">完走</Badge>
                                 )}
@@ -557,10 +557,10 @@ export default function RankingPage() {
                                     >
                                       <Tooltip label={`ベストタイム: ${bestLap.value}`} isDisabled={index !== bestLap.index}>
                                         <Flex alignItems="center" gap={1}>
-                                          <Text fontSize="md" fontWeight="medium" color="gray.200">
+                                          <Text fontSize="lg" fontWeight="medium" color="gray.200">
                                             {index + 1}:
                                           </Text>
-                                          <Text fontSize="md" fontWeight={index === bestLap.index ? "bold" : "normal"} color={index === bestLap.index ? "green.200" : "white"}>
+                                          <Text fontSize="lg" fontWeight={index === bestLap.index ? "bold" : "normal"} color={index === bestLap.index ? "green.200" : "white"}>
                                             {lap}
                                           </Text>
                                           {index === bestLap.index && (
