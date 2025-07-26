@@ -1547,7 +1547,7 @@ export default function HomePage() {
                       <Box
                         width="100%"
                         flex={1}
-                        minHeight="300px"
+                        minHeight="355px"
                         position="relative"
                         borderRadius="md"
                         overflow="hidden"
