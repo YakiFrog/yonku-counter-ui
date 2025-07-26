@@ -966,8 +966,8 @@ export default function HomePage() {
                     <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
                       <Box maxW="60%">
                         <Flex align="center" gap={3} overflow="hidden" whiteSpace="nowrap">
-                          <Text fontWeight="bold" fontSize={["xl", "2xl", "3xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">{course.name}</Text>
-                          <Text fontSize="3xl" color="rgba(255, 255, 255, 0.8)" overflow="hidden" textOverflow="ellipsis">/ {course.vehicle}</Text>
+                          <Text fontWeight="bold" fontSize={["2xl", "3xl", "4xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">{course.name}</Text>
+                          <Text fontSize="4xl" color="rgba(255, 255, 255, 0.8)" overflow="hidden" textOverflow="ellipsis">/ {course.vehicle}</Text>
                           {course.bestLap && (
                           <Badge size="xl" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
                             ベスト: {course.bestLap.time}
@@ -1017,7 +1017,7 @@ export default function HomePage() {
                     </Flex>
                     
                     {/* 周回時間の表示 */}
-                    <Box mt={2} height="100px" position="relative" zIndex={10} display="flex" flexDirection="column" justifyContent="flex-end" pb={3}>
+                    <Box mt={0} height="100px" position="relative" zIndex={10} display="flex" flexDirection="column" justifyContent="flex-end" pb={3}>
                       {course.lapTimes.length > 0 ? (
                         <Box 
                           overflowY="auto" 
@@ -1245,10 +1245,10 @@ export default function HomePage() {
                         <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
                           <Box maxW="60%">
                             <Flex align="center" gap={2} overflow="hidden" whiteSpace="nowrap">
-                              <Text fontWeight="bold" fontSize={["xl", "2xl", "3xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">
+                              <Text fontWeight="bold" fontSize={["2xl", "3xl", "4xl"]} color="#FFFFFF" overflow="hidden" textOverflow="ellipsis">
                                 {ranker.teamName || ranker.playerName}
                               </Text>
-                              <Text fontSize="xl" color="rgba(255, 255, 255, 0.8)" overflow="hidden" textOverflow="ellipsis">
+                              <Text fontSize="2xl" color="rgba(255, 255, 255, 0.8)" overflow="hidden" textOverflow="ellipsis">
                                 / {ranker.vehicleName}
                               </Text>
                               {ranker.bestLap && (
