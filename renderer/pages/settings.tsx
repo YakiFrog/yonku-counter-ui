@@ -40,11 +40,12 @@ import {
   Stack,
 } from '@chakra-ui/react';
 import { ChakraProvider } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, EditIcon, DownloadIcon } from '@chakra-ui/icons';
 import { useAppSettingsContext } from '../utils/AppSettingsContext';
 import { useSerial } from '../utils/SerialContext';
 import { Player } from '../utils/types';
 import { TabNavigation } from '../components/TabNavigation';
+import { exportSettingsToCSV, downloadSettingsCSV, importSettingsFromCSV, generateSettingsCSVFilename } from '../utils/settingsCSVUtils';
 
 export default function SettingsPage() {
   const { 
@@ -55,7 +56,8 @@ export default function SettingsPage() {
     addPlayer: addPlayerToContext,
     updatePlayer: updatePlayerInContext,
     removePlayer: removePlayerFromContext,
-    clearRaceResults
+    clearRaceResults,
+    importPlayers
   } = useAppSettingsContext();
   
   const {
@@ -75,6 +77,7 @@ export default function SettingsPage() {
   // AlertDialog用のフック
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // チームリスト
   const [playersState, setPlayersState] = useState<Player[]>([]);
@@ -295,6 +298,96 @@ export default function SettingsPage() {
       duration: 2000,
       isClosable: true,
     });
+  };
+
+  // CSVエクスポート機能
+  const handleExportSettingsCSV = () => {
+    if (!settings?.players || settings.players.length === 0) {
+      toast({
+        title: "エクスポートできません",
+        description: "チーム・車両データがありません",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const csvContent = exportSettingsToCSV(settings.players);
+      const filename = generateSettingsCSVFilename();
+      downloadSettingsCSV(csvContent, filename);
+      
+      toast({
+        title: "CSVファイルをダウンロードしました",
+        description: `ファイル名: ${filename}`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "エクスポートエラー",
+        description: "CSVファイルの作成に失敗しました",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // CSVインポート機能
+  const handleImportSettingsCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const csvContent = e.target?.result as string;
+        const importedPlayers = await importSettingsFromCSV(csvContent);
+        
+        if (importedPlayers.length === 0) {
+          toast({
+            title: "インポートエラー",
+            description: "有効なチーム・車両データが見つかりませんでした",
+            status: "warning",
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        importPlayers(importedPlayers);
+        
+        toast({
+          title: "CSVファイルをインポートしました",
+          description: `${importedPlayers.length}件のチーム・車両データを読み込みました`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: "インポートエラー",
+          description: error.message || "CSVファイルの読み込みに失敗しました",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+    
+    reader.readAsText(file, 'UTF-8');
+    // ファイル選択をリセット
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // CSVファイル選択を開始
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click();
   };
 
   // 選手に車両を設定/更新
@@ -536,7 +629,38 @@ export default function SettingsPage() {
                 <TabPanel>
                   <VStack spacing={6} align="stretch">
                     <Box>
-                      <Heading size="md" mb={4} color="white">チームリスト ({playersState.length})</Heading>
+                      <Flex justify="space-between" align="center" mb={4}>
+                        <Heading size="md" color="white">チームリスト ({playersState.length})</Heading>
+                        <HStack spacing={2}>
+                          <Button
+                            leftIcon={<DownloadIcon />}
+                            colorScheme="blue"
+                            variant="solid"
+                            size="sm"
+                            onClick={handleExportSettingsCSV}
+                            isDisabled={!settings?.players || settings.players.length === 0}
+                          >
+                            CSVエクスポート
+                          </Button>
+                          <Button
+                            leftIcon={<AddIcon />}
+                            colorScheme="green"
+                            variant="solid"
+                            size="sm"
+                            onClick={triggerFileSelect}
+                          >
+                            CSVインポート
+                          </Button>
+                          {/* 隠されたファイル入力 */}
+                          <Input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".csv"
+                            onChange={handleImportSettingsCSV}
+                            display="none"
+                          />
+                        </HStack>
+                      </Flex>
                       
                       {/* 新規チームの追加 */}
                       <Flex mb={5}>
