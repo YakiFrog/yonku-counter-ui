@@ -1017,8 +1017,7 @@ export default function HomePage() {
                     </Flex>
                     
                     {/* 周回時間の表示 */}
-                    <Box mt={2} height="100px" position="relative" zIndex={10}>
-                      <Text fontSize="lg" fontWeight="semibold" mb={1} color="white" position="relative" zIndex={10}>周回タイム:</Text>
+                    <Box mt={2} height="100px" position="relative" zIndex={10} display="flex" flexDirection="column" justifyContent="flex-end" pb={3}>
                       {course.lapTimes.length > 0 ? (
                         <Box 
                           overflowY="auto" 
@@ -1272,7 +1271,6 @@ export default function HomePage() {
                         
                         {/* ラップタイム表示 */}
                         <Box mt={2} height="100px">
-                          <Text fontSize="lg" fontWeight="semibold" mb={1} color="white">周回タイム:</Text>
                           {ranker.laps && ranker.laps.length > 0 ? (
                             <Box 
                               overflowY="auto" 
