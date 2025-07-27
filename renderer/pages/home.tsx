@@ -963,11 +963,37 @@ export default function HomePage() {
                       } : {}}
                     />
 
-                    <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
-                      <Box maxW="60%">
-                        <Flex align="center" gap={3} flexWrap="wrap">
-                          <Text fontWeight="bold" fontSize={["2xl", "3xl", "2.4em"]} color="#FFFFFF" wordBreak="break-word">{course.name}</Text>
-                          <Text fontSize="4xl" color="rgba(255, 255, 255, 0.8)" wordBreak="break-word">/ {course.vehicle}</Text>
+                    <Flex 
+                    justifyContent="space-between" 
+                    alignItems="center"
+                    width="100%"
+                    height="58px" 
+                    position="relative" 
+                    zIndex={1}>
+                      <Box maxW="100%"
+                        position="relative"
+                        top={1}
+                        >
+                        <Flex align="center" gap={3} overflow="hidden" whiteSpace="nowrap">
+                          <Text 
+                          fontWeight="bold" 
+                          fontSize={course.name && course.name.length > 10 ? ["xl", "2xl", "3.0em"] : ["2xl", "3xl", "3.0em"]} 
+                          color="#FFFFFF" 
+                          overflow="hidden"
+                          textOverflow="ellipsis"
+                          minWidth="0"
+                          letterSpacing={3.5}
+                          >{course.name}</Text>
+                          <Text 
+                          fontSize="1.5em"
+                          color="rgba(255, 255, 255, 0.8)" 
+                          overflow="hidden"
+                          textOverflow="ellipsis"
+                          minWidth="0"
+                          position="relative"
+                          pl={1}
+                          top={2}
+                          >/ {course.vehicle}</Text>
                           {course.bestLap && (
                           <Badge size="xl" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
                             ベスト: {course.bestLap.time}
@@ -1244,11 +1270,30 @@ export default function HomePage() {
 
                         <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
                           <Box maxW="60%">
-                            <Flex align="center" gap={2} flexWrap="wrap">
-                              <Text fontWeight="bold" fontSize={["2xl", "3xl", "4xl"]} color="#FFFFFF" wordBreak="break-word">
+                            <Flex align="center" gap={2} overflow="hidden" whiteSpace="nowrap">
+                              <Text 
+                                fontWeight="bold" 
+                                fontSize={
+                                  (ranker.teamName || ranker.playerName) && (ranker.teamName || ranker.playerName).length > 8 
+                                    ? ["lg", "xl", "2xl"] 
+                                    : ["2xl", "3xl", "4xl"]
+                                } 
+                                color="#FFFFFF" 
+                                overflow="hidden"
+                                textOverflow="ellipsis"
+                                minWidth="0">
                                 {ranker.teamName || ranker.playerName}
                               </Text>
-                              <Text fontSize="2xl" color="rgba(255, 255, 255, 0.8)" wordBreak="break-word">
+                              <Text 
+                                fontSize={
+                                  ranker.vehicleName && ranker.vehicleName.length > 10 
+                                    ? "lg" 
+                                    : "2xl"
+                                } 
+                                color="rgba(255, 255, 255, 0.8)" 
+                                overflow="hidden"
+                                textOverflow="ellipsis"
+                                minWidth="0">
                                 / {ranker.vehicleName}
                               </Text>
                               {ranker.bestLap && (
