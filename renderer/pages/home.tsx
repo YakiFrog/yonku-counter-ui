@@ -1433,25 +1433,27 @@ export default function HomePage() {
                       key={`position-overlay-${course.id}`}
                       position="fixed"
                       top={`${topOffset}px`}
-                      left="50%"
+                      left="48%"
                       transform="translateX(-50%)"
                       zIndex={1000}
                       bg={colorScheme.bg}
                       borderRadius="full"
                       px={14}
-                      py={4}
+                      py={2}
                       border="4px solid"
                       borderColor={colorScheme.border}
                       boxShadow={`0 0 40px rgba(${colorScheme.shadow}, 1), 0 0 80px rgba(${colorScheme.shadow}, 0.6)`}
                       pointerEvents="none"
                     >
                       <Text
-                        fontSize="7xl"
+                        fontSize={raceType === 'タイムアタック' ? "4.5em" : "5em"}
                         fontWeight="black"
                         color="white"
                         textAlign="center"
                         fontFamily="RocknRoll One"
                         textShadow="2px 2px 4px rgba(0,0,0,0.8)"
+                        position="relative"
+                        top="-5px"
                       >
                         {(raceType === 'タイムアタック') ? 'ゴール' : `${position}位`}
                       </Text>
@@ -1481,9 +1483,9 @@ export default function HomePage() {
                             bg={`${course.color.split('.')[0]}.500`}
                             color="white"
                             fontWeight="black"
-                            textShadow="2px 2px 4px rgba(0,0,0,0.8)"
+                            textShadow="2px 2px 2px rgba(0,0,0,0.6)"
                           >
-                            ベストラップ: {course.bestLap.time}
+                            ベスト: {course.bestLap.time}
                           </Badge>
                         )}
                         {course.finishTime && (
@@ -1500,7 +1502,7 @@ export default function HomePage() {
                             bg="green.500"
                             color="white"
                             fontWeight="black"
-                            textShadow="2px 2px 3px rgba(0,0,0,0.8)"
+                            textShadow="2px 2px 2px rgba(0,0,0,0.6)"
                           >
                             タイム: {formatTime(course.finishTime)}
                           </Badge>
