@@ -879,7 +879,7 @@ export default function HomePage() {
                       position="absolute"
                       left="-80px"
                       top="0"
-                      fontSize="5xl"
+                      fontSize="6xl"
                       fontWeight="black"
                       color="white"
                       w="80px"
@@ -914,12 +914,12 @@ export default function HomePage() {
                       {raceType === 'タイムアタック' ? (
                         <>
                           <Text fontSize="3xl" fontWeight="black" letterSpacing="wider">1~4</Text>
-                          <Text fontSize="lg" mt="-2">コース</Text>
+                          <Text fontSize="xl" mt="-2">コース</Text>
                         </>
                       ) : (
                         <>
                           {course.id}
-                          <Text fontSize="lg" mt="-2">コース</Text>
+                          <Text fontSize="xl" mt="-2">コース</Text>
                         </>
                       )}
                     </Box>
@@ -1250,7 +1250,7 @@ export default function HomePage() {
                             textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
                           }}
                         >
-                          <Text fontSize="lg" fontWeight="black">{positionStyle.label}</Text>
+                          <Text fontSize="2xl" fontWeight="black">{positionStyle.label}</Text>
                           <Text fontSize="4xl" mt="-1">{positionStyle.rank}</Text>
                         </Box>
 
@@ -1268,14 +1268,21 @@ export default function HomePage() {
                           pointerEvents="none"
                         />
 
-                        <Flex justifyContent="space-between" alignItems="center" position="relative" zIndex={1}>
-                          <Box maxW="60%">
+                        <Flex 
+                        justifyContent="space-between" 
+                        alignItems="center" 
+                        position="relative" 
+                        zIndex={1}
+                        width="100%"
+                        height="50px"
+                        >
+                          <Box maxW="100%">
                             <Flex align="center" gap={2} overflow="hidden" whiteSpace="nowrap">
                               <Text 
                                 fontWeight="bold" 
                                 fontSize={
                                   (ranker.teamName || ranker.playerName) && (ranker.teamName || ranker.playerName).length > 8 
-                                    ? ["lg", "xl", "2xl"] 
+                                    ? ["lg", "xl", "3xl"] 
                                     : ["2xl", "3xl", "4xl"]
                                 } 
                                 color="#FFFFFF" 
@@ -1288,22 +1295,26 @@ export default function HomePage() {
                                 fontSize={
                                   ranker.vehicleName && ranker.vehicleName.length > 10 
                                     ? "lg" 
-                                    : "2xl"
+                                    : "xl"
                                 } 
                                 color="rgba(255, 255, 255, 0.8)" 
                                 overflow="hidden"
                                 textOverflow="ellipsis"
+                                position="relative"
+                                top={1}
                                 minWidth="0">
                                 / {ranker.vehicleName}
                               </Text>
+                              <Box position="relative" pl={4}>
                               {ranker.bestLap && (
-                                <Badge size="md" colorScheme={positionStyle.badgeColor} variant="subtle">
+                                <Badge size="xl" colorScheme={positionStyle.badgeColor} variant="subtle" fontSize="lg">
                                   ベスト: {ranker.bestLap.time}
                                 </Badge>
                               )}
-                              <Badge size="md" colorScheme="green" variant="solid">
+                              <Badge size="xl" colorScheme="green" variant="solid" fontSize="lg" gap={1} ml={3}>
                                 記録: {ranker.totalTime}
                               </Badge>
+                              </Box>
                             </Flex>
                           </Box>
                           <Flex direction="column" alignItems="center">
@@ -1319,14 +1330,15 @@ export default function HomePage() {
                           {ranker.laps && ranker.laps.length > 0 ? (
                             <Box 
                               overflowY="auto" 
-                              maxHeight="80px"
+                              height="100%"
+                              // maxHeight="80px"
                               borderWidth="1px" 
                               borderRadius="md" 
                               borderColor="gray.600" 
                               bg="gray.900"
                               p={2}
                             >
-                              <Flex flexWrap="wrap" gap={2}>
+                              <Flex flexWrap="wrap" gap={2} height="100%" alignItems="center">
                                 {ranker.laps.map((lap, lapIndex) => (
                                   <Badge
                                     key={lapIndex}
@@ -1336,7 +1348,8 @@ export default function HomePage() {
                                         : "gray"
                                     }
                                     p={2}
-                                    fontSize="lg"
+                                    px={3}
+                                    fontSize="4xl"
                                     borderRadius="md"
                                     variant={
                                       ranker.bestLap && lap.time === ranker.bestLap.time 
