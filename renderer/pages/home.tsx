@@ -1476,7 +1476,7 @@ export default function HomePage() {
                     <Box
                       position="fixed"
                       top={`${topOffset + 60}px`}
-                      left="6.5%"
+                      left="7.0%"
                       zIndex={999}
                       pointerEvents="none"
                       letterSpacing={2}
