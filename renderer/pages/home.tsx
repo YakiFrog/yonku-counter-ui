@@ -994,7 +994,7 @@ export default function HomePage() {
                           pl={1}
                           top={2}
                           >/ {course.vehicle}</Text>
-                          {course.bestLap && (
+                          {/* {course.bestLap && (
                           <Badge size="xl" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
                             ベスト: {course.bestLap.time}
                           </Badge>
@@ -1003,7 +1003,7 @@ export default function HomePage() {
                           <Badge size="xl" colorScheme="green" variant="solid">
                             完走: {formatTime(course.finishTime)}
                           </Badge>
-                          )}
+                          )} */}
                         </Flex>
                       </Box>
                       <Flex direction="column" alignItems="center">
@@ -1427,33 +1427,87 @@ export default function HomePage() {
                 const colorScheme = getPositionColor(position);
                 
                 return (
-                  <Box
-                    key={`position-overlay-${course.id}`}
-                    position="fixed"
-                    top={`${topOffset}px`}
-                    left="50%"
-                    transform="translateX(-50%)"
-                    zIndex={1000}
-                    bg={colorScheme.bg}
-                    borderRadius="full"
-                    px={14}
-                    py={4}
-                    border="4px solid"
-                    borderColor={colorScheme.border}
-                    boxShadow={`0 0 40px rgba(${colorScheme.shadow}, 1), 0 0 80px rgba(${colorScheme.shadow}, 0.6)`}
-                    pointerEvents="none"
-                  >
-                    <Text
-                      fontSize="7xl"
-                      fontWeight="black"
-                      color="white"
-                      textAlign="center"
-                      fontFamily="RocknRoll One"
-                      textShadow="2px 2px 4px rgba(0,0,0,0.8)"
+                  <>
+                    {/* 順位ラベル */}
+                    <Box
+                      key={`position-overlay-${course.id}`}
+                      position="fixed"
+                      top={`${topOffset}px`}
+                      left="50%"
+                      transform="translateX(-50%)"
+                      zIndex={1000}
+                      bg={colorScheme.bg}
+                      borderRadius="full"
+                      px={14}
+                      py={4}
+                      border="4px solid"
+                      borderColor={colorScheme.border}
+                      boxShadow={`0 0 40px rgba(${colorScheme.shadow}, 1), 0 0 80px rgba(${colorScheme.shadow}, 0.6)`}
+                      pointerEvents="none"
                     >
-                      {(raceType === 'タイムアタック') ? 'ゴール' : `${position}位`}
-                    </Text>
-                  </Box>
+                      <Text
+                        fontSize="7xl"
+                        fontWeight="black"
+                        color="white"
+                        textAlign="center"
+                        fontFamily="RocknRoll One"
+                        textShadow="2px 2px 4px rgba(0,0,0,0.8)"
+                      >
+                        {(raceType === 'タイムアタック') ? 'ゴール' : `${position}位`}
+                      </Text>
+                    </Box>
+                    
+                    {/* ベストタイムと完走時間表示 */}
+                    <Box
+                      position="fixed"
+                      top={`${topOffset + 60}px`}
+                      left="6.5%"
+                      zIndex={999}
+                      pointerEvents="none"
+                      letterSpacing={2}
+                    >
+                      <HStack spacing={3} align="flex-start">
+                        {course.bestLap && (
+                          <Badge 
+                            size="3xl" 
+                            colorScheme={course.color.split('.')[0]} 
+                            variant="solid"
+                            fontSize="1.6em"
+                            px={4}
+                            py={2}
+                            borderRadius="3xl"
+                            boxShadow="lg"
+                            opacity={1.0}
+                            bg={`${course.color.split('.')[0]}.500`}
+                            color="white"
+                            fontWeight="black"
+                            textShadow="2px 2px 4px rgba(0,0,0,0.8)"
+                          >
+                            ベストラップ: {course.bestLap.time}
+                          </Badge>
+                        )}
+                        {course.finishTime && (
+                          <Badge 
+                            size="3xl" 
+                            colorScheme="green" 
+                            variant="solid"
+                            fontSize="1.6em"
+                            px={4}
+                            py={2}
+                            borderRadius="3xl"
+                            boxShadow="lg"
+                            opacity={1.0}
+                            bg="green.500"
+                            color="white"
+                            fontWeight="black"
+                            textShadow="2px 2px 3px rgba(0,0,0,0.8)"
+                          >
+                            タイム: {formatTime(course.finishTime)}
+                          </Badge>
+                        )}
+                      </HStack>
+                    </Box>
+                  </>
                 );
               });
             })()}
