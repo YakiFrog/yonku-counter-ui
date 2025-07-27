@@ -977,7 +977,7 @@ export default function HomePage() {
                         <Flex align="center" gap={3} overflow="hidden" whiteSpace="nowrap">
                           <Text 
                           fontWeight="bold" 
-                          fontSize={course.name && course.name.length > 10 ? ["xl", "2xl", "3.0em"] : ["2xl", "3xl", "3.0em"]} 
+                          fontSize={course.name && course.name.length > 10 ? ["xl", "2xl", "3.8em"] : ["2xl", "3xl", "3.8em"]} // 元は3.0
                           color="#FFFFFF" 
                           overflow="hidden"
                           textOverflow="ellipsis"
