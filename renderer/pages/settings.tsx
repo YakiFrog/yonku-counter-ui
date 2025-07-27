@@ -40,11 +40,12 @@ import {
   Stack,
 } from '@chakra-ui/react';
 import { ChakraProvider } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, EditIcon, DownloadIcon } from '@chakra-ui/icons';
 import { useAppSettingsContext } from '../utils/AppSettingsContext';
 import { useSerial } from '../utils/SerialContext';
 import { Player } from '../utils/types';
 import { TabNavigation } from '../components/TabNavigation';
+import { exportSettingsToCSV, downloadSettingsCSV, importSettingsFromCSV, generateSettingsCSVFilename } from '../utils/settingsCSVUtils';
 
 export default function SettingsPage() {
   const { 
@@ -55,7 +56,8 @@ export default function SettingsPage() {
     addPlayer: addPlayerToContext,
     updatePlayer: updatePlayerInContext,
     removePlayer: removePlayerFromContext,
-    clearRaceResults
+    clearRaceResults,
+    importPlayers
   } = useAppSettingsContext();
   
   const {
@@ -75,6 +77,7 @@ export default function SettingsPage() {
   // AlertDialog用のフック
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // チームリスト
   const [playersState, setPlayersState] = useState<Player[]>([]);
@@ -297,6 +300,96 @@ export default function SettingsPage() {
     });
   };
 
+  // CSVエクスポート機能
+  const handleExportSettingsCSV = () => {
+    if (!settings?.players || settings.players.length === 0) {
+      toast({
+        title: "エクスポートできません",
+        description: "チーム・車両データがありません",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const csvContent = exportSettingsToCSV(settings.players);
+      const filename = generateSettingsCSVFilename();
+      downloadSettingsCSV(csvContent, filename);
+      
+      toast({
+        title: "CSVファイルをダウンロードしました",
+        description: `ファイル名: ${filename}`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "エクスポートエラー",
+        description: "CSVファイルの作成に失敗しました",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // CSVインポート機能
+  const handleImportSettingsCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const csvContent = e.target?.result as string;
+        const importedPlayers = await importSettingsFromCSV(csvContent);
+        
+        if (importedPlayers.length === 0) {
+          toast({
+            title: "インポートエラー",
+            description: "有効なチーム・車両データが見つかりませんでした",
+            status: "warning",
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        importPlayers(importedPlayers);
+        
+        toast({
+          title: "CSVファイルをインポートしました",
+          description: `${importedPlayers.length}件のチーム・車両データを読み込みました`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: "インポートエラー",
+          description: error.message || "CSVファイルの読み込みに失敗しました",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+    
+    reader.readAsText(file, 'UTF-8');
+    // ファイル選択をリセット
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // CSVファイル選択を開始
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
   // 選手に車両を設定/更新
   const setVehicleToPlayer = (playerId: string) => {
     if (newVehicleName.trim() === '') return;
@@ -517,10 +610,10 @@ export default function SettingsPage() {
                       </FormControl>
 
                       <FormControl mt="4" display="flex" alignItems="center">
-                        <FormLabel mb="0" color="white">サウンド</FormLabel>
+                        <FormLabel mb="0" color="white">シリアル入力からのカウントアップ</FormLabel>
                         <Switch 
-                          isChecked={settings.soundEnabled} 
-                          onChange={(e) => handleUpdateSetting('soundEnabled', e.target.checked)} 
+                          isChecked={settings.serialCountEnabled} 
+                          onChange={(e) => handleUpdateSetting('serialCountEnabled', e.target.checked)} 
                           colorScheme="cyan"
                         />
                       </FormControl>
@@ -536,7 +629,38 @@ export default function SettingsPage() {
                 <TabPanel>
                   <VStack spacing={6} align="stretch">
                     <Box>
-                      <Heading size="md" mb={4} color="white">チームリスト</Heading>
+                      <Flex justify="space-between" align="center" mb={4}>
+                        <Heading size="md" color="white">チームリスト ({playersState.length})</Heading>
+                        <HStack spacing={2}>
+                          <Button
+                            leftIcon={<DownloadIcon />}
+                            colorScheme="blue"
+                            variant="solid"
+                            size="sm"
+                            onClick={handleExportSettingsCSV}
+                            isDisabled={!settings?.players || settings.players.length === 0}
+                          >
+                            CSVエクスポート
+                          </Button>
+                          <Button
+                            leftIcon={<AddIcon />}
+                            colorScheme="green"
+                            variant="solid"
+                            size="sm"
+                            onClick={triggerFileSelect}
+                          >
+                            CSVインポート
+                          </Button>
+                          {/* 隠されたファイル入力 */}
+                          <Input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".csv"
+                            onChange={handleImportSettingsCSV}
+                            display="none"
+                          />
+                        </HStack>
+                      </Flex>
                       
                       {/* 新規チームの追加 */}
                       <Flex mb={5}>
@@ -544,6 +668,11 @@ export default function SettingsPage() {
                           placeholder="新しいチーム名"
                           value={newPlayerName}
                           onChange={(e) => setNewPlayerName(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              addPlayer();
+                            }
+                          }}
                           mr={2}
                           bg="gray.900"
                           borderColor="gray.600"
@@ -576,6 +705,9 @@ export default function SettingsPage() {
                             <Box mb={3}>
                               {editingPlayerId === player.id ? (
                                 <Flex>
+                                  <Text color="gray.400" mr={4} fontSize="lg" fontWeight="bold">
+                                    {playersState.indexOf(player) + 1}.
+                                  </Text>
                                   <Input
                                     value={editingPlayerName}
                                     onChange={(e) => setEditingPlayerName(e.target.value)}
@@ -591,7 +723,12 @@ export default function SettingsPage() {
                                 </Flex>
                               ) : (
                                 <Flex justifyContent="space-between" alignItems="center">
-                                  <Text color="white">{player.name}</Text>
+                                  <Flex alignItems="center">
+                                    <Text color="gray.400" mr={4} fontSize="lg" fontWeight="bold">
+                                      {playersState.indexOf(player) + 1}.
+                                    </Text>
+                                    <Text color="white">{player.name}</Text>
+                                  </Flex>
                                   <Flex>
                                     <IconButton
                                       aria-label="Edit player"
@@ -666,6 +803,11 @@ export default function SettingsPage() {
                                     size="sm"
                                     value={newVehicleName}
                                     onChange={(e) => setNewVehicleName(e.target.value)}
+                                    onKeyPress={(e) => {
+                                      if (e.key === 'Enter') {
+                                        setVehicleToPlayer(player.id);
+                                      }
+                                    }}
                                     mr={2}
                                     bg="gray.800"
                                     borderColor="gray.600"
@@ -707,15 +849,49 @@ export default function SettingsPage() {
                     <Box>
                       <Heading size="md" mb={4} color="white">コース割り当て</Heading>
                       
-                      {/* デバッグ情報表示 */}
-                      <Text color="gray.400" fontSize="sm" mb={4}>
-                        登録チーム数: {playersState.length} | 
-                        設定からのチーム数: {settings?.players?.length || 0}
-                      </Text>
+                        {/* デバッグ情報とクリアボタンを横に配置 */}
+                        <Flex justify="space-between" align="center" mb={4}>
+                        <Text color="gray.400" fontSize="sm">
+                          登録チーム数: {playersState.length} | 
+                          設定からのチーム数: {settings?.players?.length || 0}
+                        </Text>
+
+                        {/* 一括クリアボタン */}
+                        <Button
+                          colorScheme="red"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                          settings.courses.forEach((_, index) => {
+                            updateCourseAssignment(index, 'playerId', '');
+                          });
+                          toast({
+                            title: '全コースの割り当てを解除しました',
+                            status: 'info',
+                            duration: 2000,
+                            isClosable: true,
+                          });
+                          }}
+                        >
+                          全コースの割り当てを解除
+                        </Button>
+                        </Flex>
                       
                       <SimpleGrid columns={[1, 2]} spacing={6}>
                         {settings.courses.map((course, index) => (
-                          <Box key={index} p={4} borderWidth="1px" borderRadius="md" bg="gray.900" borderColor="gray.600">
+                          <Box 
+                            key={index} 
+                            p={4} 
+                            borderWidth="2px" 
+                            borderRadius="md" 
+                            bg="gray.900" 
+                            borderColor={
+                              index === 0 ? "yellow.500" : 
+                              index === 1 ? "green.500" : 
+                              index === 2 ? "blue.500" : 
+                              "red.500"
+                            }
+                          >
                             <Heading size="sm" mb={3} color="white">コース {index + 1}</Heading>
                             
                             <FormControl mb={3}>
@@ -723,21 +899,19 @@ export default function SettingsPage() {
                               <Select
                                 value={course.playerId || 'none'}
                                 onChange={(e) => {
-                                  const playerId = e.target.value === 'none' ? null : e.target.value;
+                                  const playerId = e.target.value === 'none' ? '' : e.target.value;
                                   console.log('選択されたプレイヤーID:', playerId);
                                   console.log('コースの現在の状態:', course);
                                   
                                   updateCourseAssignment(index, 'playerId', playerId)
                                     .then(() => {
-                                      if (playerId) {
-                                        toast({
-                                          title: '成功',
-                                          description: 'チームを割り当てました',
-                                          status: 'success',
-                                          duration: 2000,
-                                          isClosable: true,
-                                        });
-                                      }
+                                      toast({
+                                        title: '成功',
+                                        description: playerId ? 'チームを割り当てました' : 'チームの割り当てを解除しました',
+                                        status: 'success',
+                                        duration: 2000,
+                                        isClosable: true,
+                                      });
                                     })
                                     .catch((error) => {
                                       console.error('コース割り当てエラー:', error);
@@ -933,9 +1107,10 @@ export default function SettingsPage() {
                   variant="outline"
                   onClick={() => {
                     if (window.confirm('全てのチームを削除します。この操作は元に戻せません。よろしいですか？')) {
-                      // 全てのチームを削除
-                      playersState.forEach(player => {
-                        removePlayerFromContext(player.id);
+                      // 全てのチームを一括で削除
+                      const playerIds = [...playersState].map(player => player.id);
+                      playerIds.forEach(id => {
+                        removePlayerFromContext(id);
                       });
                       toast({
                         title: '全チームを削除しました',

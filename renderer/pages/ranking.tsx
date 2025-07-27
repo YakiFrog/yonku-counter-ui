@@ -18,13 +18,24 @@ import {
   Spinner,
   Center,
   Select,
-  HStack
-} from '@chakra-ui/react'
+  HStack,
+  useToast,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  useDisclosure,
+  Input
+} from '@chakra-ui/react';
+import { DeleteIcon, DownloadIcon, AddIcon } from '@chakra-ui/icons';
 
 import { Container } from '../components/Container'
 import { TabNavigation } from '../components/TabNavigation'
 import { useAppSettingsContext } from '../utils/AppSettingsContext'
 import { Race, RaceResult } from '../utils/types'
+import { exportRacesToCSV, downloadCSV, importRacesFromCSV, generateCSVFilename } from '../utils/csvUtils'
 
 interface PlayerStats {
     playerId: string;
@@ -38,7 +49,24 @@ interface PlayerStats {
 
 export default function RankingPage() {
   // グローバル設定コンテキスト
-  const { settings, isLoading } = useAppSettingsContext();
+  const { settings, isLoading, deleteRace, importRaces } = useAppSettingsContext();
+  const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedRaceId, setSelectedRaceId] = React.useState<string>("");
+  const cancelRef = React.useRef<HTMLButtonElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // 時間文字列をミリ秒に変換するヘルパー関数
+  const parseTime = (timeStr: string): number => {
+    const [minutesSeconds, ms] = timeStr.split('.');
+    const [minutes, seconds] = minutesSeconds.split(':');
+    
+    return (
+      parseInt(minutes) * 60 * 1000 +
+      parseInt(seconds) * 1000 +
+      parseInt(ms) * 10
+    );
+  };
 
   // ユーティリティ関数: 文字列形式の時間（mm:ss.ms）を比較して小さい方（速い方）を返す
   const findBestLap = (laps: string[]): { value: string | null, index: number } => {
@@ -60,19 +88,100 @@ export default function RankingPage() {
   };
   
   // すべてのレース結果を表示用に変換
-  const allRacesData = settings?.races ? [...settings.races].reverse().map(race => ({
-    name: race.name || `第${race.raceNumber}レース`,
-    results: race.results.map((result) => ({
-      position: result.position,
-      courseId: result.courseId,  // インデックスではなく、保存されたコースIDを使用
-      name: result.teamName || result.playerName, // チーム名を優先、なければplayerNameを使用
-      vehicle: result.vehicleName,
-      time: result.totalTime,
-      laps: result.laps?.map(lap => lap.time) || [],
-      wins: 0,
-      isCompleted: result.isCompleted || false
-    }))
-  })) : [];
+  const allRacesData = settings?.races ? [...settings.races].reverse().map(race => {
+    // タイムアタックの場合は全体での順位を計算
+    if (race.raceType === 'タイムアタック') {
+      // 全てのタイムアタック結果を取得
+      const allTimeAttackResults = settings.races
+        .filter(r => r.raceType === 'タイムアタック')
+        .flatMap(r => r.results)
+        .map(result => ({
+          ...result,
+          // 時間を比較用に変換
+          timeForSort: parseTime(result.totalTime)
+        }))
+        .sort((a, b) => {
+          // 周回数が多い順、同じ場合は時間が短い順
+          const aLaps = a.laps?.length || 0;
+          const bLaps = b.laps?.length || 0;
+          if (aLaps !== bLaps) return bLaps - aLaps;
+          return a.timeForSort - b.timeForSort;
+        });
+      
+      // 全体での順位を計算
+      const globalRankedResults = allTimeAttackResults.map((result, index) => ({
+        ...result,
+        globalPosition: index + 1
+      }));
+      
+      // このレースの結果に全体順位を適用
+      const raceResults = race.results.map(result => {
+        const globalResult = globalRankedResults.find(gr => gr.id === result.id);
+        // デバッグ: ラップデータの構造を確認
+        console.log('レース結果のラップデータ:', result.laps);
+        
+        // ラップデータの処理を改善
+        let processedLaps = [];
+        if (result.laps && Array.isArray(result.laps)) {
+          processedLaps = result.laps.map(lap => {
+            // lap.timeが存在する場合はそれを使用、そうでなければlapそのものが時間文字列の場合もある
+            return typeof lap === 'object' && lap.time ? lap.time : lap;
+          });
+        }
+        
+        return {
+          position: globalResult?.globalPosition || result.position,
+          courseId: result.courseId,
+          name: result.teamName || result.playerName,
+          vehicle: result.vehicleName,
+          time: result.totalTime,
+          laps: processedLaps,
+          wins: 0,
+          isCompleted: result.isCompleted || false
+        };
+      });
+      
+      return {
+        id: race.id,
+        name: race.name || `第${race.raceNumber}レース`,
+        raceNumber: race.raceNumber,
+        raceType: race.raceType,
+        results: raceResults
+      };
+    } else {
+      // 通常レースの場合は従来通り
+      return {
+        id: race.id,
+        name: race.name || `第${race.raceNumber}レース`,
+        raceNumber: race.raceNumber,
+        raceType: race.raceType,
+        results: race.results.map((result) => {
+          // デバッグ: ラップデータの構造を確認
+          console.log('通常レースのラップデータ:', result.laps);
+          
+          // ラップデータの処理を改善
+          let processedLaps = [];
+          if (result.laps && Array.isArray(result.laps)) {
+            processedLaps = result.laps.map(lap => {
+              // lap.timeが存在する場合はそれを使用、そうでなければlapそのものが時間文字列の場合もある
+              return typeof lap === 'object' && lap.time ? lap.time : lap;
+            });
+          }
+          
+          return {
+            position: result.position,
+            courseId: result.courseId,
+            name: result.teamName || result.playerName,
+            vehicle: result.vehicleName,
+            time: result.totalTime,
+            laps: processedLaps,
+            wins: 0,
+            isCompleted: result.isCompleted || false
+          };
+        })
+      };
+    }
+  }) : [];
 
   // 総合ランキングの計算
   const calculateOverallRankings = (): PlayerStats[] => {
@@ -123,33 +232,217 @@ export default function RankingPage() {
   
   const overallRankings = calculateOverallRankings();
 
+  // レース削除の確認を開始
+  const handleDeleteClick = (raceId: string) => {
+    setSelectedRaceId(raceId);
+    onOpen();
+  };
+
+  // レースを削除
+  const confirmDelete = () => {
+    if (selectedRaceId) {
+      deleteRace(selectedRaceId);
+      toast({
+        title: "レースを削除しました",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      onClose();
+    }
+  };
+
+  // CSVエクスポート機能
+  const handleExportCSV = () => {
+    if (!settings?.races || settings.races.length === 0) {
+      toast({
+        title: "エクスポートできません",
+        description: "レースデータがありません",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const csvContent = exportRacesToCSV(settings.races);
+      const filename = generateCSVFilename();
+      downloadCSV(csvContent, filename);
+      
+      toast({
+        title: "CSVファイルをダウンロードしました",
+        description: `ファイル名: ${filename}`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: "エクスポートエラー",
+        description: "CSVファイルの作成に失敗しました",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // CSVインポート機能
+  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const csvContent = e.target?.result as string;
+        const importedRaces = await importRacesFromCSV(csvContent);
+        
+        if (importedRaces.length === 0) {
+          toast({
+            title: "インポートエラー",
+            description: "有効なレースデータが見つかりませんでした",
+            status: "warning",
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        importRaces(importedRaces);
+        
+        toast({
+          title: "CSVファイルをインポートしました",
+          description: `${importedRaces.length}件のレースデータを読み込みました`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: "インポートエラー",
+          description: error.message || "CSVファイルの読み込みに失敗しました",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+    
+    reader.readAsText(file, 'UTF-8');
+    // ファイル選択をリセット
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // CSVファイル選択を開始
+  const triggerFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <React.Fragment>
       <Head>
         <title>ランキング</title>
       </Head>
-      <Container maxWidth="1920px" px={4} py={3}>
-        <VStack spacing={4} align="stretch" width="full">
+      <Container maxWidth="1920px" px={4} py={3} height="100vh">
+        <VStack spacing={4} align="stretch" width="full" height="full">
           {/* タブナビゲーション */}
           <TabNavigation currentTab="ranking" />
+          
+          {/* エクスポート・インポートボタン */}
+          <HStack spacing={3} justify="flex-end">
+            <Button
+              leftIcon={<DownloadIcon />}
+              colorScheme="blue"
+              variant="solid"
+              size="sm"
+              onClick={handleExportCSV}
+              isDisabled={!settings?.races || settings.races.length === 0}
+            >
+              CSVエクスポート
+            </Button>
+            <Button
+              leftIcon={<AddIcon />}
+              colorScheme="green"
+              variant="solid"
+              size="sm"
+              onClick={triggerFileSelect}
+            >
+              CSVインポート
+            </Button>
+            {/* 隠されたファイル入力 */}
+            <Input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleImportCSV}
+              display="none"
+            />
+          </HStack>
+          
           {/* スクロール可能なエリア */}
-          <Box maxHeight="calc(100vh - 300px)" overflowY="auto">
+          <Box flex="1" overflowY="auto" minHeight="0">
             <VStack spacing={6} align="stretch" width="full">
-              {/* 各レース結果の表示 */}
-              {allRacesData.map((race, raceIndex) => (
-                <Box key={raceIndex} borderWidth="1px" borderRadius="lg" p={4} shadow="md" bg="gray.800" borderColor="gray.700">
-                  <Heading size="md" mb={3} color="white">
-                    {race.name}
-                  </Heading>
+              {allRacesData.length === 0 ? (
+                <Box 
+                  textAlign="center" 
+                  py={8}
+                  borderWidth="1px" 
+                  borderRadius="lg" 
+                  borderColor="gray.600"
+                  bg="gray.800"
+                >
+                  <Text color="gray.300" fontSize="lg" mb={4}>
+                    レース結果がありません
+                  </Text>
+                  <Text color="gray.400" fontSize="sm">
+                    レースを実行するか、CSVファイルからデータをインポートしてください
+                  </Text>
+                </Box>
+              ) : (
+                /* 各レース結果の表示 */
+                allRacesData.map((race, raceIndex) => (
+                <Box 
+                  key={raceIndex} 
+                  borderWidth="1px" 
+                  borderRadius="lg" 
+                  p={4} 
+                  shadow="md" 
+                  bg="gray.800" 
+                  borderColor="gray.600"
+                >
+                  <Flex justify="space-between" align="center" mb={3}>
+                    <Heading 
+                      size="lg" 
+                      color="white"
+                      letterSpacing={5}
+                    >
+                      {race.name}
+                    </Heading>
+                    <Button
+                      leftIcon={<DeleteIcon />}
+                      colorScheme="red"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        handleDeleteClick(race.id);
+                      }}
+                    >
+                      削除
+                    </Button>
+                  </Flex>
                   
                   <Table variant="simple" size="sm" colorScheme="whiteAlpha">
                     <Thead>
                       <Tr>
                         <Th color="gray.100">順位</Th>
-                        <Th color="gray.100" width="15%">チーム名</Th>
-                        <Th color="gray.100" width="15%">車両</Th>
+                        <Th color="gray.100" width="25%">チーム名</Th>
+                        <Th color="gray.100" width="13%">車両</Th>
                         <Th color="gray.100" width="15%">総合タイム</Th>
-                        <Th color="gray.100" width="40%">各周回ラップタイム</Th>
+                        <Th color="gray.100" width="45%">各周回ラップタイム</Th>
                       </Tr>
                     </Thead>
                     <Tbody>
@@ -158,39 +451,50 @@ export default function RankingPage() {
                           <Tr 
                             key={entry.position}
                             bg={
-                              entry.position === 1 ? "rgba(255, 215, 0, 0.20)" :
-                              entry.position === 2 ? "rgba(192, 192, 192, 0.20)" :
-                              entry.position === 3 ? "rgba(205, 127, 50, 0.20)" :
-                              entry.position === 4 ? "rgba(255, 0, 0, 0.20)" :
-                              "transparent"
+                              race.raceType === 'タイムアタック' ? "rgba(138, 43, 226, 0.20)" : (
+                                entry.position === 1 ? "rgba(255, 215, 0, 0.20)" :
+                                entry.position === 2 ? "rgba(192, 192, 192, 0.20)" :
+                                entry.position === 3 ? "rgba(205, 127, 50, 0.20)" :
+                                entry.position === 4 ? "rgba(255, 0, 0, 0.20)" :
+                                "transparent"
+                              )
                             }
                           >
                             <Td>
                               <Flex gap={2} alignItems="center">
                                 <Box 
                                   px={3} 
-                                  py={1} 
+                                  py={4} 
                                   borderRadius="full"
+                                  minWidth="60px"
                                   bg={
-                                    entry.position === 1 ? "rgba(255, 215, 0, 0.2)" :
-                                    entry.position === 2 ? "rgba(192, 192, 192, 0.2)" :
-                                    entry.position === 3 ? "rgba(205, 127, 50, 0.2)" :
-                                    entry.position === 4 ? "rgba(255, 0, 0, 0.2)" :
-                                    "transparent"
+                                    race.raceType === 'タイムアタック' ? "rgba(138, 43, 226, 0.3)" : (
+                                      entry.position === 1 ? "rgba(255, 215, 0, 0.2)" :
+                                      entry.position === 2 ? "rgba(192, 192, 192, 0.2)" :
+                                      entry.position === 3 ? "rgba(205, 127, 50, 0.2)" :
+                                      entry.position === 4 ? "rgba(255, 0, 0, 0.2)" :
+                                      "transparent"
+                                    )
                                   }
                                   borderWidth="1px"
                                   borderColor={
-                                    entry.position === 1 ? "yellow.400" :
-                                    entry.position === 2 ? "gray.400" :
-                                    entry.position === 3 ? "orange.400" :
-                                    entry.position === 4 ? "red.400" :
-                                    "gray.500"
+                                    race.raceType === 'タイムアタック' ? "purple.400" : (
+                                      entry.position === 1 ? "yellow.400" :
+                                      entry.position === 2 ? "gray.400" :
+                                      entry.position === 3 ? "orange.400" :
+                                      entry.position === 4 ? "red.400" :
+                                      "gray.500"
+                                    )
                                   }
+                                  display="flex"
+                                  alignItems="center"
+                                  justifyContent="center"
                                 >
                                   <Text 
                                     fontWeight="bold" 
-                                    fontSize="lg" 
+                                    fontSize="20px" 
                                     color="white"
+                                    whiteSpace="nowrap"
                                   >
                                     {entry.position}位
                                   </Text>
@@ -205,18 +509,22 @@ export default function RankingPage() {
                                   } 
                                   variant="solid" 
                                   ml={3}
+                                  fontSize="sm"
+                                  px={2}
+                                  py={2}
+                                  borderRadius="lg"
                                 >
                                   {entry.courseId}コース
                                 </Badge>
                               </Flex>
                             </Td>
                             <Td>
-                              <Text color="white" fontSize="lg" fontWeight="semibold">{entry.name}</Text>
+                              <Text color="white" fontSize="3xl" fontWeight="semibold">{entry.name}</Text>
                             </Td>
-                            <Td color="white">{entry.vehicle}</Td>
+                            <Td color="white" fontSize="2xl">{entry.vehicle}</Td>
                             <Td>
                               <Flex alignItems="center" gap={2}>
-                                <Text color="white">{entry.time}</Text>
+                                <Text color="white" fontSize="3xl" fontWeight="bold" letterSpacing={1}>{entry.time}</Text>
                                 {entry.isCompleted && (
                                   <Badge colorScheme="green" size="sm" px={2} py={1} borderRadius="md" variant="solid">完走</Badge>
                                 )}
@@ -225,8 +533,18 @@ export default function RankingPage() {
                             <Td>
                               <Flex wrap="wrap" gap={2}>
                                 {(() => {
-                                  const bestLap = findBestLap(entry.laps);
-                                  return entry.laps.map((lap, index) => (
+                                  // entry.lapsが配列でない場合は空配列を使用
+                                  const laps = Array.isArray(entry.laps) ? entry.laps : [];
+                                  if (laps.length === 0) {
+                                    return (
+                                      <Text color="gray.400" fontSize="sm">
+                                        ラップデータなし
+                                      </Text>
+                                    );
+                                  }
+                                  
+                                  const bestLap = findBestLap(laps);
+                                  return laps.map((lap, index) => (
                                     <Box 
                                       key={index} 
                                       borderWidth="1px"
@@ -239,10 +557,10 @@ export default function RankingPage() {
                                     >
                                       <Tooltip label={`ベストタイム: ${bestLap.value}`} isDisabled={index !== bestLap.index}>
                                         <Flex alignItems="center" gap={1}>
-                                          <Text fontSize="sm" fontWeight="medium" color="gray.200">
+                                          <Text fontSize="lg" fontWeight="medium" color="gray.200">
                                             {index + 1}:
                                           </Text>
-                                          <Text fontSize="sm" fontWeight={index === bestLap.index ? "bold" : "normal"} color={index === bestLap.index ? "green.200" : "white"}>
+                                          <Text fontSize="lg" fontWeight={index === bestLap.index ? "bold" : "normal"} color={index === bestLap.index ? "green.200" : "white"}>
                                             {lap}
                                           </Text>
                                           {index === bestLap.index && (
@@ -269,11 +587,40 @@ export default function RankingPage() {
                     </Tbody>
                   </Table>
                 </Box>
-              ))}
+              )))}
             </VStack>
           </Box>
         </VStack>
       </Container>
+
+      {/* 削除確認ダイアログ */}
+      <AlertDialog
+        isOpen={isOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={onClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent bg="gray.800" borderColor="gray.700">
+            <AlertDialogHeader fontSize="lg" fontWeight="bold" color="white">
+              レースを削除
+            </AlertDialogHeader>
+
+            <AlertDialogBody color="white">
+              このレースの記録を削除します。この操作は元に戻せません。
+              本当に削除しますか？
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose} variant="outline" color="white">
+                キャンセル
+              </Button>
+              <Button colorScheme="red" onClick={confirmDelete} ml={3}>
+                削除する
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </React.Fragment>
   )
 }
