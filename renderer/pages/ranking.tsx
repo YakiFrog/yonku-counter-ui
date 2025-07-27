@@ -521,7 +521,7 @@ export default function RankingPage() {
                             <Td>
                               <Text color="white" fontSize="3xl" fontWeight="semibold">{entry.name}</Text>
                             </Td>
-                            <Td color="white" fontSize="3xl">{entry.vehicle}</Td>
+                            <Td color="white" fontSize="2xl">{entry.vehicle}</Td>
                             <Td>
                               <Flex alignItems="center" gap={2}>
                                 <Text color="white" fontSize="3xl" fontWeight="bold" letterSpacing={1}>{entry.time}</Text>

@@ -1479,7 +1479,7 @@ export default function HomePage() {
                       left="7.0%"
                       zIndex={999}
                       pointerEvents="none"
-                      letterSpacing={2}
+                      letterSpacing={3}
                     >
                       <HStack spacing={3} align="flex-start">
                         {course.bestLap && (
