@@ -46,7 +46,25 @@ import { keyframes } from '@emotion/react'
 import confetti from 'canvas-confetti'
 
 // 1位ゴール時のクラッカー演出
-const triggerConfetti = () => {
+const triggerConfetti = (soundType?: 'horn' | 'popper' | 'popper_large' | 'none') => {
+  // クラッカー音を鳴らす（ローカルのmp3ファイルを使用）
+  try {
+    const type = soundType || 'popper';
+    if (type !== 'none') {
+      let fileName = '';
+      if (type === 'popper') fileName = 'Party_Popper01/Party_Popper01-1(Dry).mp3';
+      else if (type === 'popper_large') fileName = 'Party_Popper03/Party_Popper03-1(Dry).mp3';
+      else if (type === 'horn') fileName = 'Bicycle_Horn01/Bicycle_Horn01-1.mp3';
+      
+      const audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/${fileName}`;
+      const popSound = new Audio(audioPath);
+      popSound.volume = 0.8;
+      popSound.play().catch(e => console.log('Audio play error:', e));
+    }
+  } catch (e) {
+    console.log('Audio not supported:', e);
+  }
+
   const count = 200; // 全体の紙吹雪の基本量
   const defaults = {
     colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'],
@@ -405,7 +423,7 @@ export default function HomePage() {
         return;
       } else if (keyChar === 'o') {
         // 紙吹雪（手動発動）
-        triggerConfetti();
+        triggerConfetti(settings?.confettiSound);
         return;
       }
 
@@ -803,7 +821,7 @@ export default function HomePage() {
           if (!ids.includes(courseId)) {
             // 最初の完走者（1位）ならクラッカーを鳴らす
             if (ids.length === 0) {
-              triggerConfetti();
+              triggerConfetti(settings?.confettiSound);
             }
             return [...ids, courseId];
           }

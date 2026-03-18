@@ -642,6 +642,23 @@ export default function SettingsPage() {
                       </FormControl>
 
                       <FormControl mt="6">
+                        <FormLabel color="white">クラッカー演出の音</FormLabel>
+                        <Select 
+                          value={settings.confettiSound || 'popper'} 
+                          onChange={(e) => handleUpdateSetting('confettiSound', e.target.value)}
+                          bg="gray.900" 
+                          borderColor="gray.600" 
+                          color="white"
+                          mt="2"
+                        >
+                          <option value="popper" style={{ color: 'black' }}>パーティクラッカー（パーン！）</option>
+                          <option value="popper_large" style={{ color: 'black' }}>大きいクラッカー（ドーン！）</option>
+                          <option value="horn" style={{ color: 'black' }}>自転車ホーン（パフッ！）</option>
+                          <option value="none" style={{ color: 'black' }}>ミュート（音なし）</option>
+                        </Select>
+                      </FormControl>
+
+                      <FormControl mt="6">
                         <FormLabel color="white">スライドショー画像設定</FormLabel>
                         <Text fontSize="sm" color="gray.400" mb={3}>
                           レース待機中に背景で表示するカスタム画像を選択します。何も選択しない場合はデフォルト画像が使用されます。

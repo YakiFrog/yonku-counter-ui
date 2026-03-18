@@ -15,7 +15,8 @@ const defaultSettings: AppSettings = {
   serialCountEnabled: false, // シリアル入力からのカウントアップを制御
   races: [],
   currentRaceNumber: 1,  // 初期レース番号を1に設定
-  slideshowImages: [] // スライドショー画像の初期値
+  slideshowImages: [], // スライドショー画像の初期値
+  confettiSound: 'popper' // クラッカーの種類
 };
 
 // ローカルストレージのキー

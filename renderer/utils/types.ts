@@ -58,4 +58,5 @@ export type AppSettings = {
   currentRaceNumber: number;  // 追加: 現在のレース番号
   serialCountEnabled: boolean; // シリアル入力からのカウントアップを有効/無効にする設定
   slideshowImages?: string[]; // スライドショー用の画像パスリスト
+  confettiSound?: 'horn' | 'popper' | 'popper_large' | 'none'; // クラッカー演出の音種類
 };
