@@ -69,9 +69,9 @@ const triggerConfetti = (soundType?: 'horn' | 'popper' | 'popper_large' | 'none'
   const defaults = {
     colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'],
     // ========== 全体調整用パラメータ ==========
-    ticks: 150,         // 【消えるまでの時間】
+    ticks: 170,         // 【消えるまでの時間】
     gravity: 1.0,       // 【落下スピード】 
-    scalar: 2.0         // 【基本の大きさ】
+    scalar: 2.3         // 【基本の大きさ】
     // ==========================================
   };
 
@@ -93,10 +93,10 @@ const triggerConfetti = (soundType?: 'horn' | 'popper' | 'popper_large' | 'none'
 
   // さまざまなバリエーションを混ぜることで「塊」にならず自然に散らばる（spread: 広がり, startVelocity: 初速）
   fire(0.25, { spread: 50, startVelocity: 65 });
-  fire(0.20, { spread: 50, startVelocity: 45 });
+  fire(0.20, { spread: 45, startVelocity: 45 });
   fire(0.35, { spread: 40, startVelocity: 55, decay: 0.91, scalar: defaults.scalar * 0.8 }); // 小さめで広がる
-  fire(0.10, { spread: 100, startVelocity: 60, decay: 0.92, scalar: defaults.scalar * 1.2 }); // 大きめでゆっくり
-  fire(0.10, { spread: 10, startVelocity: 70, scalar: defaults.scalar * 0.9 }); // 遠くへ飛ぶ
+  fire(0.10, { spread: 80, startVelocity: 60, decay: 0.92, scalar: defaults.scalar * 1.2 }); // 大きめでゆっくり
+  fire(0.10, { spread: 30, startVelocity: 80, scalar: defaults.scalar * 1.2 }); // 遠くへ飛ぶ
 };
 import { useRouter } from 'next/router'
 
@@ -1530,32 +1530,54 @@ export default function HomePage() {
 
                 return (
                   <>
-                    {/* 順位ラベル */}
+                    {/* 順位バッジ（王冠シルエット） */}
                     <Box
                       key={`position-overlay-${course.id}`}
                       position="fixed"
-                      top={`${topOffset}px`}
+                      top={`${topOffset - 25}px`}
                       left="48%"
                       transform="translateX(-50%)"
                       zIndex={1000}
-                      bg={colorScheme.bg}
-                      borderRadius="full"
-                      px={14}
-                      py={2}
-                      border="4px solid"
-                      borderColor={colorScheme.border}
-                      boxShadow={`0 0 40px rgba(${colorScheme.shadow}, 1), 0 0 80px rgba(${colorScheme.shadow}, 0.6)`}
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="center"
+                      width="225px" // 元の260pxから1.1倍程度に調整
+                      height="170px"
                       pointerEvents="none"
                     >
+                      {/* 王冠シルエットのSVG背景 */}
+                      <svg
+                        viewBox="0 0 200 162.828"
+                        preserveAspectRatio="none" // 横方向に引き伸ばす
+                        width="100%"
+                        height="100%"
+                        style={{
+                          position: 'absolute',
+                          top: 10,
+                          left: 0,
+                          filter: `drop-shadow(0 0 25px rgba(${colorScheme.shadow}, 0.9)) drop-shadow(0 0 50px rgba(${colorScheme.shadow}, 0.5))`
+                        }}
+                      >
+                        <path
+                          d="M4714.071,300.006a14.536,14.536,0,0,0-5.281,28.237l-33.416,56.528-37.015-27.161a14.656,14.656,0,1,0-6.965,3.954l15.823,75.255H4779.56l15.818-75.242a14.515,14.515,0,1,0,3.364-28.635h0a14.518,14.518,0,0,0-10.353,24.694l-36.972,27.135-33.336-56.4a14.536,14.536,0,0,0-4.007-28.368Zm-66.883,144.686v18.135h132.421V444.692Z"
+                          transform="translate(-4613.258 -300)"
+                          fill={colorScheme.bg}
+                          stroke={colorScheme.border}
+                          strokeWidth="4"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+
+                      {/* テキスト（順位・ゴール） */}
                       <Text
-                        fontSize={raceType === 'タイムアタック' ? "4.5em" : "5em"}
+                        fontSize={raceType === 'タイムアタック' ? "3.5em" : "4.0em"}
                         fontWeight="black"
                         color="white"
                         textAlign="center"
                         fontFamily="RocknRoll One"
                         textShadow="2px 2px 4px rgba(0,0,0,0.8)"
                         position="relative"
-                        top="-5px"
+                        top="30px" // 王冠の下側のスペースにテキストを寄せる
                       >
                         {(raceType === 'タイムアタック') ? 'ゴール' : `${position}位`}
                       </Text>
