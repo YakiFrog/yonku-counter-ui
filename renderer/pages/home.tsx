@@ -55,7 +55,7 @@ const triggerConfetti = (soundType?: 'horn' | 'popper' | 'popper_large' | 'none'
       if (type === 'popper') fileName = 'Party_Popper01/Party_Popper01-1(Dry).mp3';
       else if (type === 'popper_large') fileName = 'Party_Popper03/Party_Popper03-1(Dry).mp3';
       else if (type === 'horn') fileName = 'Bicycle_Horn01/Bicycle_Horn01-1.mp3';
-      
+
       const audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/${fileName}`;
       const popSound = new Audio(audioPath);
       popSound.volume = 0.8;
@@ -95,7 +95,7 @@ const triggerConfetti = (soundType?: 'horn' | 'popper' | 'popper_large' | 'none'
   fire(0.25, { spread: 50, startVelocity: 65 });
   fire(0.20, { spread: 50, startVelocity: 45 });
   fire(0.35, { spread: 40, startVelocity: 55, decay: 0.91, scalar: defaults.scalar * 0.8 }); // 小さめで広がる
-  fire(0.10, { spread: 20, startVelocity: 60, decay: 0.92, scalar: defaults.scalar * 1.2 }); // 大きめでゆっくり
+  fire(0.10, { spread: 100, startVelocity: 60, decay: 0.92, scalar: defaults.scalar * 1.2 }); // 大きめでゆっくり
   fire(0.10, { spread: 10, startVelocity: 70, scalar: defaults.scalar * 0.9 }); // 遠くへ飛ぶ
 };
 import { useRouter } from 'next/router'
