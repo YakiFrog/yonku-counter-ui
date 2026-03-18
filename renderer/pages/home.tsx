@@ -168,6 +168,13 @@ const coursePanelHighlight = keyframes`
   }
 `;
 
+// ラスト1周グロー（白・繰り返し）
+const lastLapPulse = keyframes`
+  0%   { box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.5), 0 0 10px 2px rgba(255, 255, 255, 0.2); }
+  50%  { box-shadow: 0 0 6px 3px rgba(255, 255, 255, 0.8), 0 0 20px 5px rgba(255, 255, 255, 0.45); }
+  100% { box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.5), 0 0 10px 2px rgba(255, 255, 255, 0.2); }
+`;
+
 export default function HomePage() {
   const { settings, isLoading, saveRaceResult, updateCourse } = useAppSettingsContext();
   const toast = useToast();
@@ -1061,14 +1068,20 @@ export default function HomePage() {
             <Box pl={"7%"} minHeight="100%"> {/* 左右の余白を縮小 */}
               <VStack spacing={4} align="stretch" minHeight="100%" justify="center"> {/* 縦方向中央揃え */}
                 {(raceType === 'タイムアタック'
-                  ? [courseData[0]] // タイムアタックの場合は1コースのみ表示
-                  : [...courseData].reverse() // 通常レースの場合は4,3,2,1の順で表示
+                  ? [courseData[0]]
+                  : [...courseData].reverse()
                 ).map((course) => {
                   // 完走判定
                   const isFinished = (course.totalLaps > 0 && course.currentLap >= course.totalLaps) || course.finishTime !== null;
 
                   // ハイライト状態をチェック
                   const isHighlighted = highlightedCourses.includes(course.id);
+
+                  // ラスト1周判定（完走済み・タイムアタックは除外）
+                  const isLastLap = raceType !== 'タイムアタック'
+                    && course.totalLaps > 0
+                    && course.currentLap === course.totalLaps - 1
+                    && !isFinished;
 
                   return (
                     <Box
@@ -1331,7 +1344,18 @@ export default function HomePage() {
                       </Box>
 
                       {course.totalLaps > 0 && (
-                        <Flex gap={1} w="100%" h="20px" position="relative" overflow="hidden" borderRadius="full">
+                        <Flex
+                          gap={1}
+                          w="100%"
+                          h="20px"
+                          position="relative"
+                          overflow="hidden"
+                          borderRadius="full"
+                          sx={isLastLap ? {
+                            animation: `${lastLapPulse} 1.8s ease-in-out infinite`,
+                            borderRadius: 'full',
+                          } : {}}
+                        >
                           {[...Array(course.totalLaps)].map((_, index) => {
                             // タイムアタックの場合のプログレスバーの色を順番に設定（緑、青、赤）
                             const getProgressColor = (lapIndex) => {
@@ -1360,7 +1384,7 @@ export default function HomePage() {
                         </Flex>
                       )}
                     </Box>
-                  )
+                  );
                 })}
 
                 {/* 走者と暫定順位の区切り線 */}
