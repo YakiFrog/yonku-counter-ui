@@ -501,7 +501,7 @@ export default function HomePage() {
     }
   };
 
-  // ゲート自動コマンド送信
+  // ゲート自動開閉コマンド送信
   const handleGateAuto = async () => {
     setLastPressedButton('gateAuto');
     try {
@@ -510,7 +510,7 @@ export default function HomePage() {
       console.error('Failed to send gate auto command:', error);
       toast({
         title: 'エラー',
-        description: 'ゲート自動コマンドの送信に失敗しました',
+        description: 'ゲート自動開閉コマンドの送信に失敗しました',
         status: 'error',
         duration: 3000,
         isClosable: true,
@@ -896,7 +896,7 @@ export default function HomePage() {
         // スタート/ストップ
         toggleTimer();
       } else if (keyChar === 'e') {
-        // ゲート自動
+        // ゲート自動開閉
         handleGateAuto();
       } else if (keyChar === 'r') {
         // リセット
@@ -2149,7 +2149,7 @@ export default function HomePage() {
                 })
               }}
             >
-              ゲート自動
+              ゲート自動開閉
             </Button>
             <Button
               colorScheme="red"
@@ -2304,7 +2304,7 @@ export default function HomePage() {
                       <HStack><Kbd>r</Kbd><Text>レースリセット</Text></HStack>
                       <HStack><Kbd>t</Kbd><Text>レース終了</Text></HStack>
                       <HStack><Kbd>q</Kbd><Text>ゲート準備</Text></HStack>
-                      <HStack><Kbd>e</Kbd><Text>ゲート自動</Text></HStack>
+                      <HStack><Kbd>e</Kbd><Text>ゲート自動開閉</Text></HStack>
                     </SimpleGrid>
                   </Box>
                   <Divider borderColor="gray.600" />
