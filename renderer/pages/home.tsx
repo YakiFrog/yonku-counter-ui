@@ -27,7 +27,20 @@ import {
   AlertDialogHeader,
   AlertDialogContent,
   AlertDialogOverlay,
-  useDisclosure
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Kbd,
+  Divider,
+  Table,
+  Tbody,
+  Tr,
+  Td
 } from '@chakra-ui/react'
 import { keyframes } from '@emotion/react'
 import { useRouter } from 'next/router'
@@ -74,6 +87,7 @@ export default function HomePage() {
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isResetOpen, onOpen: onResetOpen, onClose: onResetClose } = useDisclosure();
+  const { isOpen: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
   const cancelRef = React.useRef();
   const resetCancelRef = React.useRef();
   
@@ -326,7 +340,10 @@ export default function HomePage() {
       }
       
       // q,w,e,r,tキーの処理（ゲート操作とレース制御）
-      if (keyChar === 'q') {
+      if (keyChar === 'i') {
+        onHelpOpen();
+        return;
+      } else if (keyChar === 'q') {
         // ゲート準備
         handleGatePrep();
         return;
@@ -2039,6 +2056,51 @@ export default function HomePage() {
               </AlertDialogContent>
             </AlertDialogOverlay>
           </AlertDialog>
+
+          {/* ショートカットヘルプダイアログ */}
+          <Modal isOpen={isHelpOpen} onClose={onHelpClose} size="lg">
+            <ModalOverlay backdropFilter="blur(3px)" />
+            <ModalContent bg="gray.800" color="white" borderColor="gray.600" borderWidth={1}>
+              <ModalHeader fontSize="2xl" borderBottomWidth="1px" borderColor="gray.700">
+                ⌨️ ショートカットキー一覧
+              </ModalHeader>
+              <ModalCloseButton />
+              <ModalBody py={6}>
+                <VStack align="stretch" spacing={4}>
+                  <Box>
+                    <Heading size="md" mb={2} color="purple.300">🏁 レース制御</Heading>
+                    <SimpleGrid columns={2} spacing={2}>
+                      <HStack><Kbd>w</Kbd><Text>スタート / ストップ</Text></HStack>
+                      <HStack><Kbd>r</Kbd><Text>レースリセット</Text></HStack>
+                      <HStack><Kbd>t</Kbd><Text>レース終了</Text></HStack>
+                      <HStack><Kbd>q</Kbd><Text>ゲート準備</Text></HStack>
+                      <HStack><Kbd>e</Kbd><Text>ゲート自動</Text></HStack>
+                    </SimpleGrid>
+                  </Box>
+                  <Divider borderColor="gray.600" />
+                  <Box>
+                    <Heading size="md" mb={2} color="blue.300">🔢 ラップ手動操作</Heading>
+                    <SimpleGrid columns={2} spacing={2}>
+                      <HStack><Kbd>1</Kbd> <Text>〜</Text> <Kbd>4</Kbd><Text>コース1〜4のラップ＋</Text></HStack>
+                      <HStack><Kbd>6</Kbd> <Text>〜</Text> <Kbd>9</Kbd><Text>コース1〜4のラップ取消</Text></HStack>
+                    </SimpleGrid>
+                  </Box>
+                  <Divider borderColor="gray.600" />
+                  <Box>
+                    <Heading size="md" mb={2} color="green.300">📡 システム制御</Heading>
+                    <SimpleGrid columns={2} spacing={2}>
+                      <HStack><Kbd>a</Kbd> <Kbd>s</Kbd> <Kbd>d</Kbd> <Kbd>f</Kbd><Text>シリアル手動送信</Text></HStack>
+                      <HStack><Kbd>i</Kbd><Text>このヘルプを表示</Text></HStack>
+                    </SimpleGrid>
+                  </Box>
+                </VStack>
+              </ModalBody>
+              <ModalFooter borderTopWidth="1px" borderColor="gray.700">
+                <Button colorScheme="purple" onClick={onHelpClose}>閉じる</Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+
         </VStack>
       </Container>
     </React.Fragment>
