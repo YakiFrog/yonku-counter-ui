@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { keyframes } from '@emotion/react'
 import Head from 'next/head'
 import {
   Box,
@@ -43,7 +44,17 @@ import {
   Td,
   Tooltip
 } from '@chakra-ui/react'
-import { keyframes } from '@emotion/react'
+
+// 信号受信時の点滅アニメーション定義
+const blinkYellow = keyframes`
+  0%, 20%, 40%, 60%, 80% { background-color: #F6E05E; filter: brightness(1.5); box-shadow: 0 0 10px #F6E05E; }
+  10%, 30%, 50%, 70%, 90%, 100% { background-color: #48bb78; filter: brightness(1.0); box-shadow: none; }
+`;
+
+const blinkTextYellow = keyframes`
+  0%, 20%, 40%, 60%, 80% { color: #F6E05E; font-weight: bold; }
+  10%, 30%, 50%, 70%, 90%, 100% { color: #A0AEC0; font-weight: normal; }
+`;
 import confetti from 'canvas-confetti'
 
 // 1位ゴール時のクラッカー演出
@@ -921,22 +932,45 @@ export default function HomePage() {
           {/* PC <-> ESP32 */}
           <Tooltip label="カウンター親機とのシリアル通信状態" placement="bottom">
             <HStack spacing={1}>
-              <Box w="8px" h="8px" borderRadius="full" style={{ backgroundColor: serialState.isConnected ? "#48bb78" : "#f56565" }} />
-              <Text fontSize="10px" color="gray.300" fontWeight="bold">親機</Text>
+              <Box w="11px" h="11px" borderRadius="full" style={{ backgroundColor: serialState.isAlive ? "#48bb78" : "#f56565" }} />
+              <Text fontSize="12px" color="gray.300" fontWeight="bold">親機</Text>
             </HStack>
           </Tooltip>
           
-          <Divider orientation="vertical" height="15px" borderColor="gray.500" />
+          <Divider orientation="vertical" height="20px" borderColor="gray.500" />
           
           {/* 各レーン */}
           <Tooltip label="各カウンター子機の通信状態" placement="bottom">
-            <HStack spacing={2}>
-              {serialState.laneConnectionStatus.map((isConnected, idx) => (
-                <HStack key={`lane-status-${idx}`} spacing={0.5}>
-                  <Box w="6px" h="6px" borderRadius="full" style={{ backgroundColor: isConnected ? "#48bb78" : "#718096" }} />
-                  <Text fontSize="9px" color="gray.400">L{idx + 1}</Text>
-                </HStack>
-              ))}
+            <HStack spacing={3}>
+              {serialState.laneConnectionStatus.map((isConnected, idx) => {
+                const lastActivity = serialState.laneActivityTimes[idx];
+                const isFlashing = isConnected && (Date.now() - lastActivity < 1500);
+                const dotAnimation = isFlashing 
+                  ? `${blinkYellow} 1.5s ease-in-out` 
+                  : 'none';
+                const textAnimation = isFlashing 
+                  ? `${blinkTextYellow} 1.5s ease-in-out` 
+                  : 'none';
+                
+                return (
+                  <HStack key={`lane-status-${idx}`} spacing={1}>
+                    <Box 
+                      w="11px" 
+                      h="11px" 
+                      borderRadius="full" 
+                      bg={isConnected ? "#48bb78" : "#718096"}
+                      animation={dotAnimation}
+                    />
+                    <Text 
+                      fontSize="11px" 
+                      color="gray.400"
+                      animation={textAnimation}
+                    >
+                      L{idx + 1}
+                    </Text>
+                  </HStack>
+                );
+              })}
             </HStack>
           </Tooltip>
         </HStack>

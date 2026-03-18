@@ -8,6 +8,8 @@ interface SerialState {
   error: string | null;
   messages: string[];
   laneConnectionStatus: boolean[]; // 4レーンの接続状態
+  laneActivityTimes: number[]; // 各レーンの最終アクティビティ時刻 (カウント信号)
+  isAlive: boolean; // ハードウェア(ESP32)からの応答があるか
 }
 
 // コンテキストの型定義
@@ -34,7 +36,11 @@ export function SerialProvider({ children }: { children: React.ReactNode }) {
     error: null,
     messages: [],
     laneConnectionStatus: [false, false, false, false],
+    laneActivityTimes: [0, 0, 0, 0],
+    isAlive: false,
   });
+
+  const [lastMessageTime, setLastMessageTime] = useState<number>(0);
 
   // シリアルポートに接続
   const connect = useCallback(async (port: string, baudRate: number) => {
@@ -47,7 +53,10 @@ export function SerialProvider({ children }: { children: React.ReactNode }) {
         error: null,
         messages: prev.messages,
         laneConnectionStatus: prev.laneConnectionStatus,
+        laneActivityTimes: [0, 0, 0, 0],
+        isAlive: true, 
       }));
+      setLastMessageTime(Date.now()); // 接続時にタイムスタンプを初期化
     } catch (error) {
       setSerialState(prev => ({
         ...prev,
@@ -68,6 +77,8 @@ export function SerialProvider({ children }: { children: React.ReactNode }) {
         error: null,
         messages: [],
         laneConnectionStatus: [false, false, false, false],
+        laneActivityTimes: [0, 0, 0, 0],
+        isAlive: false,
       }));
     } catch (error) {
       setSerialState(prev => ({
@@ -107,8 +118,21 @@ export function SerialProvider({ children }: { children: React.ReactNode }) {
   // データ受信時のハンドラーを設定
   useEffect(() => {
     const unsubscribe = window.serialPort.onData((data: string) => {
+      // データの受信があったらタイムスタンプを更新
+      setLastMessageTime(Date.now());
+      
       // 受信したデータを処理
       console.log('受信データ:', data);
+
+      // カウント信号 (1-4) の処理
+      const laneNum = parseInt(data);
+      if (!isNaN(laneNum) && laneNum >= 1 && laneNum <= 4) {
+        setSerialState(prev => {
+          const newActivityTimes = [...prev.laneActivityTimes];
+          newActivityTimes[laneNum - 1] = Date.now();
+          return { ...prev, laneActivityTimes: newActivityTimes };
+        });
+      }
 
       // STATUSメッセージの処理 (グローバルに保持)
       if (data.startsWith('STATUS:')) {
@@ -146,6 +170,26 @@ export function SerialProvider({ children }: { children: React.ReactNode }) {
 
     checkConnection();
   }, []);
+
+  // ハードウェア側の死活監視（ハートビート）
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSerialState(prev => {
+        // 5秒以上データが来なければ、ハードウェア側がダウン（リセット等）とみなす
+        const now = Date.now();
+        const nextIsAlive = prev.isConnected && (now - lastMessageTime < 5000);
+        
+        if (prev.isAlive !== nextIsAlive) {
+          // 通信断絶時は子機の状態もすべて切断（false）にする
+          const nextLaneStatus = nextIsAlive ? prev.laneConnectionStatus : [false, false, false, false];
+          return { ...prev, isAlive: nextIsAlive, laneConnectionStatus: nextLaneStatus };
+        }
+        return prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastMessageTime]);
 
   // メッセージをクリアする関数
   const clearMessages = useCallback(() => {
