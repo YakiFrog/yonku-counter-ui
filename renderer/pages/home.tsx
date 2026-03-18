@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
-import { 
-  Box, 
-  Button, 
-  Flex, 
-  Grid, 
-  Heading, 
-  HStack, 
+import {
+  Box,
+  Button,
+  Flex,
+  Grid,
+  Heading,
+  HStack,
   Link as ChakraLink,
   Progress,
   Text,
@@ -43,6 +43,43 @@ import {
   Td
 } from '@chakra-ui/react'
 import { keyframes } from '@emotion/react'
+import confetti from 'canvas-confetti'
+
+// 1位ゴール時のクラッカー演出
+const triggerConfetti = () => {
+  const count = 200; // 全体の紙吹雪の基本量
+  const defaults = {
+    colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'],
+    // ========== 全体調整用パラメータ ==========
+    ticks: 150,         // 【消えるまでの時間】
+    gravity: 1.0,       // 【落下スピード】 
+    scalar: 2.0         // 【基本の大きさ】
+    // ==========================================
+  };
+
+  // 塊にならないように、発射の広がり・初速・大きさを変えた複数の集団（fire）を同時に打ち出す関数
+  const fire = (particleRatio: number, opts: any) => {
+    // 左端から
+    confetti(Object.assign({}, defaults, opts, {
+      particleCount: Math.floor(count * particleRatio),
+      angle: 60,
+      origin: { x: 0, y: 0.8 }
+    }));
+    // 右端から
+    confetti(Object.assign({}, defaults, opts, {
+      particleCount: Math.floor(count * particleRatio),
+      angle: 120,
+      origin: { x: 1, y: 0.8 }
+    }));
+  };
+
+  // さまざまなバリエーションを混ぜることで「塊」にならず自然に散らばる（spread: 広がり, startVelocity: 初速）
+  fire(0.25, { spread: 50, startVelocity: 65 });
+  fire(0.20, { spread: 50, startVelocity: 45 });
+  fire(0.35, { spread: 40, startVelocity: 55, decay: 0.91, scalar: defaults.scalar * 0.8 }); // 小さめで広がる
+  fire(0.10, { spread: 20, startVelocity: 60, decay: 0.92, scalar: defaults.scalar * 1.2 }); // 大きめでゆっくり
+  fire(0.10, { spread: 10, startVelocity: 70, scalar: defaults.scalar * 0.9 }); // 遠くへ飛ぶ
+};
 import { useRouter } from 'next/router'
 
 import { Container } from '../components/Container'
@@ -90,13 +127,13 @@ export default function HomePage() {
   const { isOpen: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
   const cancelRef = React.useRef();
   const resetCancelRef = React.useRef();
-  
+
   // スライドショー関連のstate
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [slideshowImages, setSlideshowImages] = useState([]);
   const [slideDirection, setSlideDirection] = useState('left');
   const [isSliding, setIsSliding] = useState(false);
-  
+
   // すべてのステート hooks を先に宣言
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState(null);
@@ -104,56 +141,56 @@ export default function HomePage() {
   const { currentRaceNumber, updateRaceNumber } = useAppSettingsContext();
   const [raceType, setRaceType] = useState('');
   const [courseData, setCourseData] = useState([
-    { 
-      id: 1, 
-      name: '', 
-      vehicle: '', 
+    {
+      id: 1,
+      name: '',
+      vehicle: '',
       teamName: '', // チーム名を追加
-      color: 'yellow.500', 
-      currentLap: 0, 
-      totalLaps: 0, 
-      time: 0, 
-      bestLap: null, 
-      lapTimes: [], 
-      lastLapTime: 0, 
-      finishTime: null,
-    },
-    { 
-      id: 2, 
-      name: '', 
-      vehicle: '', 
-      teamName: '', // チーム名を追加
-      color: 'green.500', 
-      currentLap: 0, 
-      totalLaps: 0, 
+      color: 'yellow.500',
+      currentLap: 0,
+      totalLaps: 0,
       time: 0,
       bestLap: null,
       lapTimes: [],
       lastLapTime: 0,
       finishTime: null,
     },
-    { 
-      id: 3, 
-      name: '', 
-      vehicle: '', 
+    {
+      id: 2,
+      name: '',
+      vehicle: '',
       teamName: '', // チーム名を追加
-      color: 'blue.500', 
-      currentLap: 0, 
-      totalLaps: 0, 
+      color: 'green.500',
+      currentLap: 0,
+      totalLaps: 0,
       time: 0,
       bestLap: null,
       lapTimes: [],
       lastLapTime: 0,
       finishTime: null,
     },
-    { 
-      id: 4, 
-      name: '', 
-      vehicle: '', 
+    {
+      id: 3,
+      name: '',
+      vehicle: '',
       teamName: '', // チーム名を追加
-      color: 'red.500', 
-      currentLap: 0, 
-      totalLaps: 0, 
+      color: 'blue.500',
+      currentLap: 0,
+      totalLaps: 0,
+      time: 0,
+      bestLap: null,
+      lapTimes: [],
+      lastLapTime: 0,
+      finishTime: null,
+    },
+    {
+      id: 4,
+      name: '',
+      vehicle: '',
+      teamName: '', // チーム名を追加
+      color: 'red.500',
+      currentLap: 0,
+      totalLaps: 0,
       time: 0,
       bestLap: null,
       lapTimes: [],
@@ -161,13 +198,13 @@ export default function HomePage() {
       finishTime: null,
     },
   ]);
-  
+
   // 完走コースIDを管理
   const [finishedCourseIds, setFinishedCourseIds] = useState([]);
-  
+
   // 最後に押されたボタンを追跡
   const [lastPressedButton, setLastPressedButton] = useState(null);
-  
+
   // コースパネルのハイライト状態を管理
   const [highlightedCourses, setHighlightedCourses] = useState([]);
 
@@ -177,13 +214,13 @@ export default function HomePage() {
   const buttonGlowTimerRef = useRef(null);
   const mouseCursorTimerRef = useRef(null);
   const courseHighlightTimersRef = useRef({});
-  
+
   // コースパネルの参照を保持
   const coursePanelRef = useRef(null);
-  
+
   // マウスカーソルの表示状態
   const [showCursor, setShowCursor] = useState(true);
-  
+
   // 光るボタンエフェクトを一定時間後に消去
   useEffect(() => {
     // タブ移動時にのみハイライトをクリアするため、自動消去機能は削除
@@ -209,12 +246,12 @@ export default function HomePage() {
   useEffect(() => {
     const handleMouseMove = () => {
       setShowCursor(true);
-      
+
       // 既存のタイマーをクリア
       if (mouseCursorTimerRef.current) {
         clearTimeout(mouseCursorTimerRef.current);
       }
-      
+
       // 3秒後にカーソルを非表示
       mouseCursorTimerRef.current = setTimeout(() => {
         setShowCursor(false);
@@ -223,7 +260,7 @@ export default function HomePage() {
 
     // マウスイベントリスナーを追加
     document.addEventListener('mousemove', handleMouseMove);
-    
+
     // 初期タイマーを設定
     mouseCursorTimerRef.current = setTimeout(() => {
       setShowCursor(false);
@@ -276,7 +313,7 @@ export default function HomePage() {
     if (slideshowImages.length > 1) {
       slideshowTimerRef.current = setInterval(() => {
         setIsSliding(true);
-        setCurrentSlideIndex((prevIndex) => 
+        setCurrentSlideIndex((prevIndex) =>
           (prevIndex + 1) % slideshowImages.length
         );
         setTimeout(() => setIsSliding(false), 500);
@@ -295,10 +332,10 @@ export default function HomePage() {
     // messagesに変更があった場合、最新のメッセージを処理
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1];
-      
+
       // 受信したデータを数値に変換
       const courseNumber = parseInt(latestMessage);
-      
+
       // タイマーが実行中、シリアル入力が有効、そして1から4の数値であれば対応するコースの周回数をインクリメント
       if (isRunning && settings.serialCountEnabled && courseNumber >= 1 && courseNumber <= 4) {
         if (raceType === 'タイムアタック') {
@@ -324,7 +361,7 @@ export default function HomePage() {
     const handleKeyPress = (event: KeyboardEvent) => {
       const keyPressed = parseInt(event.key);
       const keyChar = event.key.toLowerCase();
-      
+
       // a,s,d,fキーの処理（シリアル送信）
       if (['a', 's', 'd', 'f'].includes(keyChar)) {
         serialWrite(keyChar).catch(error => {
@@ -339,7 +376,7 @@ export default function HomePage() {
         });
         return;
       }
-      
+
       // q,w,e,r,tキーの処理（ゲート操作とレース制御）
       if (keyChar === 'i') {
         onHelpOpen();
@@ -366,8 +403,12 @@ export default function HomePage() {
           onOpen(); // レース終了の確認ダイアログを表示
         }
         return;
+      } else if (keyChar === 'o') {
+        // 紙吹雪（手動発動）
+        triggerConfetti();
+        return;
       }
-      
+
       if (isRunning) {
         if (raceType === 'タイムアタック') {
           // タイムアタックモードでは2,3,4キーでラップタイムを計算
@@ -408,9 +449,9 @@ export default function HomePage() {
         const now = Date.now();
         const elapsed = now - startTime;
         setElapsedTime(elapsed);
-        
+
         // 各コースの時間も更新
-        setCourseData(prev => 
+        setCourseData(prev =>
           prev.map(course => ({
             ...course,
             time: elapsed
@@ -420,7 +461,7 @@ export default function HomePage() {
     } else if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    
+
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -436,7 +477,7 @@ export default function HomePage() {
         // コースに関連付けられた選手と車両を検索
         const player = settings.players.find(p => p.id === course.playerId);
         const vehicle = player?.vehicle;
-        
+
         // 色のマッピング - コースIDに基づいて決定
         const colorMap = {
           1: 'yellow.500',
@@ -444,7 +485,7 @@ export default function HomePage() {
           3: 'blue.500',
           4: 'red.500'
         };
-        
+
         return {
           id: course.id,
           name: player?.name || '',
@@ -460,24 +501,12 @@ export default function HomePage() {
           finishTime: null, // 全周回完了時の時間
         };
       });
-      
+
       setCourseData(updatedCourseData);
     }
   }, [settings, isLoading, raceType]); // raceTypeを依存配列に追加
 
-  // settingsがロード中または未定義の場合はローディング表示
-  if (isLoading || !settings) {
-    return (
-      <Container maxWidth="1920px" px={4} py={3}>
-        <VStack spacing={4} align="stretch" width="full">
-          <TabNavigation currentTab="race" />
-          <Center py={10}>
-            <Spinner size="xl" color="white" />
-          </Center>
-        </VStack>
-      </Container>
-    );
-  }
+
 
   // ゲート準備コマンド送信
   const handleGatePrep = async () => {
@@ -557,7 +586,7 @@ export default function HomePage() {
     setIsRunning(false);
     setElapsedTime(0);
     // レースタイプはリセットしない（現在の状態を維持）
-    setCourseData(prev => 
+    setCourseData(prev =>
       prev.map(course => ({
         ...course,
         time: 0,
@@ -574,84 +603,84 @@ export default function HomePage() {
     setFinishedCourseIds([]);
     onResetClose();
   };
-  
+
   // レース終了処理
   const finishRace = () => {
     setLastPressedButton('finish');
     // レースを一時停止
     setIsRunning(false);
-    
+
     // デバッグ: 保存前のローカルストレージの内容を確認
     console.log('保存前のローカルストレージ:', localStorage.getItem('yonkuAppSettings'));
-    
+
     // レース結果を作成（チームなしのコースは除外）
     const results: RaceResult[] = courseData
       .filter(course => course.name) // チーム名があるコースのみを対象とする
       .map((course) => {
-      // ラップタイムをRaceLap配列に変換
-      const laps = [...course.lapTimes];
-      
-      // 最後の周回完了時の時間を計算
-      const finishTime = course.finishTime || course.time;
-      
-      // ベストラップ
-      const bestLap = course.bestLap;
-      
-      return {
-        id: `result-${Date.now()}-${course.id}`,
-        raceId: `race-${Date.now()}`,
-        position: 1, // 仮の順位（タイムアタックの場合は後でランキング画面で計算）
-        playerId: course.name ? `player-${course.id}` : null,
-        playerName: course.name || `コース${course.id}`,
-        teamName: course.teamName,
-        vehicleId: course.vehicle ? `vehicle-${course.id}` : null,
-        vehicleName: course.vehicle || '',
-        courseId: course.id,
-        totalTime: formatTime(finishTime), // 修正: 完了時の時間を使用
-        laps,
-        bestLap,
-        isCompleted: course.currentLap >= settings.lapCount
-      };
-    });
-    
+        // ラップタイムをRaceLap配列に変換
+        const laps = [...course.lapTimes];
+
+        // 最後の周回完了時の時間を計算
+        const finishTime = course.finishTime || course.time;
+
+        // ベストラップ
+        const bestLap = course.bestLap;
+
+        return {
+          id: `result-${Date.now()}-${course.id}`,
+          raceId: `race-${Date.now()}`,
+          position: 1, // 仮の順位（タイムアタックの場合は後でランキング画面で計算）
+          playerId: course.name ? `player-${course.id}` : null,
+          playerName: course.name || `コース${course.id}`,
+          teamName: course.teamName,
+          vehicleId: course.vehicle ? `vehicle-${course.id}` : null,
+          vehicleName: course.vehicle || '',
+          courseId: course.id,
+          totalTime: formatTime(finishTime), // 修正: 完了時の時間を使用
+          laps,
+          bestLap,
+          isCompleted: course.currentLap >= settings.lapCount
+        };
+      });
+
     // 通常レースの場合のみ順位を計算（タイムアタックは表示時に計算）
     if (raceType !== 'タイムアタック') {
       results.sort((a, b) => {
         const aLaps = a.laps.length;
         const bLaps = b.laps.length;
         if (aLaps !== bLaps) return bLaps - aLaps; // 周回数降順
-        
+
         const aTime = parseTime(a.totalTime);
         const bTime = parseTime(b.totalTime);
         return aTime - bTime; // 時間昇順
       });
-      
+
       // 正しい順位を設定
       results.forEach((result, idx) => {
         result.position = idx + 1;
       });
     }
-    
+
     // レース情報を作成
     const race: Race = {
       id: `race-${Date.now()}`,
-      name: raceType === '決勝' ? '決勝' : 
-            raceType ? `${raceType} 第${currentRaceNumber}レース` : `第${currentRaceNumber}レース`,
+      name: raceType === '決勝' ? '決勝' :
+        raceType ? `${raceType} 第${currentRaceNumber}レース` : `第${currentRaceNumber}レース`,
       date: new Date().toISOString(),
       raceNumber: currentRaceNumber,
       raceType: raceType,
       totalLaps: settings.lapCount,
       results
     };
-    
+
     console.log('保存するレースデータ:', race); // 保存するデータの確認
-    
+
     // レース結果を保存
     saveRaceResult(race);
-    
+
     // デバッグ: 保存後のローカルストレージの内容を確認
     console.log('保存後のローカルストレージ:', localStorage.getItem('yonkuAppSettings'));
-    
+
     // レースタイプに応じて次のレースの準備
     if (raceType === 'タイムアタック') {
       // タイムアタックの場合は番号をインクリメントして、レースタイプを維持
@@ -669,7 +698,7 @@ export default function HomePage() {
       updateRaceNumber(currentRaceNumber + 1);
       updateRaceType('');
     }
-    
+
     toast({
       title: 'レース終了',
       description: `第${currentRaceNumber}レースの結果が保存されました。`,
@@ -677,27 +706,27 @@ export default function HomePage() {
       duration: 3000,
       isClosable: true,
     });
-    
+
     // レース結果ページへ遷移
     router.push('/ranking');
   };
-  
+
   // 文字列形式の時間をミリ秒に変換
   const parseTime = (timeStr: string): number => {
     const [minutesSeconds, ms] = timeStr.split('.');
     const [minutes, seconds] = minutesSeconds.split(':');
-    
+
     return (
       parseInt(minutes) * 60 * 1000 +
       parseInt(seconds) * 1000 +
       parseInt(ms) * 10
     );
   };
-  
+
   // タイムアタックの暫定上位を取得する関数
   const getTimeAttackRanking = () => {
     if (!settings?.races || settings.races.length === 0) return [];
-    
+
     // 全てのタイムアタック結果を取得
     const allTimeAttackResults = settings.races
       .filter(r => r.raceType === 'タイムアタック')
@@ -712,7 +741,7 @@ export default function HomePage() {
         if (aLaps !== bLaps) return bLaps - aLaps;
         return a.timeForSort - b.timeForSort;
       });
-    
+
     // 上位3位まで返す
     return allTimeAttackResults.slice(0, 3);
   };
@@ -720,11 +749,11 @@ export default function HomePage() {
   // 現在走行中の選手を取得する関数
   const getCurrentRunner = () => {
     if (raceType !== 'タイムアタック' || !isRunning) return null;
-    
+
     // タイムアタック時の現在の走者情報を取得（1コース目のデータ）
     const currentCourse = courseData[0];
     if (!currentCourse || !currentCourse.name) return null;
-    
+
     return {
       name: currentCourse.name,
       teamName: currentCourse.teamName,
@@ -769,25 +798,36 @@ export default function HomePage() {
         }
         return course;
       });
-      if (finished) setFinishedCourseIds(ids => [...ids, courseId]);
+      if (finished) {
+        setFinishedCourseIds(ids => {
+          if (!ids.includes(courseId)) {
+            // 最初の完走者（1位）ならクラッカーを鳴らす
+            if (ids.length === 0) {
+              triggerConfetti();
+            }
+            return [...ids, courseId];
+          }
+          return ids;
+        });
+      }
       return updated;
     });
-    
+
     // コースパネルのハイライト効果を追加
     setHighlightedCourses(prev => [...prev.filter(id => id !== courseId), courseId]);
-    
+
     // 既存のタイマーがあればクリア
     if (courseHighlightTimersRef.current[courseId]) {
       clearTimeout(courseHighlightTimersRef.current[courseId]);
     }
-    
+
     // 2秒後にハイライトを解除
     courseHighlightTimersRef.current[courseId] = setTimeout(() => {
       setHighlightedCourses(prev => prev.filter(id => id !== courseId));
       delete courseHighlightTimersRef.current[courseId];
     }, 2000);
   };
-  
+
   // 特定コースの周回数を減らす
   const decrementLap = (courseId) => {
     setCourseData(prev => {
@@ -800,7 +840,7 @@ export default function HomePage() {
           if (newLapTimes.length > 0) {
             bestLap = newLapTimes.reduce((best, current) => best.timestamp < current.timestamp ? best : current);
           }
-          const lastLapTime = course.currentLap > 1 
+          const lastLapTime = course.currentLap > 1
             ? course.lastLapTime - (course.lapTimes[course.lapTimes.length - 1]?.timestamp || 0)
             : 0;
           // 完走状態から解除されたか判定
@@ -822,31 +862,44 @@ export default function HomePage() {
       return updated;
     });
   };
-  
+
   // 時間のフォーマット (mm:ss.ms)
   const formatTime = (time) => {
     const totalSeconds = Math.floor(time / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     const milliseconds = Math.floor((time % 1000) / 10); // 2桁の表示にする
-    
+
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`;
   };
 
   // 周回の進捗を計算する関数
   const calculateProgress = (current, total) => (current / total) * 100;
+  // settingsがロード中または未定義の場合はローディング表示
+  if (isLoading || !settings) {
+    return (
+      <Container maxWidth="1920px" px={4} py={3}>
+        <VStack spacing={4} align="stretch" width="full">
+          <TabNavigation currentTab="race" />
+          <Center py={10}>
+            <Spinner size="xl" color="white" />
+          </Center>
+        </VStack>
+      </Container>
+    );
+  }
 
   return (
     <React.Fragment>
       <Head>
         <title>レース管理システム</title>
       </Head>
-      <Container 
-        maxHeight="100vh" 
-        maxWidth="1920px" 
-        px={4} 
-        py={3} 
-        height="100vh" 
+      <Container
+        maxHeight="100vh"
+        maxWidth="1920px"
+        px={4}
+        py={3}
+        height="100vh"
         overflow="hidden"
         style={{
           cursor: showCursor ? 'default' : 'none'
@@ -860,23 +913,23 @@ export default function HomePage() {
             {/* 左側：4コース分のレース情報と周回表示 */}
             <Box pl={"7%"} minHeight="100%"> {/* 左右の余白を縮小 */}
               <VStack spacing={4} align="stretch" minHeight="100%" justify="center"> {/* 縦方向中央揃え */}
-                {(raceType === 'タイムアタック' 
+                {(raceType === 'タイムアタック'
                   ? [courseData[0]] // タイムアタックの場合は1コースのみ表示
                   : [...courseData].reverse() // 通常レースの場合は4,3,2,1の順で表示
                 ).map((course) => {
                   // 完走判定
                   const isFinished = (course.totalLaps > 0 && course.currentLap >= course.totalLaps) || course.finishTime !== null;
-                  
+
                   // ハイライト状態をチェック
                   const isHighlighted = highlightedCourses.includes(course.id);
-                  
+
                   return (
-                    <Box 
+                    <Box
                       key={course.id}
                       ref={raceType === 'タイムアタック' ? coursePanelRef : null}
-                      p={4} 
+                      p={4}
                       pl={5}
-                      borderWidth="0" 
+                      borderWidth="0"
                       borderRadius="md"
                       shadow="lg"
                       position="relative"
@@ -892,22 +945,22 @@ export default function HomePage() {
                         zIndex: 10
                       } : {}}
                     >
-                    {/* コース番号を左側に横長の背景色付きで表示 */}
-                    <Box
-                      position="absolute"
-                      left="-80px"
-                      top="0"
-                      fontSize="6xl"
-                      fontWeight="black"
-                      color="white"
-                      w="80px"
-                      h="100%"
-                      display="flex"
-                      justifyContent="center"
-                      alignItems="center"
-                      flexDirection="column"
-                      bg={raceType === 'タイムアタック' ? 
-                        `repeating-linear-gradient(
+                      {/* コース番号を左側に横長の背景色付きで表示 */}
+                      <Box
+                        position="absolute"
+                        left="-80px"
+                        top="0"
+                        fontSize="6xl"
+                        fontWeight="black"
+                        color="white"
+                        w="80px"
+                        h="100%"
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        flexDirection="column"
+                        bg={raceType === 'タイムアタック' ?
+                          `repeating-linear-gradient(
                           45deg,
                           var(--chakra-colors-yellow-500) -20px,
                           var(--chakra-colors-yellow-500) 40px,
@@ -917,45 +970,45 @@ export default function HomePage() {
                           var(--chakra-colors-blue-500) 160px,
                           var(--chakra-colors-red-500) 160px,
                           var(--chakra-colors-red-500) 220px
-                        )` : 
-                        course.color
-                      }
-                      boxShadow="dark-lg"
-                      zIndex={2}
-                      borderLeftRadius="md"
-                      borderWidth="3px"
-                      borderColor={raceType === 'タイムアタック' ? "gray.400" : course.color}
-                      sx={{
-                        textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
-                      }}
-                    >
-                      {raceType === 'タイムアタック' ? (
-                        <>
-                          <Text fontSize="3xl" fontWeight="black" letterSpacing="wider">1~4</Text>
-                          <Text fontSize="xl" mt="-2">コース</Text>
-                        </>
-                      ) : (
-                        <>
-                          {course.id}
-                          <Text fontSize="xl" mt="-2">コース</Text>
-                        </>
-                      )}
-                    </Box>
+                        )` :
+                          course.color
+                        }
+                        boxShadow="dark-lg"
+                        zIndex={2}
+                        borderLeftRadius="md"
+                        borderWidth="3px"
+                        borderColor={raceType === 'タイムアタック' ? "gray.400" : course.color}
+                        sx={{
+                          textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
+                        }}
+                      >
+                        {raceType === 'タイムアタック' ? (
+                          <>
+                            <Text fontSize="3xl" fontWeight="black" letterSpacing="wider">1~4</Text>
+                            <Text fontSize="xl" mt="-2">コース</Text>
+                          </>
+                        ) : (
+                          <>
+                            {course.id}
+                            <Text fontSize="xl" mt="-2">コース</Text>
+                          </>
+                        )}
+                      </Box>
 
-                    {/* 内側の枠 */}
-                    <Box
-                      position="absolute"
-                      top={0}
-                      right={0}
-                      bottom={0}
-                      left={-35}
-                      borderRadius="xl"
-                      opacity="0.8"
-                      pointerEvents="none"
-                      borderWidth={raceType === 'タイムアタック' ? "0" : "5px"}
-                      borderColor={raceType !== 'タイムアタック' ? course.color : 'transparent'}
-                      sx={raceType === 'タイムアタック' ? {
-                        background: `repeating-linear-gradient(
+                      {/* 内側の枠 */}
+                      <Box
+                        position="absolute"
+                        top={0}
+                        right={0}
+                        bottom={0}
+                        left={-35}
+                        borderRadius="xl"
+                        opacity="0.8"
+                        pointerEvents="none"
+                        borderWidth={raceType === 'タイムアタック' ? "0" : "5px"}
+                        borderColor={raceType !== 'タイムアタック' ? course.color : 'transparent'}
+                        sx={raceType === 'タイムアタック' ? {
+                          background: `repeating-linear-gradient(
                           45deg,
                           var(--chakra-colors-yellow-500) -20px,
                           var(--chakra-colors-yellow-500) 40px,
@@ -966,53 +1019,53 @@ export default function HomePage() {
                           var(--chakra-colors-red-500) 160px,
                           var(--chakra-colors-red-500) 220px
                         )`,
-                        padding: '5px',
-                        '&::before': {
-                          content: '""',
-                          position: 'absolute',
-                          top: '5px',
-                          left: '5px',
-                          right: '5px',
-                          bottom: '5px',
-                          borderRadius: 'calc(1rem - 5px)',
-                          background: 'var(--chakra-colors-gray-800)',
-                          zIndex: -1
-                        }
-                      } : {}}
-                    />
+                          padding: '5px',
+                          '&::before': {
+                            content: '""',
+                            position: 'absolute',
+                            top: '5px',
+                            left: '5px',
+                            right: '5px',
+                            bottom: '5px',
+                            borderRadius: 'calc(1rem - 5px)',
+                            background: 'var(--chakra-colors-gray-800)',
+                            zIndex: -1
+                          }
+                        } : {}}
+                      />
 
-                    <Flex 
-                    justifyContent="space-between" 
-                    alignItems="center"
-                    width="100%"
-                    height="58px" 
-                    position="relative" 
-                    zIndex={1}>
-                      <Box maxW="100%"
+                      <Flex
+                        justifyContent="space-between"
+                        alignItems="center"
+                        width="100%"
+                        height="58px"
                         position="relative"
-                        top={1}
-                        >
-                        <Flex align="center" gap={3} overflow="hidden" whiteSpace="nowrap">
-                          <Text 
-                          fontWeight="bold" 
-                          fontSize={course.name && course.name.length > 10 ? ["xl", "2xl", "3.8em"] : ["2xl", "3xl", "3.8em"]} // 元は3.0
-                          color="#FFFFFF" 
-                          overflow="hidden"
-                          textOverflow="ellipsis"
-                          minWidth="0"
-                          letterSpacing={3.5}
-                          >{course.name}</Text>
-                          <Text 
-                          fontSize="1.5em"
-                          color="rgba(255, 255, 255, 0.8)" 
-                          overflow="hidden"
-                          textOverflow="ellipsis"
-                          minWidth="0"
+                        zIndex={1}>
+                        <Box maxW="100%"
                           position="relative"
-                          pl={1}
-                          top={2}
-                          >/ {course.vehicle}</Text>
-                          {/* {course.bestLap && (
+                          top={1}
+                        >
+                          <Flex align="center" gap={3} overflow="hidden" whiteSpace="nowrap">
+                            <Text
+                              fontWeight="bold"
+                              fontSize={course.name && course.name.length > 10 ? ["xl", "2xl", "3.8em"] : ["2xl", "3xl", "3.8em"]} // 元は3.0
+                              color="#FFFFFF"
+                              overflow="hidden"
+                              textOverflow="ellipsis"
+                              minWidth="0"
+                              letterSpacing={3.5}
+                            >{course.name}</Text>
+                            <Text
+                              fontSize="1.5em"
+                              color="rgba(255, 255, 255, 0.8)"
+                              overflow="hidden"
+                              textOverflow="ellipsis"
+                              minWidth="0"
+                              position="relative"
+                              pl={1}
+                              top={2}
+                            >/ {course.vehicle}</Text>
+                            {/* {course.bestLap && (
                           <Badge size="xl" colorScheme={`${course.color.split('.')[0]}`} variant="subtle">
                             ベスト: {course.bestLap.time}
                           </Badge>
@@ -1022,132 +1075,133 @@ export default function HomePage() {
                             完走: {formatTime(course.finishTime)}
                           </Badge>
                           )} */}
-                        </Flex>
-                      </Box>
-                      <Flex direction="column" alignItems="center">
-                        <Flex alignItems="center">
-                          <Button 
-                            size="xs" 
-                            onClick={() => decrementLap(course.id)}
-                            isDisabled={course.currentLap <= 0}
-                            colorScheme={course.color.split('.')[0]}
-                            variant="outline"
-                            mr={1}
-                            h="24px"
-                            minW="24px"
-                            p={0}
-                          >
-                            -
-                          </Button>
-                          <Text fontWeight="bold" fontSize="xl" mx={2} color="white">
-                            {course.currentLap}{course.totalLaps > 0 ? ` / ${course.totalLaps}` : ''}
-                          </Text>
-                          <Button 
-                            size="xs" 
-                            isDisabled={true} // マニュアルインクリメントを無効化
-                            colorScheme={course.color.split('.')[0]}
-                            variant="outline"
-                            ml={1}
-                            h="24px"
-                            minW="24px"
-                            p={1}
-                          >
-                            +
-                          </Button>
-                        </Flex>
-                        <Text fontSize="xs" mt={0} color="white">周回数</Text>
-                      </Flex>
-                    </Flex>
-                    
-                    {/* 周回時間の表示 */}
-                    <Box mt={0} height="100px" position="relative" zIndex={10} display="flex" flexDirection="column" justifyContent="flex-end" pb={3}>
-                      {course.lapTimes.length > 0 ? (
-                        <Box 
-                          overflowY="auto" 
-                          maxHeight="80px"
-                          borderWidth="1px" 
-                          borderRadius="md" 
-                          borderColor="gray.600" 
-                          bg="gray.900"
-                          p={2}
-                          position="relative"
-                          zIndex={10}
-                        >
-                          <Flex flexWrap="wrap" gap={2}>
-                            {course.lapTimes.map((lap, index) => (
-                              <Badge
-                                key={index}
-                                colorScheme={
-                                  course.bestLap && lap.timestamp === course.bestLap.timestamp 
-                                    ? `${course.color.split('.')[0]}` 
-                                    : "gray"
-                                }
-                                p={2}
-                                fontSize="1.3em"
-                                borderRadius="md"
-                                variant={
-                                  course.bestLap && lap.timestamp === course.bestLap.timestamp 
-                                    ? "solid" 
-                                    : "outline"
-                                }
-                                color="white"
-                                position="relative"
-                                zIndex={10}
-                              >
-                                {lap.lapNumber}周目: {lap.time}
-                              </Badge>
-                            ))}
                           </Flex>
                         </Box>
-                      ) : (                  
-                    <Box 
-                    height="60px"
-                    borderWidth="1px" 
-                    borderRadius="md" 
-                    borderColor="gray.600"
-                    bg="gray.900"
-                    display="flex" 
-                    justifyContent="center" 
-                    alignItems="center"
-                    position="relative"
-                    zIndex={10}
-                  >
-                    <Text color="gray.400" fontSize="sm" position="relative" zIndex={10}>周回データがありません</Text>
-                  </Box>
+                        <Flex direction="column" alignItems="center">
+                          <Flex alignItems="center">
+                            <Button
+                              size="xs"
+                              onClick={() => decrementLap(course.id)}
+                              isDisabled={course.currentLap <= 0}
+                              colorScheme={course.color.split('.')[0]}
+                              variant="outline"
+                              mr={1}
+                              h="24px"
+                              minW="24px"
+                              p={0}
+                            >
+                              -
+                            </Button>
+                            <Text fontWeight="bold" fontSize="xl" mx={2} color="white">
+                              {course.currentLap}{course.totalLaps > 0 ? ` / ${course.totalLaps}` : ''}
+                            </Text>
+                            <Button
+                              size="xs"
+                              isDisabled={true} // マニュアルインクリメントを無効化
+                              colorScheme={course.color.split('.')[0]}
+                              variant="outline"
+                              ml={1}
+                              h="24px"
+                              minW="24px"
+                              p={1}
+                            >
+                              +
+                            </Button>
+                          </Flex>
+                          <Text fontSize="xs" mt={0} color="white">周回数</Text>
+                        </Flex>
+                      </Flex>
+
+                      {/* 周回時間の表示 */}
+                      <Box mt={0} height="100px" position="relative" zIndex={10} display="flex" flexDirection="column" justifyContent="flex-end" pb={3}>
+                        {course.lapTimes.length > 0 ? (
+                          <Box
+                            overflowY="auto"
+                            maxHeight="80px"
+                            borderWidth="1px"
+                            borderRadius="md"
+                            borderColor="gray.600"
+                            bg="gray.900"
+                            p={2}
+                            position="relative"
+                            zIndex={10}
+                          >
+                            <Flex flexWrap="wrap" gap={2}>
+                              {course.lapTimes.map((lap, index) => (
+                                <Badge
+                                  key={index}
+                                  colorScheme={
+                                    course.bestLap && lap.timestamp === course.bestLap.timestamp
+                                      ? `${course.color.split('.')[0]}`
+                                      : "gray"
+                                  }
+                                  p={2}
+                                  fontSize="1.3em"
+                                  borderRadius="md"
+                                  variant={
+                                    course.bestLap && lap.timestamp === course.bestLap.timestamp
+                                      ? "solid"
+                                      : "outline"
+                                  }
+                                  color="white"
+                                  position="relative"
+                                  zIndex={10}
+                                >
+                                  {lap.lapNumber}周目: {lap.time}
+                                </Badge>
+                              ))}
+                            </Flex>
+                          </Box>
+                        ) : (
+                          <Box
+                            height="60px"
+                            borderWidth="1px"
+                            borderRadius="md"
+                            borderColor="gray.600"
+                            bg="gray.900"
+                            display="flex"
+                            justifyContent="center"
+                            alignItems="center"
+                            position="relative"
+                            zIndex={10}
+                          >
+                            <Text color="gray.400" fontSize="sm" position="relative" zIndex={10}>周回データがありません</Text>
+                          </Box>
+                        )}
+                      </Box>
+
+                      {course.totalLaps > 0 && (
+                        <Flex gap={1} w="100%" h="20px" position="relative" overflow="hidden" borderRadius="full">
+                          {[...Array(course.totalLaps)].map((_, index) => {
+                            // タイムアタックの場合のプログレスバーの色を順番に設定（緑、青、赤）
+                            const getProgressColor = (lapIndex) => {
+                              if (raceType === 'タイムアタック') {
+                                switch (lapIndex) {
+                                  case 0: return "green.400";
+                                  case 1: return "blue.400";
+                                  case 2: return "red.400";
+                                  default: return "gray.600";
+                                }
+                              }
+                              return course.color; // 通常レースの場合は元の色
+                            };
+
+                            return (
+                              <Box
+                                key={index}
+                                flex={1}
+                                bg={index < course.currentLap ? getProgressColor(index) : 'gray.600'}
+                                transition="background-color 0.3s"
+                                _first={{ borderLeftRadius: 'full' }}
+                                _last={{ borderRightRadius: 'full' }}
+                              />
+                            );
+                          })}
+                        </Flex>
                       )}
                     </Box>
-                    
-                    {course.totalLaps > 0 && (
-                      <Flex gap={1} w="100%" h="20px" position="relative" overflow="hidden" borderRadius="full">
-                        {[...Array(course.totalLaps)].map((_, index) => {
-                          // タイムアタックの場合のプログレスバーの色を順番に設定（緑、青、赤）
-                          const getProgressColor = (lapIndex) => {
-                            if (raceType === 'タイムアタック') {
-                              switch (lapIndex) {
-                                case 0: return "green.400";
-                                case 1: return "blue.400";
-                                case 2: return "red.400";
-                                default: return "gray.600";
-                              }
-                            }
-                            return course.color; // 通常レースの場合は元の色
-                          };
-                          
-                          return (
-                            <Box
-                              key={index}
-                              flex={1}
-                              bg={index < course.currentLap ? getProgressColor(index) : 'gray.600'}
-                              transition="background-color 0.3s"
-                              _first={{ borderLeftRadius: 'full' }}
-                              _last={{ borderRightRadius: 'full' }}
-                            />
-                          );
-                        })}
-                      </Flex>
-                    )}
-                  </Box>
-                )})}
+                  )
+                })}
 
                 {/* 走者と暫定順位の区切り線 */}
                 {raceType === 'タイムアタック' && getTimeAttackRanking().length > 0 && (
@@ -1183,227 +1237,227 @@ export default function HomePage() {
                 {raceType === 'タイムアタック' && (() => {
                   const ranking = getTimeAttackRanking();
                   if (ranking.length === 0) return null;
-                  
+
                   return (
                     <VStack spacing={4} align="stretch">
                       {ranking.map((ranker, index) => {
-                    const position = index + 1;
-                    const completedLaps = ranker.laps?.length || 0;
-                    const totalLaps = 3; // タイムアタックは3周回
-                    
-                    // 順位に応じた色とラベル設定
-                    const getPositionStyle = (pos) => {
-                      switch (pos) {
-                        case 1: return { 
-                          bg: "yellow.500", 
-                          borderColor: "yellow.500", 
-                          label: "暫定", 
-                          rank: "1位",
-                          badgeColor: "yellow"
-                        };
-                        case 2: return { 
-                          bg: "gray.500", 
-                          borderColor: "gray.500", 
-                          label: "暫定", 
-                          rank: "2位",
-                          badgeColor: "gray"
-                        };
-                        case 3: return { 
-                          bg: "orange.600", 
-                          borderColor: "orange.600", 
-                          label: "暫定", 
-                          rank: "3位",
-                          badgeColor: "orange"
-                        };
-                        default: return { 
-                          bg: "blue.500", 
-                          borderColor: "blue.500", 
-                          label: "暫定", 
-                          rank: `${pos}位`,
-                          badgeColor: "blue"
-                        };
-                      }
-                    };
-                    
-                    const positionStyle = getPositionStyle(position);
-                    
-                    return (
-                      <Box 
-                        key={`ranking-${index}`}
-                        p={4} 
-                        pl={5}
-                        borderWidth="0" 
-                        borderRadius="md"
-                        shadow="lg"
-                        position="relative"
-                        bg="gray.800"
-                        transition="all 0.2s"
-                        _hover={{
-                          transform: "translateX(2px)",
-                          boxShadow: "xl"
-                        }}
-                      >
-                        {/* 暫定順位ラベル */}
-                        <Box
-                          position="absolute"
-                          left="-80px"
-                          top="0"
-                          fontSize="3xl"
-                          fontWeight="black"
-                          color="white"
-                          w="80px"
-                          h="100%"
-                          display="flex"
-                          justifyContent="center"
-                          alignItems="center"
-                          flexDirection="column"
-                          bg={positionStyle.bg}
-                          boxShadow="dark-lg"
-                          zIndex={2}
-                          borderLeftRadius="md"
-                          borderWidth="3px"
-                          borderColor={positionStyle.borderColor}
-                          sx={{
-                            textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
-                          }}
-                        >
-                          <Text fontSize="2xl" fontWeight="black">{positionStyle.label}</Text>
-                          <Text fontSize="4xl" mt="-1">{positionStyle.rank}</Text>
-                        </Box>
+                        const position = index + 1;
+                        const completedLaps = ranker.laps?.length || 0;
+                        const totalLaps = 3; // タイムアタックは3周回
 
-                        {/* 内側の枠 */}
-                        <Box
-                          position="absolute"
-                          top={0}
-                          right={0}
-                          bottom={0}
-                          left={-35}
-                          borderWidth="5px"
-                          borderRadius="xl"
-                          borderColor={positionStyle.borderColor}
-                          opacity="0.8"
-                          pointerEvents="none"
-                        />
+                        // 順位に応じた色とラベル設定
+                        const getPositionStyle = (pos) => {
+                          switch (pos) {
+                            case 1: return {
+                              bg: "yellow.500",
+                              borderColor: "yellow.500",
+                              label: "暫定",
+                              rank: "1位",
+                              badgeColor: "yellow"
+                            };
+                            case 2: return {
+                              bg: "gray.500",
+                              borderColor: "gray.500",
+                              label: "暫定",
+                              rank: "2位",
+                              badgeColor: "gray"
+                            };
+                            case 3: return {
+                              bg: "orange.600",
+                              borderColor: "orange.600",
+                              label: "暫定",
+                              rank: "3位",
+                              badgeColor: "orange"
+                            };
+                            default: return {
+                              bg: "blue.500",
+                              borderColor: "blue.500",
+                              label: "暫定",
+                              rank: `${pos}位`,
+                              badgeColor: "blue"
+                            };
+                          }
+                        };
 
-                        <Flex 
-                        justifyContent="space-between" 
-                        alignItems="center" 
-                        position="relative" 
-                        zIndex={1}
-                        width="100%"
-                        height="50px"
-                        >
-                          <Box maxW="100%">
-                            <Flex align="center" gap={2} overflow="hidden" whiteSpace="nowrap">
-                              <Text 
-                                fontWeight="bold" 
-                                fontSize={
-                                  (ranker.teamName || ranker.playerName) && (ranker.teamName || ranker.playerName).length > 8 
-                                    ? ["lg", "xl", "3xl"] 
-                                    : ["2xl", "3xl", "4xl"]
-                                } 
-                                color="#FFFFFF" 
-                                overflow="hidden"
-                                textOverflow="ellipsis"
-                                minWidth="0">
-                                {ranker.teamName || ranker.playerName}
-                              </Text>
-                              <Text 
-                                fontSize={
-                                  ranker.vehicleName && ranker.vehicleName.length > 10 
-                                    ? "lg" 
-                                    : "xl"
-                                } 
-                                color="rgba(255, 255, 255, 0.8)" 
-                                overflow="hidden"
-                                textOverflow="ellipsis"
-                                position="relative"
-                                top={1}
-                                minWidth="0">
-                                / {ranker.vehicleName}
-                              </Text>
-                              <Box position="relative" pl={4}>
-                              {ranker.bestLap && (
-                                <Badge size="xl" colorScheme={positionStyle.badgeColor} variant="subtle" fontSize="lg">
-                                  ベスト: {ranker.bestLap.time}
-                                </Badge>
-                              )}
-                              <Badge size="xl" colorScheme="green" variant="solid" fontSize="lg" gap={1} ml={3}>
-                                記録: {ranker.totalTime}
-                              </Badge>
-                              </Box>
-                            </Flex>
-                          </Box>
-                          <Flex direction="column" alignItems="center">
-                            <Text fontSize="xl" fontWeight="bold" color="white">
-                              {completedLaps} / {totalLaps}
-                            </Text>
-                            <Text fontSize="xs" mt={0} color="white">周回数</Text>
-                          </Flex>
-                        </Flex>
-                        
-                        {/* ラップタイム表示 */}
-                        <Box mt={2} height="100px">
-                          {ranker.laps && ranker.laps.length > 0 ? (
-                            <Box 
-                              overflowY="auto" 
-                              height="100%"
-                              // maxHeight="80px"
-                              borderWidth="1px" 
-                              borderRadius="md" 
-                              borderColor="gray.600" 
-                              bg="gray.900"
-                              p={2}
-                            >
-                              <Flex flexWrap="wrap" gap={2} height="100%" alignItems="center">
-                                {ranker.laps.map((lap, lapIndex) => (
-                                  <Badge
-                                    key={lapIndex}
-                                    colorScheme={
-                                      ranker.bestLap && lap.time === ranker.bestLap.time 
-                                        ? positionStyle.badgeColor 
-                                        : "gray"
-                                    }
-                                    p={2}
-                                    px={3}
-                                    fontSize="4xl"
-                                    borderRadius="md"
-                                    variant={
-                                      ranker.bestLap && lap.time === ranker.bestLap.time 
-                                        ? "solid" 
-                                        : "outline"
-                                    }
-                                    color="white"
-                                  >
-                                    {lapIndex + 1}周目: {lap.time}
-                                  </Badge>
-                                ))}
-                              </Flex>
-                            </Box>
-                          ) : (
-                            <Box 
-                              height="60px"
-                              borderWidth="1px" 
-                              borderRadius="md" 
-                              borderColor="gray.600"
-                              bg="gray.900"
-                              display="flex" 
-                              justifyContent="center" 
+                        const positionStyle = getPositionStyle(position);
+
+                        return (
+                          <Box
+                            key={`ranking-${index}`}
+                            p={4}
+                            pl={5}
+                            borderWidth="0"
+                            borderRadius="md"
+                            shadow="lg"
+                            position="relative"
+                            bg="gray.800"
+                            transition="all 0.2s"
+                            _hover={{
+                              transform: "translateX(2px)",
+                              boxShadow: "xl"
+                            }}
+                          >
+                            {/* 暫定順位ラベル */}
+                            <Box
+                              position="absolute"
+                              left="-80px"
+                              top="0"
+                              fontSize="3xl"
+                              fontWeight="black"
+                              color="white"
+                              w="80px"
+                              h="100%"
+                              display="flex"
+                              justifyContent="center"
                               alignItems="center"
+                              flexDirection="column"
+                              bg={positionStyle.bg}
+                              boxShadow="dark-lg"
+                              zIndex={2}
+                              borderLeftRadius="md"
+                              borderWidth="3px"
+                              borderColor={positionStyle.borderColor}
+                              sx={{
+                                textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
+                              }}
                             >
-                              <Text color="gray.400" fontSize="sm">周回データがありません</Text>
+                              <Text fontSize="2xl" fontWeight="black">{positionStyle.label}</Text>
+                              <Text fontSize="4xl" mt="-1">{positionStyle.rank}</Text>
                             </Box>
-                          )}
-                        </Box>
-                      </Box>
-                    );
-                  })}
+
+                            {/* 内側の枠 */}
+                            <Box
+                              position="absolute"
+                              top={0}
+                              right={0}
+                              bottom={0}
+                              left={-35}
+                              borderWidth="5px"
+                              borderRadius="xl"
+                              borderColor={positionStyle.borderColor}
+                              opacity="0.8"
+                              pointerEvents="none"
+                            />
+
+                            <Flex
+                              justifyContent="space-between"
+                              alignItems="center"
+                              position="relative"
+                              zIndex={1}
+                              width="100%"
+                              height="50px"
+                            >
+                              <Box maxW="100%">
+                                <Flex align="center" gap={2} overflow="hidden" whiteSpace="nowrap">
+                                  <Text
+                                    fontWeight="bold"
+                                    fontSize={
+                                      (ranker.teamName || ranker.playerName) && (ranker.teamName || ranker.playerName).length > 8
+                                        ? ["lg", "xl", "3xl"]
+                                        : ["2xl", "3xl", "4xl"]
+                                    }
+                                    color="#FFFFFF"
+                                    overflow="hidden"
+                                    textOverflow="ellipsis"
+                                    minWidth="0">
+                                    {ranker.teamName || ranker.playerName}
+                                  </Text>
+                                  <Text
+                                    fontSize={
+                                      ranker.vehicleName && ranker.vehicleName.length > 10
+                                        ? "lg"
+                                        : "xl"
+                                    }
+                                    color="rgba(255, 255, 255, 0.8)"
+                                    overflow="hidden"
+                                    textOverflow="ellipsis"
+                                    position="relative"
+                                    top={1}
+                                    minWidth="0">
+                                    / {ranker.vehicleName}
+                                  </Text>
+                                  <Box position="relative" pl={4}>
+                                    {ranker.bestLap && (
+                                      <Badge size="xl" colorScheme={positionStyle.badgeColor} variant="subtle" fontSize="lg">
+                                        ベスト: {ranker.bestLap.time}
+                                      </Badge>
+                                    )}
+                                    <Badge size="xl" colorScheme="green" variant="solid" fontSize="lg" gap={1} ml={3}>
+                                      記録: {ranker.totalTime}
+                                    </Badge>
+                                  </Box>
+                                </Flex>
+                              </Box>
+                              <Flex direction="column" alignItems="center">
+                                <Text fontSize="xl" fontWeight="bold" color="white">
+                                  {completedLaps} / {totalLaps}
+                                </Text>
+                                <Text fontSize="xs" mt={0} color="white">周回数</Text>
+                              </Flex>
+                            </Flex>
+
+                            {/* ラップタイム表示 */}
+                            <Box mt={2} height="100px">
+                              {ranker.laps && ranker.laps.length > 0 ? (
+                                <Box
+                                  overflowY="auto"
+                                  height="100%"
+                                  // maxHeight="80px"
+                                  borderWidth="1px"
+                                  borderRadius="md"
+                                  borderColor="gray.600"
+                                  bg="gray.900"
+                                  p={2}
+                                >
+                                  <Flex flexWrap="wrap" gap={2} height="100%" alignItems="center">
+                                    {ranker.laps.map((lap, lapIndex) => (
+                                      <Badge
+                                        key={lapIndex}
+                                        colorScheme={
+                                          ranker.bestLap && lap.time === ranker.bestLap.time
+                                            ? positionStyle.badgeColor
+                                            : "gray"
+                                        }
+                                        p={2}
+                                        px={3}
+                                        fontSize="4xl"
+                                        borderRadius="md"
+                                        variant={
+                                          ranker.bestLap && lap.time === ranker.bestLap.time
+                                            ? "solid"
+                                            : "outline"
+                                        }
+                                        color="white"
+                                      >
+                                        {lapIndex + 1}周目: {lap.time}
+                                      </Badge>
+                                    ))}
+                                  </Flex>
+                                </Box>
+                              ) : (
+                                <Box
+                                  height="60px"
+                                  borderWidth="1px"
+                                  borderRadius="md"
+                                  borderColor="gray.600"
+                                  bg="gray.900"
+                                  display="flex"
+                                  justifyContent="center"
+                                  alignItems="center"
+                                >
+                                  <Text color="gray.400" fontSize="sm">周回データがありません</Text>
+                                </Box>
+                              )}
+                            </Box>
+                          </Box>
+                        );
+                      })}
                     </VStack>
                   );
                 })()}
               </VStack>
             </Box>
-            
+
             {/* 完走時の順位表示オーバーレイ - 親要素の透明度の影響を受けないように独立配置 */}
             {(() => {
               // 完走したコースのみを取得し、順位を計算
@@ -1426,7 +1480,7 @@ export default function HomePage() {
               return finishedCourses.map((course, index) => {
                 const position = index + 1;
                 const courseIndex = courseData.length - course.id; // reverse()されているため調整
-                
+
                 // タイムアタック時は実際のコースパネルの位置を計算
                 let topOffset;
                 if (raceType === 'タイムアタック') {
@@ -1442,7 +1496,7 @@ export default function HomePage() {
                 } else {
                   topOffset = 135 + (courseIndex * 225);
                 }
-                
+
                 // 順位に応じた色を設定（ランキングタブと統一）
                 const getPositionColor = (pos) => {
                   switch (pos) {
@@ -1455,7 +1509,7 @@ export default function HomePage() {
                 };
 
                 const colorScheme = getPositionColor(position);
-                
+
                 return (
                   <>
                     {/* 順位ラベル */}
@@ -1488,7 +1542,7 @@ export default function HomePage() {
                         {(raceType === 'タイムアタック') ? 'ゴール' : `${position}位`}
                       </Text>
                     </Box>
-                    
+
                     {/* ベストタイムと完走時間表示 */}
                     <Box
                       position="fixed"
@@ -1500,9 +1554,9 @@ export default function HomePage() {
                     >
                       <HStack spacing={3} align="flex-start">
                         {course.bestLap && (
-                          <Badge 
-                            size="3xl" 
-                            colorScheme={course.color.split('.')[0]} 
+                          <Badge
+                            size="3xl"
+                            colorScheme={course.color.split('.')[0]}
                             variant="solid"
                             fontSize="1.6em"
                             px={4}
@@ -1519,9 +1573,9 @@ export default function HomePage() {
                           </Badge>
                         )}
                         {course.finishTime && (
-                          <Badge 
-                            size="3xl" 
-                            colorScheme="green" 
+                          <Badge
+                            size="3xl"
+                            colorScheme="green"
                             variant="solid"
                             fontSize="1.6em"
                             px={4}
@@ -1543,13 +1597,13 @@ export default function HomePage() {
                 );
               });
             })()}
-            
-            
+
+
             {/* 右側：大きな経過時間表示 */}
-            <Box 
-              p={4} 
-              borderWidth="1px" 
-              borderRadius="lg" 
+            <Box
+              p={4}
+              borderWidth="1px"
+              borderRadius="lg"
               shadow="md"
               display="flex"
               flexDirection="column"
@@ -1638,7 +1692,7 @@ export default function HomePage() {
                         決勝
                       </Button>
                     </HStack>
-                    <Box 
+                    <Box
                       fontWeight="bold"
                       p={3}
                       py={10} // パディングを増やして高さを調整
@@ -1657,7 +1711,7 @@ export default function HomePage() {
                       fontFamily="RocknRoll One"
                       letterSpacing={5}
                     >
-                      <Box 
+                      <Box
                         width="100%"
                         height="100%"
                         display="flex"
@@ -1667,10 +1721,10 @@ export default function HomePage() {
                         fontSize={["4xl", "5xl", "6xl", "7xl"]}
                         color={
                           raceType === 'タイムアタック' ? 'purple.400' :
-                          raceType === '敗者復活戦' ? 'yellow.400' :
-                          raceType === '準決勝' ? 'orange.400' :
-                          raceType === '決勝' ? 'red.400' :
-                          '#FFFFFF'
+                            raceType === '敗者復活戦' ? 'yellow.400' :
+                              raceType === '準決勝' ? 'orange.400' :
+                                raceType === '決勝' ? 'red.400' :
+                                  '#FFFFFF'
                         }
                       >
                         {raceType === '決勝' ? (
@@ -1679,15 +1733,15 @@ export default function HomePage() {
                           <>
                             <Text fontSize="1.1em" lineHeight="1.1" color={
                               raceType === 'タイムアタック' ? 'purple.400' :
-                              raceType === '敗者復活戦' ? 'yellow.400' :
-                              raceType === '準決勝' ? 'orange.400' :
-                              '#FFFFFF'
+                                raceType === '敗者復活戦' ? 'yellow.400' :
+                                  raceType === '準決勝' ? 'orange.400' :
+                                    '#FFFFFF'
                             }>{raceType}</Text>
-                            <Text fontSize="0.7em" lineHeight="1" mt={1} mb={3}color={
+                            <Text fontSize="0.7em" lineHeight="1" mt={1} mb={3} color={
                               raceType === 'タイムアタック' ? 'purple.400' :
-                              raceType === '敗者復活戦' ? 'yellow.400' :
-                              raceType === '準決勝' ? 'orange.400' :
-                              '#FFFFFF'
+                                raceType === '敗者復活戦' ? 'yellow.400' :
+                                  raceType === '準決勝' ? 'orange.400' :
+                                    '#FFFFFF'
                             }>第{currentRaceNumber}レース</Text>
                           </>
                         ) : (
@@ -1700,7 +1754,7 @@ export default function HomePage() {
                   {/* 経過時間表示 */}
                   <Box width="100%">
                     <Text fontSize="lg" fontWeight="medium" color="white">ストップウォッチ</Text>
-                    <Box 
+                    <Box
                       fontSize={["3xl", "4xl", "5xl", "7.5em"]} // フォントサイズを大きく
                       fontWeight="bold"
                       color="cyan.400"
@@ -1717,21 +1771,21 @@ export default function HomePage() {
                       flexDirection="column"
                       justifyContent="center"
                       alignItems="center"
-                      // fontFamily="mono" 
+                    // fontFamily="mono" 
                     >
                       <Text as="span" display="flex" gap={0.1} color="#FFFFFF">
-                      <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(0, 2)}</Text>
-                      <Text as="span" color="rgba(255, 255, 255, 0.7)">:</Text>
-                      <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(3, 5)}</Text>
-                      <Text as="span" color="rgba(255, 255, 255, 0.7)">.</Text>
-                      <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(6, 8)}</Text>
+                        <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(0, 2)}</Text>
+                        <Text as="span" color="rgba(255, 255, 255, 0.7)">:</Text>
+                        <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(3, 5)}</Text>
+                        <Text as="span" color="rgba(255, 255, 255, 0.7)">.</Text>
+                        <Text as="span" w="2ch" color="#FFFFFF">{formatTime(elapsedTime).substring(6, 8)}</Text>
                       </Text>
                     </Box>
                   </Box>
 
                   {/* スライドショー */}
                   <Box width="100%" mt={"10px"} flex={1} minHeight="335px">
-                    <Box 
+                    <Box
                       px={4}
                       py={4}
                       borderRadius="lg"
@@ -1771,10 +1825,9 @@ export default function HomePage() {
                                 width="100%"
                                 height="100%"
                                 opacity={index === currentSlideIndex ? 1 : 0}
-                                transform={`translateX(${
-                                  index === currentSlideIndex ? "0" :
+                                transform={`translateX(${index === currentSlideIndex ? "0" :
                                   index > currentSlideIndex ? "100%" : "-100%"
-                                })`}
+                                  })`}
                                 transition="all 0.5s ease-in-out"
                                 display="flex"
                                 alignItems="center"
@@ -1804,7 +1857,7 @@ export default function HomePage() {
                             画像を読み込み中...
                           </Text>
                         )}
-                        
+
                         {/* スライドインジケーター */}
                         {slideshowImages.length > 1 && (
                           <HStack
@@ -1836,7 +1889,7 @@ export default function HomePage() {
               </VStack>
             </Box>
           </Grid>
-          
+
           {/* コントロールボタン */}
           {/* コントロールボタンを画面下部に固定 */}
           <Flex
@@ -1853,9 +1906,9 @@ export default function HomePage() {
             boxShadow="0 -4px 24px rgba(0,0,0,0.3)"
             style={{ backdropFilter: 'blur(6px)' }}
           >
-            <Button 
-              colorScheme="yellow" 
-              size="md" 
+            <Button
+              colorScheme="yellow"
+              size="md"
               py={8}
               px={8}
               fontSize="lg"
@@ -1876,9 +1929,9 @@ export default function HomePage() {
             >
               ゲート準備
             </Button>
-            <Button 
-              colorScheme={isRunning ? "orange" : "cyan"} 
-              size="md" 
+            <Button
+              colorScheme={isRunning ? "orange" : "cyan"}
+              size="md"
               onClick={toggleTimer}
               py={8}
               px={8}
@@ -1899,9 +1952,9 @@ export default function HomePage() {
             >
               {isRunning ? "一時停止" : "スタート"}
             </Button>
-            <Button 
-              colorScheme="blue" 
-              size="md" 
+            <Button
+              colorScheme="blue"
+              size="md"
               py={8}
               px={8}
               fontSize="lg"
@@ -1922,9 +1975,9 @@ export default function HomePage() {
             >
               ゲート自動
             </Button>
-            <Button 
-              colorScheme="red" 
-              size="md" 
+            <Button
+              colorScheme="red"
+              size="md"
               onClick={resetTimer}
               py={8}
               px={8}
@@ -1945,8 +1998,8 @@ export default function HomePage() {
             >
               リセット
             </Button>
-            <Button 
-              colorScheme="purple" 
+            <Button
+              colorScheme="purple"
               size="md"
               py={8}
               px={8}
@@ -1970,7 +2023,7 @@ export default function HomePage() {
               レース終了
             </Button>
           </Flex>
-          
+
           {/* レース終了確認ダイアログ */}
           <AlertDialog
             isOpen={isOpen}
@@ -1988,9 +2041,9 @@ export default function HomePage() {
                 </AlertDialogBody>
 
                 <AlertDialogFooter>
-                  <Button 
-                    ref={cancelRef} 
-                    onClick={onClose} 
+                  <Button
+                    ref={cancelRef}
+                    onClick={onClose}
                     variant="outline"
                     color="white"
                     borderColor="gray.400"
@@ -2001,12 +2054,12 @@ export default function HomePage() {
                   >
                     キャンセル
                   </Button>
-                  <Button 
-                    colorScheme="purple" 
+                  <Button
+                    colorScheme="purple"
                     onClick={() => {
                       finishRace();
                       onClose();
-                    }} 
+                    }}
                     ml={3}
                   >
                     終了して保存
@@ -2033,9 +2086,9 @@ export default function HomePage() {
                 </AlertDialogBody>
 
                 <AlertDialogFooter>
-                  <Button 
-                    ref={resetCancelRef} 
-                    onClick={onResetClose} 
+                  <Button
+                    ref={resetCancelRef}
+                    onClick={onResetClose}
                     variant="outline"
                     color="white"
                     borderColor="gray.400"
@@ -2046,9 +2099,9 @@ export default function HomePage() {
                   >
                     キャンセル
                   </Button>
-                  <Button 
-                    colorScheme="red" 
-                    onClick={executeReset} 
+                  <Button
+                    colorScheme="red"
+                    onClick={executeReset}
                     ml={3}
                   >
                     リセット実行
@@ -2092,6 +2145,7 @@ export default function HomePage() {
                     <SimpleGrid columns={2} spacing={2}>
                       <HStack><Kbd>a</Kbd> <Kbd>s</Kbd> <Kbd>d</Kbd> <Kbd>f</Kbd><Text>シリアル手動送信</Text></HStack>
                       <HStack><Kbd>i</Kbd><Text>このヘルプを表示</Text></HStack>
+                      <HStack><Kbd>o</Kbd><Text>紙吹雪を出す</Text></HStack>
                     </SimpleGrid>
                   </Box>
                 </VStack>
