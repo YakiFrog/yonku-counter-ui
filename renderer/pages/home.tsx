@@ -69,20 +69,16 @@ const playRaceSound = (type: 'horn' | 'popper' | 'popper_large' | '321go' | 'cla
       audioInstances[type].currentTime = 0;
     }
 
-    let audioPath = '';
-    if (type === 'popper') {
-      audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/Party_Popper01/Party_Popper01-1(Dry).mp3`;
-    } else if (type === 'popper_large') {
-      audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/Party_Popper03/Party_Popper03-1(Dry).mp3`;
-    } else if (type === 'horn') {
-      audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/Bicycle_Horn01/Bicycle_Horn01-1.mp3`;
-    } else if (type === '321go') {
-      audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/321GO/321GO.mp3`;
-    } else if (type === 'clap') {
-      // publicフォルダから直接配信（local-image://プロトコルでの音声再生回避）
-      audioPath = '/clap.mp3';
-    }
+    // publicフォルダから配信（HTTP経由でRange Requestに対応）
+    const pathMap: Record<string, string> = {
+      popper: '/Party_Popper01/Party_Popper01-1(Dry).mp3',
+      popper_large: '/Party_Popper03/Party_Popper03-1(Dry).mp3',
+      horn: '/Bicycle_Horn01/Bicycle_Horn01-1.mp3',
+      '321go': '/321GO/321GO.mp3',
+      clap: '/clap.mp3',
+    };
 
+    const audioPath = pathMap[type];
     if (audioPath) {
       const audio = new Audio(audioPath);
       audioInstances[type] = audio;
@@ -117,13 +113,13 @@ const triggerConfetti = (soundType?: 'horn' | 'popper' | 'popper_large' | 'none'
     confetti(Object.assign({}, defaults, opts, {
       particleCount: Math.floor(count * particleRatio),
       angle: 60,
-      origin: { x: 0, y: 0.8 }
+      origin: { x: 0, y: 0.9 }
     }));
     // 右端から
     confetti(Object.assign({}, defaults, opts, {
       particleCount: Math.floor(count * particleRatio),
       angle: 120,
-      origin: { x: 1, y: 0.8 }
+      origin: { x: 1, y: 0.9 }
     }));
   };
 
@@ -866,11 +862,11 @@ export default function HomePage() {
       // 入力フィールド（Input, Select, TextAreaなど）にフォーカスがある場合は無効
       const activeElement = document.activeElement;
       if (
-        activeElement && 
-        (activeElement.tagName === 'INPUT' || 
-         activeElement.tagName === 'SELECT' || 
-         activeElement.tagName === 'TEXTAREA' || 
-         (activeElement as HTMLElement).isContentEditable)
+        activeElement &&
+        (activeElement.tagName === 'INPUT' ||
+          activeElement.tagName === 'SELECT' ||
+          activeElement.tagName === 'TEXTAREA' ||
+          (activeElement as HTMLElement).isContentEditable)
       ) {
         return;
       }
@@ -926,9 +922,9 @@ export default function HomePage() {
         if (settings?.autoStartEnabled) {
           const delay = 2.75; // 2.75秒固定に変更
           console.log(`[AutoStart] Scheduled in ${delay}s (Fixed)`);
-          
+
           if (autoStartTimerRef.current) clearTimeout(autoStartTimerRef.current);
-          
+
           autoStartTimerRef.current = setTimeout(async () => {
             console.log('[AutoStart] Timer fired!');
             if (!isRunning) {
@@ -1005,33 +1001,33 @@ export default function HomePage() {
               <Text fontSize="12px" color="gray.300" fontWeight="bold">親機</Text>
             </HStack>
           </Tooltip>
-          
+
           <Divider orientation="vertical" height="20px" borderColor="gray.500" />
-          
+
           {/* 各レーン */}
           <Tooltip label="各カウンター子機の通信状態" placement="bottom">
             <HStack spacing={3}>
               {serialState.laneConnectionStatus.map((isConnected, idx) => {
                 const lastActivity = serialState.laneActivityTimes[idx];
                 const isFlashing = isConnected && (Date.now() - lastActivity < 1500);
-                const dotAnimation = isFlashing 
-                  ? `${blinkYellow} 1.5s ease-in-out` 
+                const dotAnimation = isFlashing
+                  ? `${blinkYellow} 1.5s ease-in-out`
                   : 'none';
-                const textAnimation = isFlashing 
-                  ? `${blinkTextYellow} 1.5s ease-in-out` 
+                const textAnimation = isFlashing
+                  ? `${blinkTextYellow} 1.5s ease-in-out`
                   : 'none';
-                
+
                 return (
                   <HStack key={`lane-status-${idx}`} spacing={1}>
-                    <Box 
-                      w="11px" 
-                      h="11px" 
-                      borderRadius="full" 
+                    <Box
+                      w="11px"
+                      h="11px"
+                      borderRadius="full"
                       bg={isConnected ? "#48bb78" : "#718096"}
                       animation={dotAnimation}
                     />
-                    <Text 
-                      fontSize="11px" 
+                    <Text
+                      fontSize="11px"
                       color="gray.400"
                       animation={textAnimation}
                     >
@@ -2397,9 +2393,9 @@ export default function HomePage() {
                         transition="all 0.2s"
                         onClick={async () => {
                           const vehicleId = player.vehicle?.id || null;
-                          await updateCourse(selectingCourseId, { 
-                            playerId: player.id, 
-                            vehicleId: vehicleId 
+                          await updateCourse(selectingCourseId, {
+                            playerId: player.id,
+                            vehicleId: vehicleId
                           });
                           onTeamSelectClose();
                           toast({
