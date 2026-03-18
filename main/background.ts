@@ -42,11 +42,12 @@ app.on('ready', () => {
   await app.whenReady()
 
   // ローカル画像読み込み用のカスタムプロトコル
-  protocol.handle('local-image', (request) => {
+  protocol.handle('local-image', async (request) => {
     const url = request.url.replace('local-image://', '');
     try {
       const decodedUrl = decodeURIComponent(url);
-      return net.fetch(`file://${decodedUrl}`);
+      const fileUrl = `file://${decodedUrl}`;
+      return net.fetch(fileUrl);
     } catch (e) {
       console.error('Failed to load local-image:', e);
       return new Response('Not Found', { status: 404 });

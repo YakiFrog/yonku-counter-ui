@@ -61,7 +61,7 @@ import confetti from 'canvas-confetti'
 const audioInstances: Record<string, HTMLAudioElement> = {};
 
 // 音響再生のみを行う関数
-const playRaceSound = (type: 'horn' | 'popper' | 'popper_large' | '321go') => {
+const playRaceSound = (type: 'horn' | 'popper' | 'popper_large' | '321go' | 'clap') => {
   try {
     // 既に再生中の同じ種類の音があれば停止して頭出し
     if (audioInstances[type]) {
@@ -69,16 +69,23 @@ const playRaceSound = (type: 'horn' | 'popper' | 'popper_large' | '321go') => {
       audioInstances[type].currentTime = 0;
     }
 
-    let fileName = '';
-    if (type === 'popper') fileName = 'Party_Popper01/Party_Popper01-1(Dry).mp3';
-    else if (type === 'popper_large') fileName = 'Party_Popper03/Party_Popper03-1(Dry).mp3';
-    else if (type === 'horn') fileName = 'Bicycle_Horn01/Bicycle_Horn01-1.mp3';
-    else if (type === '321go') fileName = '321GO/321GO.mp3';
+    let audioPath = '';
+    if (type === 'popper') {
+      audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/Party_Popper01/Party_Popper01-1(Dry).mp3`;
+    } else if (type === 'popper_large') {
+      audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/Party_Popper03/Party_Popper03-1(Dry).mp3`;
+    } else if (type === 'horn') {
+      audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/Bicycle_Horn01/Bicycle_Horn01-1.mp3`;
+    } else if (type === '321go') {
+      audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/321GO/321GO.mp3`;
+    } else if (type === 'clap') {
+      // publicフォルダから直接配信（local-image://プロトコルでの音声再生回避）
+      audioPath = '/clap.mp3';
+    }
 
-    if (fileName) {
-      const audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/${fileName}`;
+    if (audioPath) {
       const audio = new Audio(audioPath);
-      audioInstances[type] = audio; // インスタンスを保存
+      audioInstances[type] = audio;
       audio.volume = 0.8;
       audio.play().catch(e => console.log('Audio play error:', e));
     }
@@ -933,6 +940,9 @@ export default function HomePage() {
             }
           }, delay * 1000);
         }
+      } else if (keyChar === '[' || event.key === '@' || event.code === 'BracketLeft') {
+        // 拍手再生 (Pの右隣のキー)
+        playRaceSound('clap');
       }
 
       // 数値キーの処理（走行中のカウントアップ）
@@ -2323,6 +2333,7 @@ export default function HomePage() {
                       <HStack><Kbd>i</Kbd><Text>このヘルプを表示</Text></HStack>
                       <HStack><Kbd>o</Kbd><Text>紙吹雪を出す</Text></HStack>
                       <HStack><Kbd>p</Kbd><Text>ホーン (自転車音)</Text></HStack>
+                      <HStack><Kbd>[</Kbd><Text>拍手 (Pの右隣のキー)</Text></HStack>
                       <HStack><Kbd>l</Kbd><Text>321GO再生 / 自動スタート</Text></HStack>
                     </SimpleGrid>
                   </Box>
