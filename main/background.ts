@@ -1,5 +1,5 @@
 import path from 'path'
-import { app, ipcMain, session, BrowserWindow } from 'electron'
+import { app, ipcMain, session, BrowserWindow, dialog, protocol, net } from 'electron'
 import serve from 'electron-serve'
 import { createWindow } from './helpers'
 import { setupSerialPortHandlers } from './helpers/serial-port'
@@ -40,6 +40,33 @@ app.on('ready', () => {
 
 ;(async () => {
   await app.whenReady()
+
+  // ローカル画像読み込み用のカスタムプロトコル
+  protocol.handle('local-image', (request) => {
+    const url = request.url.replace('local-image://', '');
+    try {
+      const decodedUrl = decodeURIComponent(url);
+      return net.fetch(`file://${decodedUrl}`);
+    } catch (e) {
+      console.error('Failed to load local-image:', e);
+      return new Response('Not Found', { status: 404 });
+    }
+  });
+
+  // ファイル選択ダイアログのハンドラー
+  ipcMain.handle('dialog:openFiles', async () => {
+    if (!global.mainWindow) return [];
+    try {
+      const result = await dialog.showOpenDialog(global.mainWindow, {
+        properties: ['openFile', 'multiSelections'],
+        filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }]
+      });
+      return result.canceled ? [] : result.filePaths;
+    } catch (e) {
+      console.error('Failed to open dialog:', e);
+      return [];
+    }
+  });
 
   // シリアルポートハンドラーを設定
   setupSerialPortHandlers();

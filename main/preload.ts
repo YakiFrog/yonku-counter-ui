@@ -31,8 +31,15 @@ const serialHandler = {
   }
 }
 
+// ファイルダイアログのAPIを定義
+const dialogHandler = {
+  openFiles: () => ipcRenderer.invoke('dialog:openFiles')
+}
+
 contextBridge.exposeInMainWorld('ipc', handler)
 contextBridge.exposeInMainWorld('serialPort', serialHandler)
+contextBridge.exposeInMainWorld('dialog', dialogHandler)
 
 export type IpcHandler = typeof handler
 export type SerialHandler = typeof serialHandler
+export type DialogHandler = typeof dialogHandler

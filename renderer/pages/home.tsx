@@ -240,26 +240,27 @@ export default function HomePage() {
 
   const { write: serialWrite, messages, clearMessages } = useSerial();
 
-  // スライドショーの初期化
+  // スライドショーの初期化と設定からのロード
   useEffect(() => {
-    // slideshowフォルダの画像リストを設定
-    const images = [
-      // '/slideshow/thecrafters.png',
-      // '/slideshow/miniyonku.png',
-      // '/slideshow/qr.png',
-      // '/slideshow/sirius.png',
-      '/slideshow/1.JPG',
-      '/slideshow/2.JPG',
-      '/slideshow/oit.png',
-      '/slideshow/3.JPG',
-      '/slideshow/4.JPG',
-      '/slideshow/5.JPG',
-      '/slideshow/6.JPG',
-      '/slideshow/7.JPG',
-      '/slideshow/8.JPG',
-    ];
-    setSlideshowImages(images);
-  }, []);
+    if (settings && settings.slideshowImages && settings.slideshowImages.length > 0) {
+      // ユーザーが設定画面で選んだカスタム画像一覧を使用
+      setSlideshowImages(settings.slideshowImages.map(p => `local-image://${encodeURIComponent(p)}`));
+    } else {
+      // デフォルトの画像リストを設定
+      const images = [
+        '/slideshow/1.JPG',
+        '/slideshow/2.JPG',
+        '/slideshow/oit.png',
+        '/slideshow/3.JPG',
+        '/slideshow/4.JPG',
+        '/slideshow/5.JPG',
+        '/slideshow/6.JPG',
+        '/slideshow/7.JPG',
+        '/slideshow/8.JPG',
+      ];
+      setSlideshowImages(images);
+    }
+  }, [settings?.slideshowImages]);
 
   // レースタイプの復元
   useEffect(() => {

@@ -38,9 +38,10 @@ import {
   AlertDialogOverlay,
   Spinner,
   Stack,
+  Image,
 } from '@chakra-ui/react';
 import { ChakraProvider } from '@chakra-ui/react';
-import { AddIcon, DeleteIcon, EditIcon, DownloadIcon } from '@chakra-ui/icons';
+import { AddIcon, DeleteIcon, EditIcon, DownloadIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useAppSettingsContext } from '../utils/AppSettingsContext';
 import { useSerial } from '../utils/SerialContext';
 import { Player } from '../utils/types';
@@ -120,6 +121,28 @@ export default function SettingsPage() {
 
   // シリアルコマンド送信用の状態
   const [command, setCommand] = useState<string>('');
+
+  // スライドショーのドラッグ＆ドロップ用の状態（もう使わないので削除）
+
+  // 順番入れ替えハンドラ（左へ）
+  const handleMoveImageLeft = (index: number) => {
+    if (index === 0 || !settings.slideshowImages) return;
+    const newImages = [...settings.slideshowImages];
+    const temp = newImages[index];
+    newImages[index] = newImages[index - 1];
+    newImages[index - 1] = temp;
+    handleUpdateSetting('slideshowImages', newImages);
+  };
+
+  // 順番入れ替えハンドラ（右へ）
+  const handleMoveImageRight = (index: number) => {
+    if (!settings.slideshowImages || index === settings.slideshowImages.length - 1) return;
+    const newImages = [...settings.slideshowImages];
+    const temp = newImages[index];
+    newImages[index] = newImages[index + 1];
+    newImages[index + 1] = temp;
+    handleUpdateSetting('slideshowImages', newImages);
+  };
 
   // 設定送信ハンドラ
   const handleSubmit = (e: React.FormEvent) => {
@@ -616,6 +639,94 @@ export default function SettingsPage() {
                           onChange={(e) => handleUpdateSetting('serialCountEnabled', e.target.checked)} 
                           colorScheme="cyan"
                         />
+                      </FormControl>
+
+                      <FormControl mt="6">
+                        <FormLabel color="white">スライドショー画像設定</FormLabel>
+                        <Text fontSize="sm" color="gray.400" mb={3}>
+                          レース待機中に背景で表示するカスタム画像を選択します。何も選択しない場合はデフォルト画像が使用されます。
+                        </Text>
+                        <Button
+                          leftIcon={<AddIcon />}
+                          colorScheme="green"
+                          size="sm"
+                          mb={4}
+                          onClick={async () => {
+                            if (typeof window !== 'undefined' && (window as any).dialog) {
+                              const paths = await (window as any).dialog.openFiles();
+                              if (paths && paths.length > 0) {
+                                const current = settings.slideshowImages || [];
+                                handleUpdateSetting('slideshowImages', [...current, ...paths]);
+                              }
+                            }
+                          }}
+                        >
+                          PCから画像を追加する
+                        </Button>
+
+                        {settings.slideshowImages && settings.slideshowImages.length > 0 && (
+                          <SimpleGrid columns={[2, 3, 4]} spacing={4}>
+                            {settings.slideshowImages.map((path, idx) => (
+                              <Box 
+                                key={`${idx}-${path}`} 
+                                position="relative" 
+                                borderWidth="1px"
+                                borderColor="gray.600" 
+                                borderRadius="md" 
+                                overflow="hidden"
+                                transition="all 0.2s"
+                              >
+                                <Image 
+                                  src={`local-image://${encodeURIComponent(path)}`} 
+                                  alt={`slideshow-${idx}`} 
+                                  objectFit="cover" 
+                                  height="100px" 
+                                  width="100%" 
+                                />
+                                
+                                <HStack position="absolute" bottom={2} left={2} right={2} justify="space-between">
+                                  <IconButton
+                                    aria-label="Move left"
+                                    icon={<ChevronLeftIcon />}
+                                    size="sm"
+                                    bg="white"
+                                    color="black"
+                                    boxShadow="0 2px 4px rgba(0,0,0,0.4)"
+                                    _hover={{ bg: "gray.200" }}
+                                    isDisabled={idx === 0}
+                                    onClick={() => handleMoveImageLeft(idx)}
+                                  />
+                                  <IconButton
+                                    aria-label="Move right"
+                                    icon={<ChevronRightIcon />}
+                                    size="sm"
+                                    bg="white"
+                                    color="black"
+                                    boxShadow="0 2px 4px rgba(0,0,0,0.4)"
+                                    _hover={{ bg: "gray.200" }}
+                                    isDisabled={idx === settings.slideshowImages!.length - 1}
+                                    onClick={() => handleMoveImageRight(idx)}
+                                  />
+                                </HStack>
+
+                                <IconButton
+                                  aria-label="Remove image"
+                                  icon={<DeleteIcon />}
+                                  size="sm"
+                                  colorScheme="red"
+                                  boxShadow="0 2px 4px rgba(0,0,0,0.4)"
+                                  position="absolute"
+                                  top={2}
+                                  right={2}
+                                  onClick={() => {
+                                    const newImages = settings.slideshowImages!.filter((_, i) => i !== idx);
+                                    handleUpdateSetting('slideshowImages', newImages);
+                                  }}
+                                />
+                              </Box>
+                            ))}
+                          </SimpleGrid>
+                        )}
                       </FormControl>
                     </Box>
                     
