@@ -819,8 +819,9 @@ export default function HomePage() {
       if (finished) {
         setFinishedCourseIds(ids => {
           if (!ids.includes(courseId)) {
-            // 最初の完走者（1位）ならクラッカーを鳴らす
-            if (ids.length === 0) {
+            // 設定された順位以内の完走者ならクラッカーを鳴らす
+            const triggerRank = settings?.confettiTriggerRank || 1;
+            if (ids.length < triggerRank) {
               triggerConfetti(settings?.confettiSound);
             }
             return [...ids, courseId];

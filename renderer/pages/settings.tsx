@@ -659,6 +659,23 @@ export default function SettingsPage() {
                       </FormControl>
 
                       <FormControl mt="6">
+                        <FormLabel color="white">クラッカーを鳴らす順位</FormLabel>
+                        <Select 
+                          value={settings.confettiTriggerRank || 1} 
+                          onChange={(e) => handleUpdateSetting('confettiTriggerRank', parseInt(e.target.value))}
+                          bg="gray.900" 
+                          borderColor="gray.600" 
+                          color="white"
+                          mt="2"
+                        >
+                          <option value={1} style={{ color: 'black' }}>1位のゴール時のみ</option>
+                          <option value={2} style={{ color: 'black' }}>上位2位のゴールまで</option>
+                          <option value={3} style={{ color: 'black' }}>上位3位のゴールまで</option>
+                          <option value={4} style={{ color: 'black' }}>全員（4位のゴールまで）</option>
+                        </Select>
+                      </FormControl>
+
+                      <FormControl mt="6">
                         <FormLabel color="white">スライドショー画像設定</FormLabel>
                         <Text fontSize="sm" color="gray.400" mb={3}>
                           レース待機中に背景で表示するカスタム画像を選択します。何も選択しない場合はデフォルト画像が使用されます。
