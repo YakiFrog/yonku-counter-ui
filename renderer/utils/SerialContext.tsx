@@ -7,6 +7,7 @@ interface SerialState {
   baudRate: number | null;
   error: string | null;
   messages: string[];
+  laneConnectionStatus: boolean[]; // 4レーンの接続状態
 }
 
 // コンテキストの型定義
@@ -32,6 +33,7 @@ export function SerialProvider({ children }: { children: React.ReactNode }) {
     baudRate: null,
     error: null,
     messages: [],
+    laneConnectionStatus: [false, false, false, false],
   });
 
   // シリアルポートに接続
@@ -44,6 +46,7 @@ export function SerialProvider({ children }: { children: React.ReactNode }) {
         baudRate,
         error: null,
         messages: prev.messages,
+        laneConnectionStatus: prev.laneConnectionStatus,
       }));
     } catch (error) {
       setSerialState(prev => ({
@@ -64,6 +67,7 @@ export function SerialProvider({ children }: { children: React.ReactNode }) {
         baudRate: null,
         error: null,
         messages: [],
+        laneConnectionStatus: [false, false, false, false],
       }));
     } catch (error) {
       setSerialState(prev => ({
@@ -105,11 +109,24 @@ export function SerialProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = window.serialPort.onData((data: string) => {
       // 受信したデータを処理
       console.log('受信データ:', data);
+
+      // STATUSメッセージの処理 (グローバルに保持)
+      if (data.startsWith('STATUS:')) {
+        const statuses = data.replace('STATUS:', '').split(',').map(s => s === '1');
+        if (statuses.length === 4) {
+          setSerialState(prev => ({
+            ...prev,
+            laneConnectionStatus: statuses
+          }));
+        }
+        return; // メッセージ履歴には追加しない
+      }
+
       setSerialState(prev => ({
         ...prev,
-        messages: [...prev.messages, data],
+        // メッセージ履歴を最新100件に制限してメモリリークを防止
+        messages: [...prev.messages.slice(-99), data],
       }));
-      // ここで必要な処理を追加
     });
 
     return () => {

@@ -39,6 +39,8 @@ import {
   Spinner,
   Stack,
   Image,
+  Divider,
+  Tooltip,
 } from '@chakra-ui/react';
 import { ChakraProvider } from '@chakra-ui/react';
 import { AddIcon, DeleteIcon, EditIcon, DownloadIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
@@ -1329,3 +1331,32 @@ export default function SettingsPage() {
     </Container>
   );
 }
+
+// 通信状態インジケーターコンポーネント
+export const ConnectionStatusIndicator = ({ serialState }: { serialState: any }) => (
+  <Box position="fixed" top="10px" right="20px" zIndex={2000}>
+    <HStack spacing={3} bg="rgba(0,0,0,0.5)" borderRadius="md" p={1.5} backdropFilter="blur(2px)">
+      {/* PC <-> ESP32 */}
+      <Tooltip label="カウンター親機とのシリアル通信状態" placement="bottom">
+        <HStack spacing={1}>
+          <Box w="8px" h="8px" borderRadius="full" style={{ backgroundColor: serialState.isConnected ? "#48bb78" : "#f56565" }} />
+          <Text fontSize="10px" color="gray.300" fontWeight="bold">親機</Text>
+        </HStack>
+      </Tooltip>
+      
+      <Divider orientation="vertical" height="15px" borderColor="gray.500" />
+      
+      {/* 各レーン */}
+      <Tooltip label="各カウンター子機の通信状態" placement="bottom">
+        <HStack spacing={2}>
+          {serialState.laneConnectionStatus.map((isConnected: boolean, idx: number) => (
+            <HStack key={`lane-status-${idx}`} spacing={0.5}>
+              <Box w="6px" h="6px" borderRadius="full" style={{ backgroundColor: isConnected ? "#48bb78" : "#718096" }} />
+              <Text fontSize="9px" color="gray.400">L{idx + 1}</Text>
+            </HStack>
+          ))}
+        </HStack>
+      </Tooltip>
+    </HStack>
+  </Box>
+);

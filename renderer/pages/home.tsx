@@ -40,7 +40,8 @@ import {
   Table,
   Tbody,
   Tr,
-  Td
+  Td,
+  Tooltip
 } from '@chakra-ui/react'
 import { keyframes } from '@emotion/react'
 import confetti from 'canvas-confetti'
@@ -293,7 +294,7 @@ export default function HomePage() {
     };
   }, []);
 
-  const { write: serialWrite, messages, clearMessages } = useSerial();
+  const { write: serialWrite, messages, clearMessages, serialState } = useSerial();
 
   // スライドショーの初期化と設定からのロード
   useEffect(() => {
@@ -352,7 +353,7 @@ export default function HomePage() {
       const latestMessage = messages[messages.length - 1];
 
       // 受信したデータを数値に変換
-      const courseNumber = parseInt(latestMessage);
+      const courseNumber = parseInt(latestMessage as string);
 
       // タイマーが実行中、シリアル入力が有効、そして1から4の数値であれば対応するコースの周回数をインクリメント
       if (isRunning && settings.serialCountEnabled && courseNumber >= 1 && courseNumber <= 4) {
@@ -913,6 +914,34 @@ export default function HomePage() {
       <Head>
         <title>レース管理システム</title>
       </Head>
+
+      {/* 通信状態インジケーター (画面右上) */}
+      <Box position="fixed" top="10px" right="20px" zIndex={2000}>
+        <HStack spacing={3} bg="rgba(0,0,0,0.5)" borderRadius="md" p={1.5} backdropFilter="blur(2px)">
+          {/* PC <-> ESP32 */}
+          <Tooltip label="カウンター親機とのシリアル通信状態" placement="bottom">
+            <HStack spacing={1}>
+              <Box w="8px" h="8px" borderRadius="full" style={{ backgroundColor: serialState.isConnected ? "#48bb78" : "#f56565" }} />
+              <Text fontSize="10px" color="gray.300" fontWeight="bold">親機</Text>
+            </HStack>
+          </Tooltip>
+          
+          <Divider orientation="vertical" height="15px" borderColor="gray.500" />
+          
+          {/* 各レーン */}
+          <Tooltip label="各カウンター子機の通信状態" placement="bottom">
+            <HStack spacing={2}>
+              {serialState.laneConnectionStatus.map((isConnected, idx) => (
+                <HStack key={`lane-status-${idx}`} spacing={0.5}>
+                  <Box w="6px" h="6px" borderRadius="full" style={{ backgroundColor: isConnected ? "#48bb78" : "#718096" }} />
+                  <Text fontSize="9px" color="gray.400">L{idx + 1}</Text>
+                </HStack>
+              ))}
+            </HStack>
+          </Tooltip>
+        </HStack>
+      </Box>
+
       <Container
         maxHeight="100vh"
         maxWidth="1920px"

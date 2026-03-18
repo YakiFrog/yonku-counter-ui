@@ -49,6 +49,12 @@ class SerialPortManager {
         console.error('Serial port error:', err);
       });
 
+      this.port.on('close', () => {
+        console.log('Serial port closed natively (e.g. unplugged or sleep)');
+        this.port = null;
+        this.parser = null;
+      });
+
       this.parser.on('data', (data: Buffer) => {
         const message = data.toString().trim();
         // メインウィンドウにデータを送信
@@ -69,13 +75,19 @@ class SerialPortManager {
         return;
       }
 
-      this.port.close((err) => {
+      const portToClose = this.port;
+      
+      // 即座にインスタンスを破棄して、後続の通信をブロックする
+      this.port = null;
+      this.parser = null;
+
+      portToClose.close((err) => {
         if (err) {
-          reject(err);
+          console.error('Warning: Error during serial port close (might be already disconnected):', err);
+          // エラーが発生しても内部状態はリセット済みなので正常ルートとして返す
+          resolve();
           return;
         }
-        this.port = null;
-        this.parser = null;
         resolve();
       });
     });
@@ -88,7 +100,7 @@ class SerialPortManager {
   // シリアルポートにデータを送信
   async write(data: string) {
     return new Promise((resolve, reject) => {
-      if (!this.port) {
+      if (!this.port || !this.port.isOpen) {
         reject(new Error('Serial port is not connected'));
         return;
       }
