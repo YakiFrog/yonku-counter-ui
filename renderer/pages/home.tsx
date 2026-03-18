@@ -166,12 +166,14 @@ const coursePanelHighlight = keyframes`
 `;
 
 export default function HomePage() {
-  const { settings, isLoading, saveRaceResult } = useAppSettingsContext();
+  const { settings, isLoading, saveRaceResult, updateCourse } = useAppSettingsContext();
   const toast = useToast();
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isResetOpen, onOpen: onResetOpen, onClose: onResetClose } = useDisclosure();
   const { isOpen: isHelpOpen, onOpen: onHelpOpen, onClose: onHelpClose } = useDisclosure();
+  const { isOpen: isTeamSelectOpen, onOpen: onTeamSelectOpen, onClose: onTeamSelectClose } = useDisclosure();
+  const [selectingCourseId, setSelectingCourseId] = useState<number | null>(null);
   const cancelRef = React.useRef();
   const resetCancelRef = React.useRef();
 
@@ -910,20 +912,22 @@ export default function HomePage() {
       } else if (keyChar === 'p') {
         // ホーン再生
         playRaceSound('horn');
-      } else if (keyChar === 'l') {
+      } else if (keyChar === 'l' && !isRunning) {
         // 321GO再生
         playRaceSound('321go');
         // 自動スタート設定が有効な場合
         if (settings?.autoStartEnabled) {
-          const delay = settings.autoStartDelay || 3;
-          console.log(`[AutoStart] Scheduled in ${delay}s`);
+          const delay = 2.75; // 2.75秒固定に変更
+          console.log(`[AutoStart] Scheduled in ${delay}s (Fixed)`);
           
           if (autoStartTimerRef.current) clearTimeout(autoStartTimerRef.current);
           
-          autoStartTimerRef.current = setTimeout(() => {
+          autoStartTimerRef.current = setTimeout(async () => {
             console.log('[AutoStart] Timer fired!');
             if (!isRunning) {
-              toggleTimer();
+              await toggleTimer();
+              // toggleTimer() 内でも送信されますが、確実を期すために明示的に送信（またはログ出力）
+              console.log('[AutoStart] Sending "w" command via serial');
             } else {
               console.log('[AutoStart] Race already running, skipping auto-start');
             }
@@ -982,7 +986,7 @@ export default function HomePage() {
       </Head>
 
       {/* 通信状態インジケーター (画面右上) */}
-      <Box position="fixed" top="10px" right="20px" zIndex={2000}>
+      <Box position="fixed" top="10px" right="20px" zIndex={1000}>
         <HStack spacing={3} bg="rgba(0,0,0,0.5)" borderRadius="md" p={1.5} backdropFilter="blur(2px)">
           {/* PC <-> ESP32 */}
           <Tooltip label="カウンター親機とのシリアル通信状態" placement="bottom">
@@ -1118,6 +1122,19 @@ export default function HomePage() {
                         sx={{
                           textShadow: "2px 2px 4px rgba(0,0,0,0.3)"
                         }}
+                        cursor={isRunning ? "default" : "pointer"}
+                        onClick={() => {
+                          if (!isRunning) {
+                            setSelectingCourseId(course.id);
+                            onTeamSelectOpen();
+                          }
+                        }}
+                        transition="all 0.2s"
+                        _hover={!isRunning ? {
+                          filter: "brightness(1.2)",
+                          boxShadow: "0 0 20px rgba(0,0,0,0.6)",
+                          zIndex: 10
+                        } : {}}
                       >
                         {raceType === 'タイムアタック' ? (
                           <>
@@ -2058,7 +2075,7 @@ export default function HomePage() {
             position="fixed"
             left={0}
             bottom={0}
-            zIndex={2000}
+            zIndex={1000}
             bg="rgba(30,30,30,0.98)"
             py={3}
             px={4}
@@ -2305,12 +2322,98 @@ export default function HomePage() {
                       <HStack><Kbd>a</Kbd> <Kbd>s</Kbd> <Kbd>d</Kbd> <Kbd>f</Kbd><Text>シリアル手動送信</Text></HStack>
                       <HStack><Kbd>i</Kbd><Text>このヘルプを表示</Text></HStack>
                       <HStack><Kbd>o</Kbd><Text>紙吹雪を出す</Text></HStack>
+                      <HStack><Kbd>p</Kbd><Text>ホーン (自転車音)</Text></HStack>
+                      <HStack><Kbd>l</Kbd><Text>321GO再生 / 自動スタート</Text></HStack>
                     </SimpleGrid>
+                  </Box>
+                  <Divider borderColor="gray.600" />
+                  <Box>
+                    <Heading size="md" mb={2} color="orange.300">🖱️ マウス操作</Heading>
+                    <Text fontSize="md">レーン番号（L1〜L4）をクリックすると、そのレーンのチーム割り当てを直接変更できます。</Text>
                   </Box>
                 </VStack>
               </ModalBody>
               <ModalFooter borderTopWidth="1px" borderColor="gray.700">
                 <Button colorScheme="purple" onClick={onHelpClose}>閉じる</Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+
+          {/* チーム選択モーダル */}
+          <Modal isOpen={isTeamSelectOpen} onClose={onTeamSelectClose} size="xl" scrollBehavior="inside">
+            <ModalOverlay backdropFilter="blur(5px)" bg="rgba(0,0,0,0.4)" />
+            <ModalContent bg="gray.900" color="white" borderColor="gray.700" borderWidth={1} shadow="2xl">
+              <ModalHeader borderBottomWidth="1px" borderColor="gray.800" fontSize="xl" fontWeight="bold">
+                L{selectingCourseId} レーンのチーム選択
+              </ModalHeader>
+              <ModalCloseButton />
+              <ModalBody p={6}>
+                <VStack spacing={3} align="stretch">
+                  <Button
+                    variant="ghost"
+                    colorScheme="red"
+                    justifyContent="flex-start"
+                    height="60px"
+                    fontSize="lg"
+                    borderWidth={1}
+                    borderColor="red.900"
+                    _hover={{ bg: "red.900" }}
+                    onClick={async () => {
+                      await updateCourse(selectingCourseId, { playerId: null, vehicleId: null });
+                      onTeamSelectClose();
+                      toast({
+                        title: `L${selectingCourseId} の割り当てを解除しました`,
+                        status: "info",
+                        duration: 3000,
+                        isClosable: true
+                      });
+                    }}
+                  >
+                    🚫 割り当てを解除
+                  </Button>
+                  <Box height="2px" bg="gray.800" my={2} />
+                  <SimpleGrid columns={1} spacing={3}>
+                    {settings?.players?.map((player) => (
+                      <Button
+                        key={player.id}
+                        variant="outline"
+                        colorScheme="gray"
+                        justifyContent="flex-start"
+                        height="70px"
+                        p={4}
+                        borderColor="gray.700"
+                        _hover={{ bg: "gray.700", borderColor: "blue.500", transform: "translateY(-2px)" }}
+                        transition="all 0.2s"
+                        onClick={async () => {
+                          const vehicleId = player.vehicle?.id || null;
+                          await updateCourse(selectingCourseId, { 
+                            playerId: player.id, 
+                            vehicleId: vehicleId 
+                          });
+                          onTeamSelectClose();
+                          toast({
+                            title: `L${selectingCourseId} に ${player.name} を設定しました`,
+                            status: "success",
+                            duration: 3000,
+                            isClosable: true
+                          });
+                        }}
+                      >
+                        <VStack align="start" spacing={0}>
+                          <Text fontSize="lg" fontWeight="bold">{player.name}</Text>
+                          {player.vehicle && (
+                            <Text fontSize="sm" color="gray.400">
+                              🚗 {player.vehicle.name}
+                            </Text>
+                          )}
+                        </VStack>
+                      </Button>
+                    ))}
+                  </SimpleGrid>
+                </VStack>
+              </ModalBody>
+              <ModalFooter borderTopWidth="1px" borderColor="gray.800">
+                <Button variant="ghost" mr={3} onClick={onTeamSelectClose}>キャンセル</Button>
               </ModalFooter>
             </ModalContent>
           </Modal>
