@@ -141,6 +141,9 @@ export default function SettingsPage() {
   const [selectedPort, setSelectedPort] = useState<string>("");
   const [selectedBaudRate, setSelectedBaudRate] = useState<number>(115200);
   const toast = useToast();
+  
+  // 自動スタート待ち時間入力用のローカルト状態（小数点の入力をスムーズにするため）
+  const [autoStartDelayStr, setAutoStartDelayStr] = useState<string>("");
 
   // AlertDialog用のフック
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -149,6 +152,15 @@ export default function SettingsPage() {
   
   // チームリスト
   const [playersState, setPlayersState] = useState<Player[]>([]);
+  
+  // 初回ロード時および設定変更時にローカル状態を同期
+  useEffect(() => {
+    if (settings && settings.autoStartDelay !== undefined) {
+      if (parseFloat(autoStartDelayStr) !== settings.autoStartDelay) {
+        setAutoStartDelayStr(String(settings.autoStartDelay));
+      }
+    }
+  }, [settings?.autoStartDelay, isLoading]);
   
   // コンテキストからチームデータをロード
   useEffect(() => {
@@ -743,6 +755,49 @@ export default function SettingsPage() {
                           <option value={4} style={{ color: 'black' }}>全員（4位のゴールまで）</option>
                         </Select>
                       </FormControl>
+
+                      <Divider my={4} borderColor="gray.700" />
+                      
+                      <Box>
+                        <Heading size="sm" mb={4} color="gray.300">自動スタート設定 (Lキー連動)</Heading>
+                        <FormControl display="flex" alignItems="center" mb={4}>
+                          <FormLabel mb="0" color="white" flex="1">
+                            「321GO」音の後に自動でスタートする
+                          </FormLabel>
+                          <Switch 
+                            isChecked={settings.autoStartEnabled} 
+                            onChange={(e) => handleUpdateSetting('autoStartEnabled', e.target.checked)}
+                            colorScheme="yellow"
+                          />
+                        </FormControl>
+
+                        <FormControl isDisabled={!settings.autoStartEnabled}>
+                          <FormLabel color="white">スタートまでの待ち時間 (秒)</FormLabel>
+                          <NumberInput 
+                            value={autoStartDelayStr} 
+                            min={1} 
+                            max={10}
+                            step={0.5}
+                            precision={1}
+                            onChange={(valueString, valueNumber) => {
+                              setAutoStartDelayStr(valueString);
+                              // 数字として有効で、かつ入力中でない（末尾がドットでない）場合に設定を更新
+                              if (!isNaN(valueNumber) && !valueString.endsWith('.')) {
+                                handleUpdateSetting('autoStartDelay', valueNumber);
+                              }
+                            }}
+                          >
+                            <NumberInputField bg="gray.900" borderColor="gray.600" color="white" _hover={{ borderColor: "gray.500" }} />
+                            <NumberInputStepper>
+                              <NumberIncrementStepper color="gray.400" borderColor="gray.600" />
+                              <NumberDecrementStepper color="gray.400" borderColor="gray.600" />
+                            </NumberInputStepper>
+                          </NumberInput>
+                          <Text fontSize="xs" color="gray.500" mt={1}>
+                            Lキーを押してから、計測が自動で開始されるまでの秒数です。
+                          </Text>
+                        </FormControl>
+                      </Box>
 
                       <FormControl mt="6">
                         <FormLabel color="white">スライドショー画像設定</FormLabel>

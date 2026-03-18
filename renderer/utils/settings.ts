@@ -17,7 +17,9 @@ const defaultSettings: AppSettings = {
   currentRaceNumber: 1,  // 初期レース番号を1に設定
   slideshowImages: [], // スライドショー画像の初期値
   confettiSound: 'popper', // クラッカーの種類
-  confettiTriggerRank: 1 // デフォルトは1位のみ
+  confettiTriggerRank: 1, // デフォルトは1位のみ
+  autoStartEnabled: false, // 自動スタートは初期無効
+  autoStartDelay: 3 // デフォルト3秒
 };
 
 // ローカルストレージのキー

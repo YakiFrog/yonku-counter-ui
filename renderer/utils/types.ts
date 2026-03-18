@@ -60,4 +60,6 @@ export type AppSettings = {
   slideshowImages?: string[]; // スライドショー用の画像パスリスト
   confettiSound?: 'horn' | 'popper' | 'popper_large' | 'none'; // クラッカー演出の音種類
   confettiTriggerRank?: number; // クラッカーを鳴らす対象順位（デフォルト1）
+  autoStartEnabled: boolean; // 321GO後に自動スタートするかどうか
+  autoStartDelay: number;    // 自動スタートまでの遅延秒数 (秒)
 };

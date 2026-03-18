@@ -57,24 +57,41 @@ const blinkTextYellow = keyframes`
 `;
 import confetti from 'canvas-confetti'
 
-// 1位ゴール時のクラッカー演出
-const triggerConfetti = (soundType?: 'horn' | 'popper' | 'popper_large' | 'none') => {
-  // クラッカー音を鳴らす（ローカルのmp3ファイルを使用）
-  try {
-    const type = soundType || 'popper';
-    if (type !== 'none') {
-      let fileName = '';
-      if (type === 'popper') fileName = 'Party_Popper01/Party_Popper01-1(Dry).mp3';
-      else if (type === 'popper_large') fileName = 'Party_Popper03/Party_Popper03-1(Dry).mp3';
-      else if (type === 'horn') fileName = 'Bicycle_Horn01/Bicycle_Horn01-1.mp3';
+// 音響再生中のインスタンス保持用
+const audioInstances: Record<string, HTMLAudioElement> = {};
 
+// 音響再生のみを行う関数
+const playRaceSound = (type: 'horn' | 'popper' | 'popper_large' | '321go') => {
+  try {
+    // 既に再生中の同じ種類の音があれば停止して頭出し
+    if (audioInstances[type]) {
+      audioInstances[type].pause();
+      audioInstances[type].currentTime = 0;
+    }
+
+    let fileName = '';
+    if (type === 'popper') fileName = 'Party_Popper01/Party_Popper01-1(Dry).mp3';
+    else if (type === 'popper_large') fileName = 'Party_Popper03/Party_Popper03-1(Dry).mp3';
+    else if (type === 'horn') fileName = 'Bicycle_Horn01/Bicycle_Horn01-1.mp3';
+    else if (type === '321go') fileName = '321GO/321GO.mp3';
+
+    if (fileName) {
       const audioPath = `local-image:///Users/kotaniryota/NLAB/yonku-counter-ui/resources/${fileName}`;
-      const popSound = new Audio(audioPath);
-      popSound.volume = 0.8;
-      popSound.play().catch(e => console.log('Audio play error:', e));
+      const audio = new Audio(audioPath);
+      audioInstances[type] = audio; // インスタンスを保存
+      audio.volume = 0.8;
+      audio.play().catch(e => console.log('Audio play error:', e));
     }
   } catch (e) {
     console.log('Audio not supported:', e);
+  }
+};
+
+// 1位ゴール時のクラッカー演出
+const triggerConfetti = (soundType?: 'horn' | 'popper' | 'popper_large' | 'none') => {
+  // 音を鳴らす
+  if (soundType && soundType !== 'none') {
+    playRaceSound(soundType as any);
   }
 
   const count = 200; // 全体の紙吹雪の基本量
@@ -163,6 +180,18 @@ export default function HomePage() {
   const [slideshowImages, setSlideshowImages] = useState([]);
   const [slideDirection, setSlideDirection] = useState('left');
   const [isSliding, setIsSliding] = useState(false);
+
+  // オートスタート用のタイマー保持
+  const autoStartTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // コンポーネント終了時にタイマーがあれば解除
+  useEffect(() => {
+    return () => {
+      if (autoStartTimerRef.current) {
+        clearTimeout(autoStartTimerRef.current);
+      }
+    };
+  }, []);
 
   // すべてのステート hooks を先に宣言
   const [isRunning, setIsRunning] = useState(false);
@@ -387,91 +416,6 @@ export default function HomePage() {
   // 修正: 依存配列に[isRunning]を追加してキーボードイベントハンドラーが適切に更新されるように変更
   // 追加履歴: 2025/05/24 - 5,6,7,8キーでRevert機能（直前の周回数増加を戻す）を追加
   // 追加履歴: 2025/07/26 - a,s,d,fキーでシリアル送信機能を追加
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      const keyPressed = parseInt(event.key);
-      const keyChar = event.key.toLowerCase();
-
-      // a,s,d,fキーの処理（シリアル送信）
-      if (['a', 's', 'd', 'f'].includes(keyChar)) {
-        serialWrite(keyChar).catch(error => {
-          console.error(`Failed to send ${keyChar} command:`, error);
-          toast({
-            title: 'エラー',
-            description: `${keyChar}コマンドの送信に失敗しました`,
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          });
-        });
-        return;
-      }
-
-      // q,w,e,r,tキーの処理（ゲート操作とレース制御）
-      if (keyChar === 'i') {
-        onHelpOpen();
-        return;
-      } else if (keyChar === 'q') {
-        // ゲート準備
-        handleGatePrep();
-        return;
-      } else if (keyChar === 'w') {
-        // スタート/ストップ
-        toggleTimer();
-        return;
-      } else if (keyChar === 'e') {
-        // ゲート自動
-        handleGateAuto();
-        return;
-      } else if (keyChar === 'r') {
-        // リセット
-        resetTimer();
-        return;
-      } else if (keyChar === 't') {
-        // レース終了（レースが開始済みまたは計測時間がある場合のみ）
-        if (isRunning || elapsedTime > 0) {
-          onOpen(); // レース終了の確認ダイアログを表示
-        }
-        return;
-      } else if (keyChar === 'o') {
-        // 紙吹雪（手動発動）
-        triggerConfetti(settings?.confettiSound);
-        return;
-      }
-
-      if (isRunning) {
-        if (raceType === 'タイムアタック') {
-          // タイムアタックモードでは2,3,4キーでラップタイムを計算
-          if (keyPressed >= 2 && keyPressed <= 4) {
-            incrementLap(1); // 常に1コース目のデータを更新
-          }
-          // 7,8,9キーでRevert機能（2,3,4コース目に対応）
-          else if (keyPressed >= 7 && keyPressed <= 9) {
-            decrementLap(1); // 常に1コース目のデータを更新
-          }
-        } else {
-          // 通常レースモードでは1-4のキーが押された場合、対応するコースの周回数を増やす
-          if (keyPressed >= 1 && keyPressed <= 4) {
-            incrementLap(keyPressed);
-          }
-          // 6-9のキーが押された場合、対応するコース（1-4）の周回数を減らす（Revert機能）
-          else if (keyPressed >= 6 && keyPressed <= 9) {
-            const courseId = keyPressed - 5; // 6は1、7は2、8は3、9は4にマッピング
-            decrementLap(courseId);
-          }
-        }
-      }
-    };
-
-    // イベントリスナーの登録
-    window.addEventListener('keypress', handleKeyPress);
-
-    // クリーンアップ
-    return () => {
-      window.removeEventListener('keypress', handleKeyPress);
-    };
-  }, [isRunning, raceType, serialWrite, toast]);  // serialWriteとtoastを依存配列に追加
-
   // ストップウォッチの更新
   useEffect(() => {
     if (isRunning) {
@@ -906,6 +850,117 @@ export default function HomePage() {
 
   // 周回の進捗を計算する関数
   const calculateProgress = (current, total) => (current / total) * 100;
+
+  // キーボードショートカット
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // 入力フィールド（Input, Select, TextAreaなど）にフォーカスがある場合は無効
+      const activeElement = document.activeElement;
+      if (
+        activeElement && 
+        (activeElement.tagName === 'INPUT' || 
+         activeElement.tagName === 'SELECT' || 
+         activeElement.tagName === 'TEXTAREA' || 
+         (activeElement as HTMLElement).isContentEditable)
+      ) {
+        return;
+      }
+
+      const keyPressed = parseInt(event.key);
+      const keyChar = event.key.toLowerCase();
+
+      // a,s,d,fキーの処理（シリアル送信）
+      if (['a', 's', 'd', 'f'].includes(keyChar)) {
+        serialWrite(keyChar).catch(error => {
+          console.error(`Failed to send ${keyChar} command:`, error);
+          toast({
+            title: 'エラー',
+            description: `${keyChar}コマンドの送信に失敗しました`,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+        });
+        return;
+      }
+
+      // ショートカットキーの処理
+      if (keyChar === 'i') {
+        onHelpOpen();
+      } else if (keyChar === 'q') {
+        // ゲート準備
+        handleGatePrep();
+      } else if (keyChar === 'w') {
+        // スタート/ストップ
+        toggleTimer();
+      } else if (keyChar === 'e') {
+        // ゲート自動
+        handleGateAuto();
+      } else if (keyChar === 'r') {
+        // リセット
+        resetTimer();
+      } else if (keyChar === 't') {
+        // レース終了（レースが開始済みまたは計測時間がある場合のみ）
+        if (isRunning || elapsedTime > 0) {
+          onOpen();
+        }
+      } else if (keyChar === 'o') {
+        // 紙吹雪（手動発動）
+        triggerConfetti(settings?.confettiSound);
+      } else if (keyChar === 'p') {
+        // ホーン再生
+        playRaceSound('horn');
+      } else if (keyChar === 'l') {
+        // 321GO再生
+        playRaceSound('321go');
+        // 自動スタート設定が有効な場合
+        if (settings?.autoStartEnabled) {
+          const delay = settings.autoStartDelay || 3;
+          console.log(`[AutoStart] Scheduled in ${delay}s`);
+          
+          if (autoStartTimerRef.current) clearTimeout(autoStartTimerRef.current);
+          
+          autoStartTimerRef.current = setTimeout(() => {
+            console.log('[AutoStart] Timer fired!');
+            if (!isRunning) {
+              toggleTimer();
+            } else {
+              console.log('[AutoStart] Race already running, skipping auto-start');
+            }
+          }, delay * 1000);
+        }
+      }
+
+      // 数値キーの処理（走行中のカウントアップ）
+      if (isRunning) {
+        if (raceType === 'タイムアタック') {
+          // タイムアタックモードでは2,3,4キーでラップタイムを計算
+          if (keyPressed >= 2 && keyPressed <= 4) {
+            incrementLap(1); // 常に1コース目のデータを更新
+          }
+          // 7,8,9キーでRevert機能（2,3,4コース目に対応）
+          else if (keyPressed >= 7 && keyPressed <= 9) {
+            decrementLap(1); // 常に1コース目のデータを更新
+          }
+        } else {
+          // 通常レースモードでは1-4のキーが押された場合、対応するコースの周回数を増やす
+          if (keyPressed >= 1 && keyPressed <= 4) {
+            incrementLap(keyPressed);
+          }
+          // 6-9のキーが押された場合、対応するコース（1-4）の周回数を減らす（Revert機能）
+          else if (keyPressed >= 6 && keyPressed <= 9) {
+            const courseId = keyPressed - 5;
+            decrementLap(courseId);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isRunning, raceType, serialWrite, toast, settings, toggleTimer, handleGatePrep, handleGateAuto, resetTimer, onOpen, onHelpOpen, elapsedTime, incrementLap, decrementLap]);
   // settingsがロード中または未定義の場合はローディング表示
   if (isLoading || !settings) {
     return (
