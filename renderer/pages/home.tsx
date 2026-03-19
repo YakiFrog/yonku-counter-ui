@@ -925,6 +925,8 @@ export default function HomePage() {
       } else if (keyChar === 'l' && !isRunning) {
         // 321GO再生
         playRaceSound('321go');
+        // ゲート準備コマンドを即座に送信（Qキー相当）
+        handleGatePrep();
         // 自動スタート設定が有効な場合
         if (settings?.autoStartEnabled) {
           const delay = 2.75; // 2.75秒固定に変更
